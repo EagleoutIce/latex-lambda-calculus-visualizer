@@ -1,47 +1,42 @@
 \documentclass{article}
 
 \usepackage{tikz}
-
-\usepackage{color-palettes}
-\usepackage[encoding,cpalette,defaultfont]{sopra-listings}
+\usepackage[prefix=]{xcolor-material}
+\usepackage{xspace} % :3
+\usepackage{etoolbox}%
 
 \makeatletter
-\newcounter{lst@lambda@calculus@brackets}
-\begingroup\makeatletter
-\@for\grad:={75!white,40!black,75!white,40!black,75!white,40!black}\do{
-   \@for\pal:={A,B,C,D}\do{%
-      \xglobal\colorlet{lst@lambda@calculus@brackets@\thelst@lambda@calculus@brackets}{palette\pal!\grad}
-      \stepcounter{lst@lambda@calculus@brackets}
-   }
+% hacky but this way i do not have to make anything active :3
+\def\lec@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}}}%
+\def\lc@init@colorcycle{\@tempcnta\z@\@for\@col:={red,orange,yellow,green,cyan,teal,blue,purple,magenta}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
+\def\lc@colorvar#1#2{\tikz[baseline=(@.base)]{\node[fill=#1!10,rounded corners=3pt,inner ysep=1pt,inner xsep=2.25pt] (@) {\strut#2};}%
+\expandafter\def\csname#2\endcsname{\lc@colorvar{#1}{#2}\xspace}%
 }
-\endgroup
-\setcounter{lst@lambda@calculus@brackets}{0}
-\lstdefinelanguage{lLambdaCalculus}{
-   add to literate={:lambda:}{{{\ensuremath{\color{sol@colors@lst@keywordA}{\lambda}}}}}1
-   {\\}{{{\ensuremath{\color{sol@colors@lst@keywordA}{\lambda}}}}\aftergroup\typeout}1
-   % we want colorized brackets
-   {(}{{{%
-      \textcolor{lst@lambda@calculus@brackets@\arabic{lst@lambda@calculus@brackets}}{%
-         $\mathbf{(}_{\textsf{\relsize{-4}\the\numexpr\c@lst@lambda@calculus@brackets+1\relax}}$%
-      }\addtocounter{lst@lambda@calculus@brackets}{1}}}}1
-   {)}{{{%
-      \addtocounter{lst@lambda@calculus@brackets}{-1}\textcolor{lst@lambda@calculus@brackets@\arabic{lst@lambda@calculus@brackets}}{%
-      $\mathbf{)}_{\textsf{\relsize{-4}\the\numexpr\c@lst@lambda@calculus@brackets+1\relax}}$}}}}1
-   {:-alpha->:}{{{\ensuremath{\overset{\alpha}{\to}}}}}2
-   {:-eta->:}{{{\ensuremath{\overset{\eta}{\to}}}}}2
-   {:-beta5->:}{{{\ensuremath{\overset{\beta_5}{\to}}}}}2
-   {:-beta->:}{{{\ensuremath{\overset{\beta}{\to}}}}}2,
-   morekeywords=[4]{true,false,and,or,not,ifelse,const,head,tail,nil,null,succ,add,mult,isZero,pred},
-   moredelim=**[s][\itshape\@declaredcolor{gray}\solGet{literals}]{[}{]},
-   breaklines=true % currently, listing can not literate closing braces if breaklines; see below
+\newcounter{lc@colorcycle}% switch to newcount?
+\def\lc@colorcycle{\stepcounter{lc@colorcycle}\ifnum\thelc@colorcycle<\lc@colors@exclusivemax\else
+   \setcounter{lc@colorcycle}{0}% assume at least one
+\fi
+\edef\@col{\csname lc@color@\thelc@colorcycle\endcsname}\stepcounter{lc@colorcycle}}%
+\def\lc@dot{\textcolor{gray}{.}}
+% TODO: color brackets/larger to match
+\def\lc@open{(\begingroup}
+\def\lc@close{\endgroup)}
+% TODO: select random colors
+% TODO: grouping with \( and \)
+% TODO: replacements like \cons
+% TODO: allow to draw arrows
+\xspaceaddexceptions{\lc@close}%
+\def\lc@enable{%
+   \let\\\relax
+   \newcommand*\\[2][]{\ifstrempty{##1}{\lc@colorcycle}{\edef\@col{##1}}\ensuremath{\color{\@col}\lambda}\expandafter\lc@colorvar\expandafter{\@col}{##2}}%
+   \let\.\lc@dot
+   \lec@enablechars
+   \lc@init@colorcycle
+   \let\(\lc@open
+   \let\)\lc@close
 }
-% Current deal with bracket close bug
-% \def\nocollect#1#2{}
-% \lst@AddToHookAtTop{SelectCharTable}{\let\lst@Def\nocollect}
-\RegisterLanguage{lc}{lLambdaCalculus}
+\long\def\LC#1{\texttt{\lc@enable#1}}
 
 \begin{document}
-\begin{lc}
-\a.b c d
-\end{lc}
+\LC{\\a\.\b \(\a \(\\b\.\(\\a\.\b\) \b \c \a\)\)}
 \end{document}
