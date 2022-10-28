@@ -81,7 +81,8 @@
       }%
       \expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
    \fi
-   % TODO: clear this macro (lc@lambdas\the\numexpr\the\c@lc@bracketlevel+1\relax)
+   % TODO: increase lineskip for consekutive lines
+   % TODO: work with RLC in mathmode (mbox? -> linebreaks?)
 }
 \newcommand*\lc@lambda[2][]{%
    % if nothing is selected, we use the colorcycle
