@@ -14,15 +14,17 @@ jobs:
         uses: xu-cheng/latex-action@v2
         with:
           root_file: |
-            visualizer.tex
+            example.tex
+      - name: Install PU for previews
+        run: sudo apt install poppler-utils
       - name: 🖼️ Generate preview
         run: |
-          pdftoppm -png -r 400 ./build/visualizer.pdf visualizer
+          pdftoppm -png -r 400 ./build/example.pdf example
       - name: Commit
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -f "./build/visualizer.pdf" "visualizer-1.png"
+          git add -f "./build/example.pdf" "example-1.png"
           git commit -m "Newly compiled data"
       - name: Push changes
         uses: ad-m/github-push-action@master

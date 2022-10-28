@@ -1,5 +1,8 @@
+% Florian Sihler, 2022
+% Licensed under MIT License
+% https://opensource.org/licenses/MIT
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{latex-lc-visualizer}[2022/07/24 Florian Sihler - Highlighting lambda calculus expressions]
+\ProvidesPackage{lc-visualizer}[2022/07/24 Florian Sihler - Highlighting lambda calculus expressions]
 
 \RequirePackage{tikz}
 \usetikzlibrary{tikzmark}
@@ -9,6 +12,7 @@
 
 % hacky but this way i do not have to make anything active :3
 \def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}}}%
+
 \def\lc@enableshortcuts{%
 \let\mathequiv\equiv
 \def\equiv{\ensuremath{\mathequiv}\xspace}%
@@ -18,6 +22,8 @@
 \lc@init@colorcycle
 
 \def\lc@colormix#1{#1!10!white!80!lightgray}
+\def\lc@lambdasymbol{\lambda}
+\def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
 
 \def\lc@colorvar#1#2{\tikz[baseline=(@.base)]{\node[fill=\lc@colormix{#1},rounded corners=3pt,inner ysep=1pt,inner xsep=2.25pt,fill opacity=.85,text opacity=1] (@) {\strut#2};}%
 \expandafter\def\csname#2\endcsname{\lc@colorvar{#1}{#2}\xspace}\def\lc@curcol{#1}%
@@ -68,6 +74,7 @@
       \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
       % \typeout{Targets: \lc@lastbracket of \@tmp}%
       \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
+         % TODO: make smaller even if in same brace?
          \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
          % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
          \tikz[overlay,remember picture]{\draw[lightgray!40!white!90!\@lc@color!70!white,thin,rounded corners=1.5pt] ([yshift=-5pt+1pt*\the\c@lc@bracketlevel]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north west);}%
@@ -88,7 +95,7 @@
    \expandafter\xappto\csname lc@lambdas\the\c@lc@bracketlevel\endcsname{{\the\c@lc@markerindex}}%
    % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
    \tikzmarknode{lc@\the\c@lc@markerindex}{%
-      \ensuremath{\color{\@col!80!black}\lambda}%
+      \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
    }\expandafter\lc@colorvar\expandafter{\@col}{#2}%
 }%
 
@@ -96,21 +103,31 @@
 % TODO: allow to draw arrows
 % TODO: reductions! (first only the symbols)
 \xspaceaddexceptions{\lc@close}%
-\def\lc@enable{%
+\def\lc@enable@cc{%
+\catcode`\(=\active \scantokens{\let(}\lc@open
+\catcode`\)=\active \scantokens{\let)}\lc@close
+\catcode`.=\active \scantokens{\let.}\lc@dot
+}
+\def\lc@enable@default{%
+\let\(\lc@open
+\let\)\lc@close
+\let\.\lc@dot
+}
+\def\lc@enable@base{%
    \let\\\relax
    \let\\\lc@lambda
-   \catcode`.=\active \scantokens{\let.}\lc@dot
    \lc@enablechars
    \lc@enableshortcuts
    % \lc@init@colorcycle % done globally
-   \catcode`\(=\active \scantokens{\let(}\lc@open
-   \catcode`\)=\active \scantokens{\let)}\lc@close
    % set to 0 even if unbalanced
    \c@lc@bracketlevel\z@
    \setcounter{lc@colorcycle}{0}%
 }
 % TODO: inner variant that uses \( and \.?
-\outer\long\def\LC{\begingroup\let\;\endLC\ttfamily\lc@enable}
-\def\endLC{\endgroup}
+\outer\long\def\LC{\begingroup\lc@enable@cc\@LC}
+\def\@LC#1{\begingroup\ttfamily\lc@enable@base#1\endgroup\endgroup}
+
+\long\def\RLC#1{\bgroup\ttfamily\lc@enable@default\lc@enable@base#1\egroup}
+
 
 \endinput

@@ -1,0 +1,64 @@
+% Florian Sihler, 2022
+% Licensed under MIT License
+% https://opensource.org/licenses/MIT
+\documentclass[parskip=half,english,numbers=noenddot,footnotes=nomultiple,oneside]{scrartcl}
+\errorcontextlines99999
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}
+
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{lmodern}
+
+\usepackage[prefix=]{xcolor-material}
+\usepackage{listings}
+
+\usepackage{lc-visualizer}
+
+% working with texcsstyle did not work
+\lstdefinelanguage{ltx}{
+   literate={\\LC}{\textcolor{purple}{\bfseries\textbackslash LC}}3
+   {\\RLC}{\textcolor{purple}{\bfseries\textbackslash RLC}}4
+   {\\a}{\textcolor{gray}{\textbackslash a}}2
+   {\\b}{\textcolor{gray}{\textbackslash b}}2
+   {\\f}{\textcolor{gray}{\textbackslash f}}2
+   {\\x}{\textcolor{gray}{\textbackslash x}}2
+   {\\.}{\textcolor{gray}{\bfseries\textbackslash .}}2
+   {\\;}{\textcolor{purple}{\bfseries\textbackslash ;}}2
+   {\\centerline}{\textcolor{purple}{\textbackslash centerline}}{11}
+   {\\Y}{\textcolor{purple}{\textbackslash Y}}2
+   {\\equiv}{\textcolor{purple}{\textbackslash equiv}}6
+   {\\\\}{\textcolor{teal}{\textbackslash \textbackslash}}2
+}
+\lstset{basicstyle=\ttfamily,keepspaces,breaklines,language=ltx}
+\lstMakeShortInline|
+\def\ltx#1{\lstinline/#1/}
+\interfootnotelinepenalty=10000
+
+\usepackage{bm}
+\lcSetLambda{\bm\lambda}
+
+\title{The \texttt{lc-visualizer} package}
+\author{%
+	\texorpdfstring{Florian Sihler\medskip\\[-2mm]
+		{\scriptsize\url{https://github.com/EagleoutIce/latex-lambda-calculus-visualizer}}%
+	}{Florian Sihler}}
+\date{Version v1.0 \textendash{} 2022/10/28}
+
+
+\begin{document}
+   \maketitle
+
+	\texttt{lc-visualizer} is a simple package to get highlighting for lambda-calculus expressions.
+   Issuing |\LC{(\\a.\\b.\a (\b \\b.\b \a)) a c}| yields the following:
+
+   \LC{(\\a.\\b.\a (\b \\b.\b \a)) a c}
+
+   There is also |\RLC|, a variant that does not do any catcode magic and that can be used inside other macros. So |\centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f (\x \x\)\) \(\\x\.\f \(\x \x\)\)}}| yields:
+
+   \centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}}
+
+   \end{document}
