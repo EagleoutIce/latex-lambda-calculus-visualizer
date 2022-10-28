@@ -3,16 +3,15 @@
 
 \usepackage[prefix=]{xcolor-material}
 \usepackage{latex-lc-visualizer}
-
 \usepackage[active,tightpage]{preview}
 
 \begin{document}
 \preview
-\parbox{.65\linewidth}{%
+\begin{minipage}{.625\linewidth}%
 \LC \\a.\b (\a (\\b.(\\a.\b) \b \c \a))\;%
 \bigskip
 
 \LC \Y \equiv \\f.(\\x.\f (\x \x)) (\\x.\f (\x \x))\;
-}
+\end{minipage}
 \endpreview
 \end{document}

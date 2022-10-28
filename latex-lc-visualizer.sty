@@ -7,7 +7,6 @@
 \RequirePackage{etoolbox}
 \RequirePackage{amsmath}
 
-\makeatletter
 % hacky but this way i do not have to make anything active :3
 \def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}}}%
 \def\lc@enableshortcuts{%
@@ -20,7 +19,7 @@
 
 \def\lc@colormix#1{#1!10!white!80!lightgray}
 
-\def\lc@colorvar#1#2{\tikz[baseline=(@.base)]{\node[fill=\lc@colormix{#1},rounded corners=3pt,inner ysep=1pt,inner xsep=2.25pt,fill opacity=.8,text opacity=.9] (@) {\strut#2};}%
+\def\lc@colorvar#1#2{\tikz[baseline=(@.base)]{\node[fill=\lc@colormix{#1},rounded corners=3pt,inner ysep=1pt,inner xsep=2.25pt,fill opacity=.85,text opacity=1] (@) {\strut#2};}%
 \expandafter\def\csname#2\endcsname{\lc@colorvar{#1}{#2}\xspace}\def\lc@curcol{#1}%
 }
 \newcounter{lc@colorcycle}% switch to newcount?
@@ -28,7 +27,7 @@
    \setcounter{lc@colorcycle}{0}% assume at least one
 \fi
 \edef\@col{\csname lc@color@\thelc@colorcycle\endcsname}\stepcounter{lc@colorcycle}}%
-\def\lc@dot{\textcolor{\@col}{.}}
+\def\lc@dot{\textcolor{\lc@colormix{\@col}!40!black}{.}}
 % TODO: color brackets/larger to match
 \newcount\c@lc@bracketlevel
 \newcount\c@lc@markerindex % current index for tikzmark, will not be reset!
@@ -89,7 +88,7 @@
    \expandafter\xappto\csname lc@lambdas\the\c@lc@bracketlevel\endcsname{{\the\c@lc@markerindex}}%
    % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
    \tikzmarknode{lc@\the\c@lc@markerindex}{%
-      \ensuremath{\color{\@col}\lambda}%
+      \ensuremath{\color{\@col!80!black}\lambda}%
    }\expandafter\lc@colorvar\expandafter{\@col}{#2}%
 }%
 
@@ -110,8 +109,8 @@
    \c@lc@bracketlevel\z@
    \setcounter{lc@colorcycle}{0}%
 }
-\long\def\LC{\begingroup\let\;\endLC\ttfamily\lc@enable}
+% TODO: inner variant that uses \( and \.?
+\outer\long\def\LC{\begingroup\let\;\endLC\ttfamily\lc@enable}
 \def\endLC{\endgroup}
-
 
 \endinput
