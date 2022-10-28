@@ -1,0 +1,117 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{latex-lc-visualizer}[2022/07/24 Florian Sihler - Highlighting lambda calculus expressions]
+
+\RequirePackage{tikz}
+\usetikzlibrary{tikzmark}
+\RequirePackage{xspace} % :3
+\RequirePackage{etoolbox}
+\RequirePackage{amsmath}
+
+\makeatletter
+% hacky but this way i do not have to make anything active :3
+\def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}}}%
+\def\lc@enableshortcuts{%
+\let\mathequiv\equiv
+\def\equiv{\ensuremath{\mathequiv}\xspace}%
+\def\Y{\mbox{\textbf{Y}}\xspace}% TODO: highlight Y combinator
+}
+\def\lc@init@colorcycle{\@tempcnta\z@\@for\@col:={red,orange,yellow,green,cyan,teal,blue,purple,magenta}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
+\lc@init@colorcycle
+
+\def\lc@colormix#1{#1!10!white!80!lightgray}
+
+\def\lc@colorvar#1#2{\tikz[baseline=(@.base)]{\node[fill=\lc@colormix{#1},rounded corners=3pt,inner ysep=1pt,inner xsep=2.25pt,fill opacity=.8,text opacity=.9] (@) {\strut#2};}%
+\expandafter\def\csname#2\endcsname{\lc@colorvar{#1}{#2}\xspace}\def\lc@curcol{#1}%
+}
+\newcounter{lc@colorcycle}% switch to newcount?
+\def\lc@colorcycle{\stepcounter{lc@colorcycle}\ifnum\thelc@colorcycle<\lc@colors@exclusivemax\else
+   \setcounter{lc@colorcycle}{0}% assume at least one
+\fi
+\edef\@col{\csname lc@color@\thelc@colorcycle\endcsname}\stepcounter{lc@colorcycle}}%
+\def\lc@dot{\textcolor{\@col}{.}}
+% TODO: color brackets/larger to match
+\newcount\c@lc@bracketlevel
+\newcount\c@lc@markerindex % current index for tikzmark, will not be reset!
+% TODO: colors?
+\def\lc@open{%
+   % first we advance the bracketindex to ensure unique
+   \stepcounter{lc@markerindex}%
+   % now store the bracketindex with the current nestinglevel:
+   \edef\lc@bracket@mark{\the\c@lc@markerindex}%
+   % now, store the opening brace in the node
+   \tikzmarknode{lc@\the\c@lc@markerindex}{%
+      % the opening brace
+      \mbox{\color{lightgray}(}%
+      %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{(}}$%
+   }%
+   % enter the grouping level
+   \begingroup\advance\c@lc@bracketlevel\@ne
+}
+\def\lc@close{%
+   % leave grouping level
+   \xdef\lc@lastbracket{\the\c@lc@bracketlevel}%
+   \endgroup
+   % assure unique index
+   \stepcounter{lc@markerindex}%
+   % store draw the brace
+   \tikzmarknode{lc@\the\c@lc@markerindex}{%
+      % the closing brace
+      \mbox{\color{lightgray})}%
+      %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{)}}$%
+   }%
+   % draw stuff around
+   % TODO: flag so this only happens if wanted
+   % \ifnum\c@lc@bracketlevel>3\else
+   %    \tikz[overlay,remember picture]{\draw[lightgray!40!white,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\the\c@lc@bracketlevel]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north east);}%
+   % \fi
+   % TODO: toggle for lambda draw, now we are one level higher:
+   \ifcsname lc@lambdas\lc@lastbracket\endcsname
+      \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
+      % \typeout{Targets: \lc@lastbracket of \@tmp}%
+      \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
+         \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
+         % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
+         \tikz[overlay,remember picture]{\draw[lightgray!40!white!90!\@lc@color!70!white,thin,rounded corners=1.5pt] ([yshift=-5pt+1pt*\the\c@lc@bracketlevel]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north west);}%
+      }%
+      \expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
+   \fi
+   % TODO: clear this macro (lc@lambdas\the\numexpr\the\c@lc@bracketlevel+1\relax)
+}
+\newcommand*\lc@lambda[2][]{%
+   % if nothing is selected, we use the colorcycle
+   \ifstrempty{#1}{\lc@colorcycle}{\edef\@col{#1}}% otherwise, use the picked color
+   % ensure a unique index
+   \stepcounter{lc@markerindex}%
+   % now store the lambdaindex with the current nestinglevel:
+   % by adding a hook to the nesting level of the lambda, first it is reached on a closing brace we draw
+   % TODO: deal with outermost no-bracket level => we do not draw
+   \expandafter\xdef\csname lc@lambdacolor@\the\c@lc@markerindex\endcsname{\@col}%
+   \expandafter\xappto\csname lc@lambdas\the\c@lc@bracketlevel\endcsname{{\the\c@lc@markerindex}}%
+   % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
+   \tikzmarknode{lc@\the\c@lc@markerindex}{%
+      \ensuremath{\color{\@col}\lambda}%
+   }\expandafter\lc@colorvar\expandafter{\@col}{#2}%
+}%
+
+% TODO: replacements like \cons
+% TODO: allow to draw arrows
+% TODO: reductions! (first only the symbols)
+\xspaceaddexceptions{\lc@close}%
+\def\lc@enable{%
+   \let\\\relax
+   \let\\\lc@lambda
+   \catcode`.=\active \scantokens{\let.}\lc@dot
+   \lc@enablechars
+   \lc@enableshortcuts
+   % \lc@init@colorcycle % done globally
+   \catcode`\(=\active \scantokens{\let(}\lc@open
+   \catcode`\)=\active \scantokens{\let)}\lc@close
+   % set to 0 even if unbalanced
+   \c@lc@bracketlevel\z@
+   \setcounter{lc@colorcycle}{0}%
+}
+\long\def\LC{\begingroup\let\;\endLC\ttfamily\lc@enable}
+\def\endLC{\endgroup}
+
+
+\endinput
