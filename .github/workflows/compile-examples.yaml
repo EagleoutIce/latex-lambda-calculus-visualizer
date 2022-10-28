@@ -1,0 +1,32 @@
+name: Build Example
+
+"on":
+  push:
+    branches: [master, main]
+
+jobs:
+  build-pdfs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@v3
+      - name: 📄 Compile Examples
+        uses: xu-cheng/latex-action@v2
+        with:
+          root_file: |
+            visualizer.tex
+      - name: 🖼️ Generate preview
+        run: |
+          pdftoppm -png -r 400 ./build/visualizer.pdf visualizer
+      - name: Commit
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -f "./build/visualizer.pdf" "visualizer-1.png"
+          git commit -m "Newly compiled data"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          force: true
