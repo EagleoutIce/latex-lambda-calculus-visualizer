@@ -15,6 +15,7 @@ jobs:
         with:
           root_file: |
             example.tex
+            visualizer-doc.tex
       - name: Install PU for previews
         run: sudo apt install poppler-utils
       - name: 🖼️ Generate preview
@@ -24,7 +25,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -f "./build/example.pdf" "example-1.png"
+          git add -f "./build/example.pdf" "example-1.png" "./build/visualizer-doc.pdf"
           git commit -m "Newly compiled data"
       - name: Push changes
         uses: ad-m/github-push-action@master
