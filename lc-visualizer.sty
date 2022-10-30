@@ -89,19 +89,28 @@
    % TODO work with RLC in mathmode (mbox? -> linebreaks?)
 }
 \newcommand*\lc@lambda[2][]{%
-   % if nothing is selected, we use the colorcycle
-   \ifstrempty{#1}{\lc@colorcycle}{\edef\@col{#1}}% otherwise, use the picked color
-   % ensure a unique index
-   \stepcounter{lc@markerindex}%
-   % now store the lambdaindex with the current nestinglevel:
-   % by adding a hook to the nesting level of the lambda, first it is reached on a closing brace we draw
-   % TODO deal with outermost no-bracket level => we do not draw
-   \expandafter\xdef\csname lc@lambdacolor@\the\c@lc@markerindex\endcsname{\@col}%
-   \expandafter\xappto\csname lc@lambdas\the\c@lc@bracketlevel\endcsname{{\the\c@lc@markerindex}}%
-   % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
-   \tikzmarknode{lc@\the\c@lc@markerindex}{%
-      \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
-   }\expandafter\lc@colorvar\expandafter{\@col}{#2}%
+   \@tempcnta\z@
+   % TODO: allow custom colors for multiple letters?
+   \@for\@letter:={#2}\do{%
+      % if nothing is selected, we use the colorcycle
+      \ifstrempty{#1}{\lc@colorcycle}{\edef\@col{#1}}% otherwise, use the picked color
+      % ensure a unique index
+      \stepcounter{lc@markerindex}%
+      % now store the lambdaindex with the current nestinglevel:
+      % by adding a hook to the nesting level of the lambda, first it is reached on a closing brace we draw
+      % deal with outermost no-bracket level? => we do not draw
+      \expandafter\xdef\csname lc@lambdacolor@\the\c@lc@markerindex\endcsname{\@col}%
+      \expandafter\xappto\csname lc@lambdas\the\c@lc@bracketlevel\endcsname{{\the\c@lc@markerindex}}%
+      % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
+      % only draw lambda symbol if first in comfort
+      \tikzmarknode{lc@\the\c@lc@markerindex}{\ifnum\the\@tempcnta<\@ne
+         % TODO: mixin for lambda symbol
+         \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
+         \else\phantom{\ensuremath{\lc@lambdasymbol}}\fi
+      }%
+      \expandafter\expandafter\expandafter\lc@colorvar\expandafter\expandafter\expandafter{\expandafter\@col\expandafter}\expandafter{\@letter}%
+      \advance\@tempcnta\@ne
+   }%
 }%
 
 % TODO replacements like \cons
