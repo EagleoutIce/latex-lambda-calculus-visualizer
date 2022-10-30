@@ -60,10 +60,9 @@
 
 \def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
 \lcSetLambda{\lambda}
-
+\def\lc@strut{\rule[-\dp\z@]\z@{\dimexpr\ht\strutbox+\dp\z@}}
 % color | letter | markname
-% TODO: use tikzmark do directly link the node?
-\def\lc@colorvar#1#2#3{\setbox\z@=\hbox{g}\tikzmarknode{#3}{\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\rule[-\dp\z@]\z@{\dimexpr\ht\strutbox+\dp\z@}#2};}}%
+\def\lc@colorvar#1#2#3{\setbox\z@=\hbox{g}\mark{#3}{\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\lc@strut#2};}}%
 \expandafter\renewcommand\csname#2\endcsname[1][lc@last]{\lc@colorvar{#1}{#2}{##1}\xspace}\def\lc@curcol{#1}%
 % assign it globally so that even other groups will start from here
 \expandafter\xdef\csname#2@col\endcsname{#1}%
@@ -177,12 +176,21 @@
 \let\)\lc@close
 \let\.\lc@dot
 }
+\newcommandx*\lc@reducemarks[4][1=north,4={}]{\tikz[overlay,remember picture]{
+   \path(#2.#1) -- (#2@.#1) coordinate[pos=.5] (@1);
+   \path(#3.#1) -- (#3@.#1) coordinate[pos=.5] (@2);
+   \draw[->,lightgray,bend right,#4] (@1) to (@2);
+}}
+\let\reducemarks\lc@reducemarks
+
+\newcommand*\lc@mark[3][3pt]{\tikzmarknode[outer ysep=#1]{#2}{\lc@strut}#3\tikzmarknode[outer ysep=#1]{#2@}{\lc@strut}}%
+
 \def\lc@enable@base#1{%
    \let\\\relax
    \let\\\lc@lambda
    \lc@enablechars
    \lc@enableshortcuts
-   \let\mark\tikzmarknode
+   \let\mark\lc@mark
    % \lc@init@colorcycle % done globally
    % set to 0 even if unbalanced
    \c@lc@bracketlevel\z@
