@@ -120,7 +120,7 @@
             % TODO allow to customize schrinking factors etc
             \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
             % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
-            \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
+            \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=1pt-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
             \advance\@tempcnta\@ne
          }%
       \fi
