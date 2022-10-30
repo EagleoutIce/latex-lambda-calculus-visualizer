@@ -45,7 +45,7 @@
 }
 \newcounter{lc@colorcycle}% switch to newcount?
 % TODO: start from 0 so there is no weird shift
-\def\lc@colorcycle{\stepcounter{lc@colorcycle}\ifnum\thelc@colorcycle<\lc@colors@exclusivemax\else
+\def\lc@colorcycle{\ifnum\thelc@colorcycle<\lc@colors@exclusivemax\else
    \setcounter{lc@colorcycle}{0}% assume at least one
 \fi
 \edef\@col{\csname lc@color@\thelc@colorcycle\endcsname}\stepcounter{lc@colorcycle}}%
