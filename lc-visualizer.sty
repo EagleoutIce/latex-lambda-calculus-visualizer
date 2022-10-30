@@ -43,15 +43,15 @@
       rounded corners=3pt,
       inner ysep=1pt,
       inner xsep=2.25pt,
-      fill opacity=.2,
+      fill opacity=.25,
       text opacity=1
    }
 }
 
 \def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
 \lcSetLambda{\lambda}
-
-\def\lc@colorvar#1#2{\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\strut#2};}%
+y
+\def\lc@colorvar#1#2{\setbox\z@=\hbox{g}\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\rule[-\dp\z@]\z@{\dimexpr\ht\strutbox+\dp\z@}#2};}%
 \expandafter\def\csname#2\endcsname{\lc@colorvar{#1}{#2}\xspace}\def\lc@curcol{#1}%
 % assign it globally so that even other groups will start from here
 \expandafter\xdef\csname#2@col\endcsname{#1}%
@@ -102,7 +102,7 @@
          \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
          \@tempcnta\z@ % level offset within same bracketlevel
          \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
-            % TODO make smaller even if in same brace => yes
+            % TODO allow to customize schrinking factors etc
             \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
             % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
             \tikz[overlay,remember picture]{\draw[lightgray!90!\@lc@color!70!white,opacity=.6,thin,rounded corners=1.5pt] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
