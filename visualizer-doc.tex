@@ -22,6 +22,9 @@
 \lstdefinelanguage{ltx}{
    literate={\\LC}{\textcolor{purple}{\bfseries\textbackslash LC}}3
    {\\RLC}{\textcolor{purple}{\bfseries\textbackslash RLC}}4
+   {\\lcDisableLambdaRanges}{\textcolor{purple}{\bfseries\textbackslash lcDisableLambdaRanges}}{21}
+   {\\lcSetColorMixin}{\textcolor{purple}{\bfseries\textbackslash lcSetColorMixin}}{15}
+   {\\lcSetColors}{\textcolor{purple}{\bfseries\textbackslash lcSetColors}}{11}
    {\\a}{\textcolor{gray}{\textbackslash a}}2
    {\\b}{\textcolor{gray}{\textbackslash b}}2
    {\\f}{\textcolor{gray}{\textbackslash f}}2
@@ -61,6 +64,12 @@
 
    \centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}}
 
-   \subsection{Shortcut and customization options}
+   \section{Shortcut and customization options}
       You can pass on multiple letters to a lambda-abstraction: |\LC{\\{a,b}.\b \a}| yields: \LC{\\{a,b}.\b \a}.
+
+      With |\lcDisableLambdaRanges| you can disable the brackets drawn around to signal the abstraction ranges of lambdas locally:
+      |{\lcDisableLambdaRanges\LC{((\\a.\a) \b \a)}}| yields: {\lcDisableLambdaRanges\LC{((\\a.\a) \b \a)}} (vs. \LC{((\\a.\a) \b \a)}).
+
+      If you do not like the colors you can change the color-cycle locally with |\lcSetColors|: |{\lcSetColors{purple,orange}\LC{((\\a.\a) \\b.\b \a)}}| yields: {\lcSetColors{purple,orange}\LC{((\\a.\a) \\b.\b \a)}} (vs. \LC{((\\a.\a) \\b.\b \a)}).
+      With |\lcSetColorMixin| you can (locally) change the way colors are mixed in the background highlights (with |#1| being the actual color selected): |{\lcSetColorMixin{#1!70!white}\LC{((\\a.\a) \\b.\b \a)}}| yields the output: {\lcSetColorMixin{#1!70!white}\LC{((\\a.\a) \\b.\b \a)}} (vs. \LC{((\\a.\a) \\b.\b \a)}).
    \end{document}
