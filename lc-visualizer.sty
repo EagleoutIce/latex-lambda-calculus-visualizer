@@ -40,6 +40,10 @@
 % TODO: make those macros more customizable
 \def\lcSetColorMixin#1{\def\lc@colormix##1{#1}}
 \lcSetColorMixin{#1!85!lightgray}
+
+\def\lcSetDuplicateVariableMixin#1{\def\lc@colormix@doublevar##1{#1}}
+\lcSetDuplicateVariableMixin{#1!65!lightgray!78!black}
+
 \tikzset{
    lc@node/.style={
       fill=\lc@colormix{#1},
@@ -132,10 +136,9 @@
       % if nothing is selected, we use the colorcycle
       \ifstrempty{#1}{%
          % if there already is a color, lighten it
-         % TODO: make this customizable
-         % TODO: make this mixin customizable for @col
+         % TODO: make this customizable (e.g., disable)
          \ifcsname\@letter @col\endcsname
-            \edef\@col{\csname\@letter @col\endcsname!65!lightgray!78!black}%
+            \edef\@col{\lc@colormix@doublevar{\csname\@letter @col\endcsname}}%
          \else
             \lc@colorcycle
          \fi
