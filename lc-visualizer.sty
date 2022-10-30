@@ -171,7 +171,7 @@
 \let\)\lc@close
 \let\.\lc@dot
 }
-\def\lc@enable@base{%
+\def\lc@enable@base#1{%
    \let\\\relax
    \let\\\lc@lambda
    \lc@enablechars
@@ -179,12 +179,12 @@
    % \lc@init@colorcycle % done globally
    % set to 0 even if unbalanced
    \c@lc@bracketlevel\z@
-   \setcounter{lc@colorcycle}{0}%
+   \setcounter{lc@colorcycle}{#1}%
 }
 \outer\long\def\LC{\begingroup\lc@enable@cc\@LC}
-\def\@LC#1{\mbox{\ttfamily\lc@enable@base#1}\endgroup}
+\newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@enable@base{#1}#2}\endgroup}
 
-\long\def\RLC#1{\mbox{\ttfamily\lc@enable@default\lc@enable@base#1}}
+\newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@enable@default\lc@enable@base{#1}#2}}
 
 
 \endinput
