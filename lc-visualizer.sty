@@ -40,6 +40,10 @@
 % TODO: make those macros more customizable
 \def\lcSetColorMixin#1{\def\lc@colormix##1{#1}}
 \lcSetColorMixin{#1!85!lightgray}
+
+\def\lcSetDuplicateVariableMixin#1{\def\lc@colormix@doublevar##1{#1}}
+\lcSetDuplicateVariableMixin{#1!65!lightgray!78!black}
+
 \tikzset{
    lc@node/.style={
       fill=\lc@colormix{#1},
@@ -116,7 +120,7 @@
             % TODO allow to customize schrinking factors etc
             \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
             % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
-            \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
+            \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=1pt-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
             \advance\@tempcnta\@ne
          }%
       \fi
@@ -132,10 +136,9 @@
       % if nothing is selected, we use the colorcycle
       \ifstrempty{#1}{%
          % if there already is a color, lighten it
-         % TODO: make this customizable
-         % TODO: make this mixin customizable for @col
+         % TODO: make this customizable (e.g., disable)
          \ifcsname\@letter @col\endcsname
-            \edef\@col{\csname\@letter @col\endcsname!65!lightgray!78!black}%
+            \edef\@col{\lc@colormix@doublevar{\csname\@letter @col\endcsname}}%
          \else
             \lc@colorcycle
          \fi
