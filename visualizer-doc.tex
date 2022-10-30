@@ -22,12 +22,14 @@
 \lstdefinelanguage{ltx}{
    literate={\\LC}{\textcolor{purple}{\bfseries\textbackslash LC}}3
    {\\RLC}{\textcolor{purple}{\textbackslash RLC}}4
-   {\\lcDisableLambdaRanges}{\textcolor{purple}{\textbackslash lcDisableLambdaRanges}}{21}
-   {\\lcEnableLambdaRanges}{\textcolor{purple}{\textbackslash lcEnableLambdaRanges}}{20}
-   {\\tikzset}{\textcolor{purple}{\textbackslash tikzset}}7
-   {\\lcSetColorMixin}{\textcolor{purple}{\textbackslash lcSetColorMixin}}{15}
-   {\\lcSetColors}{\textcolor{purple}{\textbackslash lcSetColors}}{11}
-   {\\lcMaximumParenthesisRangeDrawDepth}{\textcolor{purple}{\textbackslash lcMaximumParenthesisRangeDrawDepth}}{34}
+   {\\lcDisableLambdaRanges}{\textcolor{purple}{\textbackslash lcDisableLambdaRanges}}{22}
+   {\\lcEnableLambdaRanges}{\textcolor{purple}{\textbackslash lcEnableLambdaRanges}}{21}
+   {\\tikzset}{\textcolor{purple}{\textbackslash tikzset}}8
+   {\\lcSetColorMixin}{\textcolor{purple}{\textbackslash lcSetColorMixin}}{16}
+   {\\lcSetColors}{\textcolor{purple}{\textbackslash lcSetColors}}{12}
+   {\\lcMaximumParenthesisRangeDrawDepth}{\textcolor{purple}{\textbackslash lcMaximumParenthesisRangeDrawDepth}}{35}
+   {\\reducemarks}{\textcolor{purple}{\textbackslash reducemarks}}{12}
+   {\\mark}{\textcolor{purple}{\textbackslash mark}}{5}
    {\\a}{\textcolor{gray}{\textbackslash a}}2
    {\\b}{\textcolor{gray}{\textbackslash b}}2
    {\\c}{\textcolor{gray}{\textbackslash c}}2
@@ -103,4 +105,14 @@
          \item |\tikzset{lc@abstraction@bracket/.append style={draw=#1!50!pink}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={draw=#1!50!pink}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
          \item |\tikzset{lc@abstraction@bracket/.append style={opacity=1}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={opacity=1}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
       \end{itemize}
+
+      Furthermore, you can give parts of your formula readable names:
+\begin{lstlisting}[columns=fullflexible]
+\LC{(\\a[a].\a[a2] \b \c) \mark{b}{(\\b.\b)}}
+\reducemarks{b}{a}[bend right=10]
+\reducemarks[south]{a}{a2}[green,bend right=20,-latex]
+\end{lstlisting}
+      This yields:
+      \LC{(\\a[a].\a[a2] \b \c) \mark{b}{(\\b.\b)}}\reducemarks{b}{a}[bend right=10]\reducemarks[south]{a}{a2}[green,bend right=20,-latex]
+
    \end{document}
