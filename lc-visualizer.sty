@@ -47,6 +47,7 @@
       text opacity=1
    }
 }
+\colorlet{lc@bracketcolor}{lightgray}
 
 \def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
 \lcSetLambda{\lambda}
@@ -75,7 +76,7 @@
    % now, store the opening brace in the node
    \tikzmarknode{lc@\the\c@lc@markerindex}{%
       % the opening brace
-      \mbox{\color{lightgray}(}%
+      \mbox{\color{lc@bracketcolor}(}%
       %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{(}}$%
    }%
    % enter the grouping level
@@ -90,7 +91,7 @@
    % store draw the brace
    \tikzmarknode{lc@\the\c@lc@markerindex}{%
       % the closing brace
-      \mbox{\color{lightgray})}%
+      \mbox{\color{lc@bracketcolor})}%
       %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{)}}$%
    }%
    % draw stuff around
