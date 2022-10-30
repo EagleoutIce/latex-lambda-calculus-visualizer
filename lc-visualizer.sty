@@ -18,9 +18,6 @@
 \def\lcMaximumParenthesisRangeDrawDepth#1{\def\lc@max@bracket@drawdepth{#1}}
 \lcMaximumParenthesisRangeDrawDepth{0}
 
-% TODO: beamer animation support colorvar enable disable toggle
-% TODO: switch to color letters instead of their backgrounds?
-
 % hacky but this way i do not have to make anything active :3
 \def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{%
    \expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}%
@@ -33,20 +30,28 @@
 \def\Y{\mbox{\textbf{Y}}\xspace}% TODO highlight Y combinator
 }
 \def\lc@init@colorcycle#1{\@tempcnta\z@\@for\@col:={#1}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
-% TODO: lighten the letter-color if it is reused in binding
 
 \let\lcSetColors\lc@init@colorcycle
 \lcSetColors{teal,lime,red,green,purple,yellow,blue,pink,orange,cyan,magenta,olive,violet,brown}
 
 % TODO: make those macros more customizable
 \def\lcSetColorMixin#1{\def\lc@colormix##1{#1}}
-% TODO: allow to customize the node in the background
 \lcSetColorMixin{#1!85!lightgray}
+\tikzset{
+   lc@node/.style={
+      fill=\lc@colormix{#1},
+      rounded corners=3pt,
+      inner ysep=1pt,
+      inner xsep=2.25pt,
+      fill opacity=.2,
+      text opacity=1
+   }
+}
 
 \def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
 \lcSetLambda{\lambda}
 
-\def\lc@colorvar#1#2{\tikz[baseline=(@.base)]{\node[fill=\lc@colormix{#1},rounded corners=3pt,inner ysep=1pt,inner xsep=2.25pt,fill opacity=.2,text opacity=1] (@) {\strut#2};}%
+\def\lc@colorvar#1#2{\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\strut#2};}%
 \expandafter\def\csname#2\endcsname{\lc@colorvar{#1}{#2}\xspace}\def\lc@curcol{#1}%
 % assign it globally so that even other groups will start from here
 \expandafter\xdef\csname#2@col\endcsname{#1}%

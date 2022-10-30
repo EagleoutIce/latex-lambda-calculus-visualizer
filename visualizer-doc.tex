@@ -24,6 +24,7 @@
    {\\RLC}{\textcolor{purple}{\textbackslash RLC}}4
    {\\lcDisableLambdaRanges}{\textcolor{purple}{\textbackslash lcDisableLambdaRanges}}{21}
    {\\lcEnableLambdaRanges}{\textcolor{purple}{\textbackslash lcEnableLambdaRanges}}{20}
+   {\\tikzset}{\textcolor{purple}{\textbackslash tikzset}}7
    {\\lcSetColorMixin}{\textcolor{purple}{\textbackslash lcSetColorMixin}}{15}
    {\\lcSetColors}{\textcolor{purple}{\textbackslash lcSetColors}}{11}
    {\\lcMaximumParenthesisRangeDrawDepth}{\textcolor{purple}{\textbackslash lcMaximumParenthesisRangeDrawDepth}}{34}
@@ -81,4 +82,13 @@
 
       The package will try its best to keep colors in sync and recognizable:
       |\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}| yields: \LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}. But in general, do not re-use variables with different bindings that often within the same expression.
+
+      By changing the tikz-style of |lc@node| you can modify the behavior of highlighted nodes (|#1| is the color).
+      The following examples all use |\LC{(\\a.\a (\\b.\b \c)) \a \c}| and make the |\tikzset|-command local to the group:
+      \begin{itemize}
+         \item |\tikzset{lc@node/.append style={fill=none}}|:\\* {\tikzset{lc@node/.append style={fill=none}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@node/.append style={fill=none,text=#1}}|:\\* {\tikzset{lc@node/.append style={fill=none,text=#1}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@node/.append style={fill=#1!50!green,text=#1!25!green}}|:\\* {\tikzset{lc@node/.append style={fill=#1!50!green,text=#1!25!green}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@node/.append style={opacity=1,circle}}|:\\* {\tikzset{lc@node/.append style={opacity=1,circle}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+      \end{itemize}
    \end{document}
