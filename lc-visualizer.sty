@@ -138,10 +138,12 @@
       \expandafter\xappto\csname lc@lambdas\the\c@lc@bracketlevel\endcsname{{\the\c@lc@markerindex}}%
       % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
       % only draw lambda symbol if first in comfort
+      \ifnum\the\@tempcnta<\@ne\else% insert the space before so brackets are better
+      \phantom{\ensuremath{\lc@lambdasymbol}}\fi
       \tikzmarknode{lc@\the\c@lc@markerindex}{\ifnum\the\@tempcnta<\@ne
          % TODO: mixin for lambda symbol
          \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
-         \else\phantom{\ensuremath{\lc@lambdasymbol}}\fi
+         \fi
       }%
       \expandafter\expandafter\expandafter\lc@colorvar\expandafter\expandafter\expandafter{\expandafter\@col\expandafter}\expandafter{\@letter}%
       \advance\@tempcnta\@ne
