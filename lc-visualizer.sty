@@ -10,6 +10,11 @@
 \RequirePackage{etoolbox}
 \RequirePackage{amsmath}
 
+\newif\iflcdrawlambdaranges
+\let\lcEnableLambdaRanges\lcdrawlambdarangestrue
+\lcEnableLambdaRanges
+\let\lcDisableLambdaRanges\lcdrawlambdarangesfalse
+
 % hacky but this way i do not have to make anything active :3
 \def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}}}%
 
@@ -26,14 +31,17 @@
 \lcSetColors{red,orange,olive,yellow,lime,green,cyan,teal,blue,pink,magenta,purple,violet,brown}
 
 % TODO: make those macros more customizable
-\def\lc@colormix#1{#1!10!white!80!lightgray}
-\def\lc@lambdasymbol{\lambda}
+\def\lcSetColorMixin#1{\def\lc@colormix##1{#1}}
+\lcSetColorMixin{#1!22!white!80!lightgray}
+
 \def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
+\lcSetLambda{\lambda}
 
 \def\lc@colorvar#1#2{\tikz[baseline=(@.base)]{\node[fill=\lc@colormix{#1},rounded corners=3pt,inner ysep=1pt,inner xsep=2.25pt,fill opacity=.85,text opacity=1] (@) {\strut#2};}%
 \expandafter\def\csname#2\endcsname{\lc@colorvar{#1}{#2}\xspace}\def\lc@curcol{#1}%
 }
 \newcounter{lc@colorcycle}% switch to newcount?
+% TODO: start from 0 so there is no weird shift
 \def\lc@colorcycle{\stepcounter{lc@colorcycle}\ifnum\thelc@colorcycle<\lc@colors@exclusivemax\else
    \setcounter{lc@colorcycle}{0}% assume at least one
 \fi
@@ -74,16 +82,17 @@
    % \ifnum\c@lc@bracketlevel>3\else
    %    \tikz[overlay,remember picture]{\draw[lightgray!40!white,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\the\c@lc@bracketlevel]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north east);}%
    % \fi
-   % TODO a toggle to disable lambda draw, now we are one level higher:
    \ifcsname lc@lambdas\lc@lastbracket\endcsname
-      \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
-      % \typeout{Targets: \lc@lastbracket of \@tmp}%
-      \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
-         % TODO make smaller even if in same brace => yes
-         \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
-         % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
-         \tikz[overlay,remember picture]{\draw[lightgray!40!white!90!\@lc@color!70!white,thin,rounded corners=1.5pt] ([yshift=-5pt+1pt*\the\c@lc@bracketlevel]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north west);}%
-      }%
+      \iflcdrawlambdaranges
+         \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
+         \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
+            % TODO make smaller even if in same brace => yes
+            \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
+            % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
+            \tikz[overlay,remember picture]{\draw[lightgray!40!white!90!\@lc@color!70!white,thin,rounded corners=1.5pt] ([yshift=-5pt+1pt*\the\c@lc@bracketlevel]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north west);}%
+         }%
+      \fi
+      % we clear, even if disabled:
       \expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
    \fi
    % TODO increase lineskip for consecutive lines
