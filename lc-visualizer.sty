@@ -100,11 +100,13 @@
    \ifcsname lc@lambdas\lc@lastbracket\endcsname
       \iflcdrawlambdaranges
          \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
+         \@tempcnta\z@ % level offset within same bracketlevel
          \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
             % TODO make smaller even if in same brace => yes
             \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
             % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
-            \tikz[overlay,remember picture]{\draw[lightgray!90!\@lc@color!70!white,opacity=.6,thin,rounded corners=1.5pt] ([yshift=-5pt+1pt*\the\c@lc@bracketlevel]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north west);}%
+            \tikz[overlay,remember picture]{\draw[lightgray!90!\@lc@color!70!white,opacity=.6,thin,rounded corners=1.5pt] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
+            \advance\@tempcnta\@ne
          }%
       \fi
       % we clear, even if disabled:
@@ -115,7 +117,6 @@
 \newcommand*\lc@lambda[2][]{%
    \@tempcnta\z@
    % TODO: allow custom colors for multiple letters?
-   % TODO: make it smaller even on same level
    \@for\@letter:={#2}\do{%
       % if nothing is selected, we use the colorcycle
       \ifstrempty{#1}{%
