@@ -8,7 +8,10 @@
 \usetikzlibrary{tikzmark}
 \RequirePackage{xspace} % :3
 \RequirePackage{etoolbox}
+% TODO: make packages optional?
 \RequirePackage{amsmath}
+% TODO: replace xargs by manual construction!
+\RequirePackage{xargs}
 
 \newif\iflcdrawlambdaranges
 \let\lcEnableLambdaRanges\lcdrawlambdarangestrue
@@ -19,7 +22,7 @@
 \lcMaximumParenthesisRangeDrawDepth{0}
 
 % hacky but this way i do not have to make anything active :3
-\def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{%
+\def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{% TODO: allow optional arguments for mark for them too
    \expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}%
    \csgundef{\@l @col}% clear global colordef
 }}%
@@ -58,8 +61,10 @@
 \def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
 \lcSetLambda{\lambda}
 
-\def\lc@colorvar#1#2{\setbox\z@=\hbox{g}\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\rule[-\dp\z@]\z@{\dimexpr\ht\strutbox+\dp\z@}#2};}%
-\expandafter\def\csname#2\endcsname{\lc@colorvar{#1}{#2}\xspace}\def\lc@curcol{#1}%
+% color | letter | markname
+% TODO: use tikzmark do directly link the node?
+\def\lc@colorvar#1#2#3{\setbox\z@=\hbox{g}\tikzmarknode{#3}{\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\rule[-\dp\z@]\z@{\dimexpr\ht\strutbox+\dp\z@}#2};}}%
+\expandafter\renewcommand\csname#2\endcsname[1][lc@last]{\lc@colorvar{#1}{#2}{##1}\xspace}\def\lc@curcol{#1}%
 % assign it globally so that even other groups will start from here
 \expandafter\xdef\csname#2@col\endcsname{#1}%
 }
@@ -121,7 +126,7 @@
    \fi
    % TODO increase lineskip for consecutive lines
 }
-\newcommand*\lc@lambda[2][]{%
+\newcommandx*\lc@lambda[3][1={},3={}]{%
    \@tempcnta\z@
    % TODO: allow custom colors for multiple letters?
    \@for\@letter:={#2}\do{%
@@ -152,7 +157,8 @@
          \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
          \fi
       }%
-      \expandafter\expandafter\expandafter\lc@colorvar\expandafter\expandafter\expandafter{\expandafter\@col\expandafter}\expandafter{\@letter}%
+      \ifstrempty{#3}{\def\lc@markname{lc@last}}{\def\lc@markname{#3}}%
+      \expandafter\expandafter\expandafter\lc@colorvar\expandafter\expandafter\expandafter{\expandafter\@col\expandafter}\expandafter{\@letter}{\lc@markname}%
       \advance\@tempcnta\@ne
    }%
 }%
