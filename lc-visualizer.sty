@@ -62,7 +62,6 @@
 \lcSetLambda{\lambda}
 \def\lc@strut{\rule[-\dp\z@]\z@{\dimexpr\ht\strutbox+\dp\z@}}
 % color | letter | markname
-% TODO: use tikzmark do directly link the node?
 \def\lc@colorvar#1#2#3{\setbox\z@=\hbox{g}\mark{#3}{\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\lc@strut#2};}}%
 \expandafter\renewcommand\csname#2\endcsname[1][lc@last]{\lc@colorvar{#1}{#2}{##1}\xspace}\def\lc@curcol{#1}%
 % assign it globally so that even other groups will start from here
