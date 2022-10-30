@@ -22,6 +22,7 @@
 % TODO: lighten the letter-color if it is reused in binding
 
 \let\lcSetColors\lc@init@colorcycle
+% TODO: make colors in iniitial cycles more distinguiable
 \lcSetColors{red,orange,olive,yellow,lime,green,cyan,teal,blue,pink,magenta,purple,violet,brown}
 
 % TODO: make those macros more customizable
@@ -85,12 +86,13 @@
       }%
       \expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
    \fi
-   % TODO increase lineskip for consekutive lines
+   % TODO increase lineskip for consecutive lines
    % TODO work with RLC in mathmode (mbox? -> linebreaks?)
 }
 \newcommand*\lc@lambda[2][]{%
    \@tempcnta\z@
    % TODO: allow custom colors for multiple letters?
+   % TODO: make it smaller even on same level
    \@for\@letter:={#2}\do{%
       % if nothing is selected, we use the colorcycle
       \ifstrempty{#1}{\lc@colorcycle}{\edef\@col{#1}}% otherwise, use the picked color
