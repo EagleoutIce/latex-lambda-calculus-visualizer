@@ -127,7 +127,6 @@
       % we clear, even if disabled:
       \expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
    \fi
-   % TODO increase lineskip for consecutive lines
 }
 \newcommandx*\lc@lambda[3][1={},3={}]{%
    \@tempcnta\z@
@@ -200,9 +199,10 @@
    \setcounter{lc@colorcycle}{#1}%
 }
 \outer\long\def\LC{\begingroup\lc@enable@cc\@LC}
-\newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@enable@base{#1}#2}\endgroup}
 
-\newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@enable@default\lc@enable@base{#1}#2}}
+\def\lc@LineStrut{\rule[\dimexpr-\dp\strutbox-4.5pt]\z@{\dimexpr\ht\strutbox+\dp\strutbox+9pt}}
+\newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
+\newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
 
 
 \endinput
