@@ -76,7 +76,7 @@
       However, being disabled by default you can no configure the maximum nesting-level to draw this brackets for.
       Writing |{\lcDisableLambdaRanges\lcMaximumParenthesisRangeDrawDepth{2}\LC{((\\a.\a) \b \a)}}| yields: {\lcDisableLambdaRanges\lcMaximumParenthesisRangeDrawDepth{2}\LC{((\\a.\a) \b \a)}} (vs. {\lcDisableLambdaRanges\LC{((\\a.\a) \b \a)}}).
 
-      If you do not like the colors you can change their cycle locally with |\lcSetColors|: |{\lcSetColors{purple,orange}\LC{((\\a.\a) \\b.\b \a)}}| yields: {\lcSetColors{purple,orange}\LC{((\\a.\a) \\b.\b \a)}} (vs. \LC{((\\a.\a) \\b.\b \a)}).
+      If you do not like the colors you can change their cycle locally with |\lcSetColors|: |{\lcSetColors{teal,lime}\LC{((\\a.\a) \\b.\b \a)}}| yields: {\lcSetColors{teal,lime}\LC{((\\a.\a) \\b.\b \a)}} (vs. \LC{((\\a.\a) \\b.\b \a)}).
 
       With |\lcSetColorMixin| you can (locally) change the way colors are mixed in the background highlights (with |#1| being the actual color selected): |{\lcSetColorMixin{#1!70!white}\LC{((\\a.\a) \\b.\b \a)}}| yields the output: {\lcSetColorMixin{#1!70!white}\LC{((\\a.\a) \\b.\b \a)}} (vs. \LC{((\\a.\a) \\b.\b \a)}).
    \end{document}
