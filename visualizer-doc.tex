@@ -92,4 +92,14 @@
          \item |\tikzset{lc@node/.append style={fill=#1!50!green,text=#1!25!green}}|:\\* {\tikzset{lc@node/.append style={fill=#1!50!green,text=#1!25!green}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
          \item |\tikzset{lc@node/.append style={opacity=1,circle}}|:\\* {\tikzset{lc@node/.append style={opacity=1,circle}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
       \end{itemize}
+
+      Similarly, by changing the tikz-style of |lc@abstraction@bracket| you can modify the behavior of brackets for lambdas (|#1| is the color), given they are enabled with |\lcEnableLambdaRanges|.
+      The following examples all use |\LC{(\\a.\a (\\b.\b \c)) \a \c}| and make the |\tikzset|-command local to the group:
+      \begin{itemize}
+         \item |\tikzset{lc@abstraction@bracket/.append style={draw=green}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={draw=green}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@abstraction@bracket/.append style={rounded corners=6pt}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={rounded corners=6pt}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@abstraction@bracket/.append style={very thick}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={very thick}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@abstraction@bracket/.append style={draw=#1!50!pink}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={draw=#1!50!pink}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@abstraction@bracket/.append style={opacity=1}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={opacity=1}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+      \end{itemize}
    \end{document}
