@@ -18,6 +18,9 @@
 \def\lcMaximumParenthesisRangeDrawDepth#1{\def\lc@max@bracket@drawdepth{#1}}
 \lcMaximumParenthesisRangeDrawDepth{0}
 
+% TODO: beamer animation support colorvar enable disable toggle
+% TODO: switch to color letters instead of their backgrounds?
+
 % hacky but this way i do not have to make anything active :3
 \def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{%
    \expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}%
@@ -114,7 +117,7 @@
          % TODO: make this customizable
          % TODO: make this mixin customizable for @col
          \ifcsname\@letter @col\endcsname
-            \edef\@col{\csname\@letter @col\endcsname!70!lightgray!95!black!95!-\csname\@letter @col\endcsname}%
+            \edef\@col{\csname\@letter @col\endcsname!65!lightgray!95!black}%
          \else
             \lc@colorcycle
          \fi
