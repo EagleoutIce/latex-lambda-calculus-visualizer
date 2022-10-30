@@ -12,8 +12,11 @@
 
 \newif\iflcdrawlambdaranges
 \let\lcEnableLambdaRanges\lcdrawlambdarangestrue
-\lcEnableLambdaRanges
 \let\lcDisableLambdaRanges\lcdrawlambdarangesfalse
+\lcEnableLambdaRanges
+
+\def\lcMaximumParenthesisRangeDrawDepth#1{\def\lc@max@bracket@drawdepth{#1}}
+\lcMaximumParenthesisRangeDrawDepth{0}
 
 % hacky but this way i do not have to make anything active :3
 \def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}}}%
@@ -78,10 +81,9 @@
       %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{)}}$%
    }%
    % draw stuff around
-   % TODO flag so markers for brackets only happen if wanted
-   % \ifnum\c@lc@bracketlevel>3\else
-   %    \tikz[overlay,remember picture]{\draw[lightgray!40!white,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\the\c@lc@bracketlevel]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north east);}%
-   % \fi
+   \ifnum\c@lc@bracketlevel<\lc@max@bracket@drawdepth
+      \tikz[overlay,remember picture]{\draw[lightgray!40!white,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\the\c@lc@bracketlevel]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north east);}%
+   \fi
    \ifcsname lc@lambdas\lc@lastbracket\endcsname
       \iflcdrawlambdaranges
          \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
@@ -151,9 +153,9 @@
 }
 % TODO inner variant that uses \( and \.?
 \outer\long\def\LC{\begingroup\lc@enable@cc\@LC}
-\def\@LC#1{\begingroup\ttfamily\lc@enable@base#1\endgroup\endgroup}
+\def\@LC#1{\mbox{\ttfamily\lc@enable@base#1}\endgroup}
 
-\long\def\RLC#1{\bgroup\ttfamily\lc@enable@default\lc@enable@base#1\egroup}
+\long\def\RLC#1{\mbox{\ttfamily\lc@enable@default\lc@enable@base#1}}
 
 
 \endinput
