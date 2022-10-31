@@ -1,0 +1,120 @@
+% Florian Sihler, 2022
+% Licensed under MIT License
+% https://opensource.org/licenses/MIT
+\documentclass[parskip=half,english,numbers=noenddot,footnotes=nomultiple,oneside]{scrartcl}
+\errorcontextlines99999
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}
+
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{lmodern}
+
+\usepackage[prefix=]{xcolor-material}
+\usepackage{listings}
+
+\usepackage{lc-visualizer}
+
+% working with texcsstyle did not work
+\lstdefinelanguage{ltx}{
+   literate={\\LC}{\textcolor{purple}{\bfseries\textbackslash LC}}3
+   {\\RLC}{\textcolor{purple}{\textbackslash RLC}}4
+   {\\lcDisableLambdaRanges}{\textcolor{purple}{\textbackslash lcDisableLambdaRanges}}{22}
+   {\\lcEnableLambdaRanges}{\textcolor{purple}{\textbackslash lcEnableLambdaRanges}}{21}
+   {\\tikzset}{\textcolor{purple}{\textbackslash tikzset}}8
+   {\\lcSetColorMixin}{\textcolor{purple}{\textbackslash lcSetColorMixin}}{16}
+   {\\lcSetColors}{\textcolor{purple}{\textbackslash lcSetColors}}{12}
+   {\\lcMaximumParenthesisRangeDrawDepth}{\textcolor{purple}{\textbackslash lcMaximumParenthesisRangeDrawDepth}}{35}
+   {\\lcSetDuplicateVariableMixin}{\textcolor{purple}{\textbackslash lcSetDuplicateVariableMixin}}{28}
+   {\\reducemarks}{\textcolor{purple}{\textbackslash reducemarks}}{12}
+   {\\mark}{\textcolor{purple}{\textbackslash mark}}{5}
+   {\\a}{\textcolor{gray}{\textbackslash a}}2
+   {\\b}{\textcolor{gray}{\textbackslash b}}2
+   {\\c}{\textcolor{gray}{\textbackslash c}}2
+   {\\f}{\textcolor{gray}{\textbackslash f}}2
+   {\\x}{\textcolor{gray}{\textbackslash x}}2
+   {\\.}{\textcolor{gray}{\textbackslash .}}2
+   {\\centerline}{\textcolor{purple}{\textbackslash centerline}}{11}
+   {\\Y}{\textcolor{purple}{\textbackslash Y}}2
+   {\\equiv}{\textcolor{purple}{\textbackslash equiv}}6
+   {\\\\}{\textcolor{teal}{\textbackslash \textbackslash}}2
+}
+\lstset{basicstyle=\ttfamily,keepspaces,breaklines,language=ltx}
+\lstMakeShortInline|
+\def\ltx#1{\lstinline/#1/}
+\interfootnotelinepenalty=10000
+
+\usepackage{bm}
+\lcSetLambda{\bm\lambda}
+
+\title{The \texttt{lc-visualizer} package}
+\author{%
+	\texorpdfstring{Florian Sihler\medskip\\[-2mm]
+		{\scriptsize\url{https://github.com/EagleoutIce/latex-lambda-calculus-visualizer}}%
+	}{Florian Sihler}}
+\date{Version v1.0 \textendash{} 2022/10/28}
+
+
+\begin{document}
+   \maketitle
+
+	\texttt{lc-visualizer} is a simple package to get highlighting for lambda-calculus expressions.
+   Issuing |\LC{(\\a.\\b.\a (\b \\b.\b \a)) a c}| yields the following:
+
+   \LC{(\\a.\\b.\a (\b \\b.\b \a)) a c}
+
+   There is also |\RLC|, a variant that does not do any catcode magic and that can be used inside other macros. So |\centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f (\x \x\)\) \(\\x\.\f \(\x \x\)\)}}| yields:
+
+   \centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}}
+
+   \section{Shortcut and customization options}
+      You can pass on multiple letters to a lambda-abstraction: |\LC{\\{a,b}.\b \a}| yields: \LC{\\{a,b}.\b \a}.
+
+      With |\lcDisableLambdaRanges| you can disable the brackets drawn around to signal the abstraction ranges of lambdas locally (or re-enable with |\lcEnableLambdaRanges|):
+      |{\lcDisableLambdaRanges\LC{((\\a.\a) \b \a)}}| yields: {\lcDisableLambdaRanges\LC{((\\a.\a) \b \a)}} (vs. \LC{((\\a.\a) \b \a)}).
+
+      With |\lcMaximumParenthesisRangeDrawDepth| you can (similarly to the effects of the |\lcDisableLambdaRanges| macro) allow to draw brackets for parenthesis.
+      However, being disabled by default you can no configure the maximum nesting-level to draw this brackets for.
+      Writing |{\lcDisableLambdaRanges\lcMaximumParenthesisRangeDrawDepth{2}\LC{((\\a.\a) \b \a)}}| yields: {\lcDisableLambdaRanges\lcMaximumParenthesisRangeDrawDepth{2}\LC{((\\a.\a) \b \a)}} (vs. {\lcDisableLambdaRanges\LC{((\\a.\a) \b \a)}}).
+
+      If you do not like the colors you can change their cycle locally with |\lcSetColors|: |{\lcSetColors{teal,lime}\LC{((\\a.\a) \\b.\b \a)}}| yields: {\lcSetColors{teal,lime}\LC{((\\a.\a) \\b.\b \a)}} (vs. \LC{((\\a.\a) \\b.\b \a)}). Furthermore, both |\LC| and |\RLC| have an optional argument to set the start index in the color-cycle (defaults to \(0\)):
+      |\LC[3]{((\\a.\a) \\b.\b \a)}| yields: \LC[3]{((\\a.\a) \\b.\b \a)}. This can be used in combination with leftmost-outermost beta-reductions!
+
+      With |\lcSetColorMixin| you can (locally) change the way colors are mixed in the background highlights (with |#1| being the actual color selected): |{\lcSetColorMixin{#1!70!white}\LC{((\\a.\a) \\b.\b \a)}}| yields the output: {\lcSetColorMixin{#1!70!white}\LC{((\\a.\a) \\b.\b \a)}} (vs. \LC{((\\a.\a) \\b.\b \a)}).
+
+      The package will try its best to keep colors in sync and recognizable:
+      |\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}| yields: \LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}. But in general, do not re-use variables with different bindings that often within the same expression.
+      If you want to change the mixin for each step (local to current group), use |\lcSetDuplicateVariableMixin|. So |\lcSetDuplicateVariableMixin{#1!40!green}| yields: {\lcSetDuplicateVariableMixin{#1!87!green}\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}}
+
+      By changing the tikz-style of |lc@node| you can modify the behavior of highlighted nodes (|#1| is the color).
+      The following examples all use |\LC{(\\a.\a (\\b.\b \c)) \a \c}| and make the |\tikzset|-command local to the group:
+      \begin{itemize}
+         \item |\tikzset{lc@node/.append style={fill=none}}|:\\* {\tikzset{lc@node/.append style={fill=none}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@node/.append style={fill=none,text=#1}}|:\\* {\tikzset{lc@node/.append style={fill=none,text=#1}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@node/.append style={fill=#1!50!green,text=#1!25!green}}|:\\* {\tikzset{lc@node/.append style={fill=#1!50!green,text=#1!25!green}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@node/.append style={opacity=1,circle}}|:\\* {\tikzset{lc@node/.append style={opacity=1,circle}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+      \end{itemize}
+
+      Similarly, by changing the tikz-style of |lc@abstraction@bracket| you can modify the behavior of brackets for lambdas (|#1| is the color), given they are enabled with |\lcEnableLambdaRanges|.
+      The following examples all use |\LC{(\\a.\a (\\b.\b \c)) \a \c}| and make the |\tikzset|-command local to the group:
+      \begin{itemize}
+         \item |\tikzset{lc@abstraction@bracket/.append style={draw=green}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={draw=green}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@abstraction@bracket/.append style={rounded corners=6pt}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={rounded corners=6pt}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@abstraction@bracket/.append style={very thick}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={very thick}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@abstraction@bracket/.append style={draw=#1!50!pink}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={draw=#1!50!pink}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+         \item |\tikzset{lc@abstraction@bracket/.append style={opacity=1}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={opacity=1}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+      \end{itemize}
+
+      Furthermore, you can give parts of your formula readable names:
+\begin{lstlisting}[columns=fullflexible]
+\LC{(\\a[a].\a[a2] \b \c) \mark{b}{(\\b.\b)}}
+\reducemarks{b}{a}[bend right=10]
+\reducemarks[south]{a}{a2}[green,bend right=20,-latex]
+\end{lstlisting}
+      This yields:
+      \LC{(\\a[a].\a[a2] \b \c) \mark{b}{(\\b.\b)}}\reducemarks{b}{a}[bend right=10]\reducemarks[south]{a}{a2}[green,bend right=20,-latex]
+
+   \end{document}
