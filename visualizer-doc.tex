@@ -27,6 +27,8 @@
    {\\tikzset}{\textcolor{purple}{\textbackslash tikzset}}8
    {\\lcSetColorMixin}{\textcolor{purple}{\textbackslash lcSetColorMixin}}{16}
    {\\lcSetColors}{\textcolor{purple}{\textbackslash lcSetColors}}{12}
+   {\\lcDoNotShadeSameVariables}{\textcolor{purple}{\textbackslash lcDoNotShadeSameVariables}}{26}
+   {\\lcDoShadeSameVariables}{\textcolor{purple}{\textbackslash lcDoShadeSameVariables}}{23}
    {\\lcMaximumParenthesisRangeDrawDepth}{\textcolor{purple}{\textbackslash lcMaximumParenthesisRangeDrawDepth}}{35}
    {\\lcSetDuplicateVariableMixin}{\textcolor{purple}{\textbackslash lcSetDuplicateVariableMixin}}{28}
    {\\reducemarks}{\textcolor{purple}{\textbackslash reducemarks}}{12}
@@ -88,7 +90,8 @@
       The package will try its best to keep colors in sync and recognizable:
       |\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}| yields: \LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}. But in general, do not re-use variables with different bindings that often within the same expression.
       If you want to change the mixin for each step (local to current group), use |\lcSetDuplicateVariableMixin|. So |\lcSetDuplicateVariableMixin{#1!40!green}| yields: {\lcSetDuplicateVariableMixin{#1!87!green}\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}}
-
+      If you do not like like the mixin alltogether, you can disable it locally by |\lcDoNotShadeSameVariables| (vs. |\lcDoShadeSameVariables|). This yields:
+      {\lcDoNotShadeSameVariables\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}}
       By changing the tikz-style of |lc@node| you can modify the behavior of highlighted nodes (|#1| is the color).
       The following examples all use |\LC{(\\a.\a (\\b.\b \c)) \a \c}| and make the |\tikzset|-command local to the group:
       \begin{itemize}
