@@ -18,6 +18,11 @@
 \let\lcDisableLambdaRanges\lcdrawlambdarangesfalse
 \lcEnableLambdaRanges
 
+\newif\iflcshadeSameVaiables
+\let\lcDoShadeSameVariables\lcshadeSameVaiablestrue
+\let\lcDoNotShadeSameVariables\lcshadeSameVaiablesfalse
+\lcDoShadeSameVariables
+
 \def\lcMaximumParenthesisRangeDrawDepth#1{\def\lc@max@bracket@drawdepth{#1}}
 \lcMaximumParenthesisRangeDrawDepth{0}
 
@@ -135,9 +140,10 @@
       % if nothing is selected, we use the colorcycle
       \ifstrempty{#1}{%
          % if there already is a color, lighten it
-         % TODO: make this customizable (e.g., disable)
          \ifcsname\@letter @col\endcsname
-            \edef\@col{\lc@colormix@doublevar{\csname\@letter @col\endcsname}}%
+            \iflcshadeSameVaiables
+               \edef\@col{\lc@colormix@doublevar{\csname\@letter @col\endcsname}}%
+            \else \lc@colorcycle \fi
          \else
             \lc@colorcycle
          \fi
@@ -200,6 +206,7 @@
 }
 \outer\long\def\LC{\begingroup\lc@enable@cc\@LC}
 
+% TODO: allow to disable lineStrut
 \def\lc@LineStrut{\rule[\dimexpr-\dp\strutbox-4.5pt]\z@{\dimexpr\ht\strutbox+\dp\strutbox+9pt}}
 \newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
 \newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
