@@ -206,8 +206,11 @@
 }
 \outer\long\def\LC{\begingroup\lc@enable@cc\@LC}
 
-% TODO: allow to disable lineStrut
-\def\lc@LineStrut{\rule[\dimexpr-\dp\strutbox-4.5pt]\z@{\dimexpr\ht\strutbox+\dp\strutbox+9pt}}
+\def\lc@@LineStrut{\rule[\dimexpr-\dp\strutbox-4.5pt]\z@{\dimexpr\ht\strutbox+\dp\strutbox+9pt}}
+\def\lcDoStrutLine{\let\lc@LineStrut\lc@@LineStrut}%
+\def\lcDoNotStrutLine{\let\lc@LineStrut\@empty}%
+\lcDoStrutLine
+
 \newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
 \newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
 

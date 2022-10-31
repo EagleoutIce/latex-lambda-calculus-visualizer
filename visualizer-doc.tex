@@ -48,6 +48,7 @@
 \lstMakeShortInline|
 \def\ltx#1{\lstinline/#1/}
 \interfootnotelinepenalty=10000
+\lcDoNotStrutLine
 
 \usepackage{bm}
 \lcSetLambda{\bm\lambda}
@@ -120,4 +121,5 @@
       This yields:
       \LC{(\\a[a].\a[a2] \b \c) \mark{b}{(\\b.\b)}}\reducemarks{b}{a}[bend right=10]\reducemarks[south]{a}{a2}[green,bend right=20,-latex]
 
-   \end{document}
+   By default, the package will automatically enlarge the line skip limit to ensure that your \(\lambda\)-Expressions have enough space (e.g., for presentations). You can disable this with |\lcDoNotStrutLine| (vs. |\lcDoStrutLine|). Here a strutted example: {\lcDoStrutLine\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+\end{document}
