@@ -71,7 +71,7 @@
 
    \LC{(\\a.\\b.\a (\b \\b.\b \a)) a c}
 
-   There is also |\RLC|, a variant that does not do any catcode magic and that can be used inside other macros. So |\centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f (\x \x\)\) \(\\x\.\f \(\x \x\)\)}}| yields:
+   There is also |\RLC|, a variant that does not do any catcode magic and that can be used inside other macros. So |\centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}}| yields:
 
    \centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}}
 
@@ -123,5 +123,13 @@
       This yields:
       \LC{(\\a[a].\a[a2] \b \c) \mark{b}{(\\b.\b)}}\reducemarks{b}{a}[bend right=10]\reducemarks[south]{a}{a2}[green,bend right=20,-latex]
 
-   By default, the package will automatically enlarge the line skip limit to ensure that your \(\lambda\)-Expressions have enough space (e.g., for presentations). You can disable this with |\lcDoNotStrutLine| (vs. |\lcDoStrutLine|). Here a strutted example: {\lcDoStrutLine\LC{(\\a.\a (\\b.\b \c)) \a \c}}
+   By default, the package will automatically enlarge the line skip limit to ensure that your \(\lambda\)-Expressions have enough space (e.g., for presentations). You can disable this with |\lcDoNotStrutLine| (vs. |\lcDoStrutLine|). Here a strutted example: {\lcDoStrutLine\LC{(\\a.\a (\\b.\b \c)) \a \c}}.
+
+
+   Marks work even within tikzpictures: \begin{center}
+      \begin{tikzpicture}
+         \node at (0,0) {\RLC{\Y \equiv \\f\.\mark{A}{\(\\x\.\f \(\x \x\)\)} \mark{B}{\(\\x\.\f \(\x \x\)\)}}};
+         \reducemarks{A}{B}
+      \end{tikzpicture}
+   \end{center}
 \end{document}
