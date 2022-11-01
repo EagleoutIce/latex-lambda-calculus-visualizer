@@ -93,7 +93,7 @@
    % now store the bracketindex with the current nestinglevel:
    \edef\lc@bracket@mark{\the\c@lc@markerindex}%
    % now, store the opening brace in the node
-   \tikzmarknode{lc@\the\c@lc@markerindex}{%
+   \lc@tikzmarknode{lc@\the\c@lc@markerindex}{%
       % the opening brace
       \mbox{\color{lc@bracketcolor}(}%
       %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{(}}$%
@@ -108,7 +108,7 @@
    % assure unique index
    \stepcounter{lc@markerindex}%
    % store draw the brace
-   \tikzmarknode{lc@\the\c@lc@markerindex}{%
+   \lc@tikzmarknode{lc@\the\c@lc@markerindex}{%
       % the closing brace
       \mbox{\color{lc@bracketcolor})}%
       %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{)}}$%
@@ -159,7 +159,7 @@
       % only draw lambda symbol if first in comfort
       \ifnum\the\@tempcnta<\@ne\else% insert the space before so brackets are better
       \phantom{\ensuremath{\lc@lambdasymbol}}\fi
-      \tikzmarknode{lc@\the\c@lc@markerindex}{\ifnum\the\@tempcnta<\@ne
+      \lc@tikzmarknode{lc@\the\c@lc@markerindex}{\ifnum\the\@tempcnta<\@ne
          % TODO: mixin for lambda symbol
          \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
          \fi
@@ -191,7 +191,8 @@
 }}
 \let\reducemarks\lc@reducemarks
 
-\newcommand*\lc@mark[3][3pt]{\tikzmarknode[outer ysep=#1]{#2}{\lc@strut}#3\tikzmarknode[outer ysep=#1]{#2@}{\lc@strut}}%
+\newcommand*\lc@mark[3][3pt]{\lc@tikzmarknode[outer ysep=#1]{#2}{\lc@strut}#3\lc@tikzmarknode[outer ysep=#1]{#2@}{\lc@strut}}%
+\def\lc@tikzmarknode{\ifcsname scope\endcsname \expandafter\subnode\else \expandafter\tikzmarknode\fi}
 
 \def\lc@enable@base#1{%
    \let\\\relax
