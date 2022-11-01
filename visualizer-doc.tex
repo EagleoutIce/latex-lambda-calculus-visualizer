@@ -126,10 +126,13 @@
    By default, the package will automatically enlarge the line skip limit to ensure that your \(\lambda\)-Expressions have enough space (e.g., for presentations). You can disable this with |\lcDoNotStrutLine| (vs. |\lcDoStrutLine|). Here a strutted example: {\lcDoStrutLine\LC{(\\a.\a (\\b.\b \c)) \a \c}}.
 
 
-   Marks work even within tikzpictures: \begin{center}
+   Marks work even within tikzpictures:
+
+
+   \begin{center}
       \begin{tikzpicture}
-         \node at (0,0) {\RLC{\Y \equiv \\f\.\mark{A}{\(\\x\.\f \(\x \x\)\)} \mark{B}{\(\\x\.\f \(\x \x\)\)}}};
-         \reducemarks{A}{B}
+         \node[fill=lightgray!80!orange!40!white,rounded corners=2pt, inner sep=5pt] at (0,0) {\RLC{\Y \equiv \\f\.\mark{A}{\(\\x\.\f \(\x \x\)\)} \mark{B}{\(\\x\.\f \(\x \x\)\)}}};
+         \reducemarks{B}{A}[bend right=10]
       \end{tikzpicture}
    \end{center}
 \end{document}
