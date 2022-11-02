@@ -215,5 +215,7 @@
 \newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
 \newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
 
+% cs | name | TODO: rewrite with currently unused
+\def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\textsf{\textit{#2}}\xspace}}}
 
 \endinput
