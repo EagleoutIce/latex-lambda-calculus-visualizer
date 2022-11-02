@@ -59,7 +59,7 @@
       text opacity=1
    },
    lc@abstraction@bracket/.style={
-      lightgray!70!#1,
+      lightgray!80!#1,
       opacity=.575,
       thin,
       rounded corners=2.33pt
@@ -229,6 +229,7 @@
 % TODO: redef not working?
 \usetikzlibrary{shapes.multipart}
 % manual inner extra strut
-\def\lc@TypesetRewritingRule#1#2{\setbox0=\hbox{\RLC{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1.5pt] (@) {\scriptsize#1\nodepart{two}\rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}\box0};}}
+% \rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}
+\def\lc@TypesetRewritingRule#1#2{\setbox0=\hbox{\let\lc@enablechars\relax\RLC[\the\c@lc@colorcycle]{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize#1\nodepart{two}\box0};}}
 
 \endinput

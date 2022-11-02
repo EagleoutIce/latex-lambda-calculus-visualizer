@@ -8,10 +8,14 @@
 \begin{document}
 \preview
 \begin{minipage}{.625\linewidth}%
-\LC{\\{a,x}.\b (\a (\\b.(\\a.\b) \b \c \a \x))}%
-\bigskip
+% \LC{\\{a,x}.\b (\a (\\b.(\\a.\b) \b \c \a \x))}%
+% \bigskip
 
-\LC{\Y \equiv \\f.(\\x.\f (\x \x)) (\\x.\f (\x \x))}
+% \LC{\Y \equiv \\f.(\\x.\f (\x \x)) (\\x.\f (\x \x))}
+% \bigskip
+
+\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}
+\LC{\\x.\\x.\cons \x}
 \end{minipage}
 \endpreview
 \end{document}
