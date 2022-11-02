@@ -63,6 +63,14 @@
       opacity=.575,
       thin,
       rounded corners=2.33pt
+   },
+   lc@node@replacement/.style={
+      draw=lightgray!55!white,
+      rounded corners=3pt,
+      thick,
+      rectangle split,
+      rectangle split part fill={lightgray!55!white,none},
+      rectangle split parts=2
    }
 }
 \colorlet{lc@bracketcolor}{lightgray}
@@ -82,7 +90,7 @@
    \setcounter{lc@colorcycle}{0}% assume at least one
 \fi
 \edef\@col{\csname lc@color@\thelc@colorcycle\endcsname}\stepcounter{lc@colorcycle}}%
-\def\lc@dot{\textcolor{\lc@colormix{\@col}!40!black}{.}}
+\def\lc@dot{\textcolor{\lc@colormix{\@col}!21!black}{.}}
 % TODO color brackets/larger to match
 \newcount\c@lc@bracketlevel
 \newcount\c@lc@markerindex % current index for tikzmark, will not be reset!
@@ -215,7 +223,12 @@
 \newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
 \newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
 
-% cs | name | TODO: rewrite with currently unused
-\def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\textsf{\textit{#2}}\xspace}}}
+% cs | name | rewrite reuls
+\def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\textsf{\textit{#2}}\xspace}{\lc@TypesetRewritingRule{#2}{#3}\xspace}}}}
+
+% TODO: redef not working?
+\usetikzlibrary{shapes.multipart}
+% manual inner extra strut
+\def\lc@TypesetRewritingRule#1#2{\setbox0=\hbox{\RLC{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1.5pt] (@) {\scriptsize#1\nodepart{two}\rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}\box0};}}
 
 \endinput

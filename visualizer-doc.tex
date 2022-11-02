@@ -138,6 +138,10 @@
    \end{center}
 
    With |\lcCreateNewRewritingRule| you can create a new rewriting rule (this is work in progress).
-   So with |\lcCreateNewRewritingRule\cons{cons}{\\x y c\.\c \x \y}| you can now use |\cons| within your \(\lambda\)-calculus expressions. Therefore, \lcCreateNewRewritingRule\cons{cons}{\\x y c\.\c \x \y}|\LC{\\x.\cons \x}| yields: \LC{\\x.\cons \x}.
+   So with |\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}| you can now use |\cons| within your \(\lambda\)-calculus expressions. Therefore, \lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}|\LC{\\x.\cons \x}| yields:
+
+   \LC{\\x.\cons \x}.
+
+   There is a starred version as well, that types just the name: |\LC{\\x.\cons* \x}| yields: \LC{\\x.\cons* \x}
 
 \end{document}
