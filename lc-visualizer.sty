@@ -40,7 +40,7 @@
 \def\lc@init@colorcycle#1{\@tempcnta\z@\@for\@col:={#1}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
 
 \let\lcSetColors\lc@init@colorcycle
-\lcSetColors{teal,lime!90!black,red,green,purple,yellow,blue,pink,orange,cyan,magenta,olive,violet,brown}
+\lcSetColors{teal,lime!90!black,red,green,violet,yellow,pink,orange,cyan,magenta,olive,purple,blue,brown}
 
 % TODO: make those macros more customizable
 \def\lcSetColorMixin#1{\def\lc@colormix##1{#1}}
@@ -59,10 +59,18 @@
       text opacity=1
    },
    lc@abstraction@bracket/.style={
-      lightgray!70!#1,
+      lightgray!92!#1,
       opacity=.575,
       thin,
       rounded corners=2.33pt
+   },
+   lc@node@replacement/.style={
+      draw=lightgray!55!white,
+      rounded corners=3pt,
+      thick,
+      rectangle split,
+      rectangle split part fill={lightgray!55!white,none},
+      rectangle split parts=2
    }
 }
 \colorlet{lc@bracketcolor}{lightgray}
@@ -82,7 +90,7 @@
    \setcounter{lc@colorcycle}{0}% assume at least one
 \fi
 \edef\@col{\csname lc@color@\thelc@colorcycle\endcsname}\stepcounter{lc@colorcycle}}%
-\def\lc@dot{\textcolor{\lc@colormix{\@col}!40!black}{.}}
+\def\lc@dot{\textcolor{\lc@colormix{\@col}!21!black}{.}}
 % TODO color brackets/larger to match
 \newcount\c@lc@bracketlevel
 \newcount\c@lc@markerindex % current index for tikzmark, will not be reset!
@@ -215,5 +223,12 @@
 \newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
 \newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
 
+% cs | name | rewrite reuls
+\def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\textsf{\textit{#2}}\xspace}{\lc@TypesetRewritingRule{#2}{#3}\xspace}}}}
+
+\usetikzlibrary{shapes.multipart}
+% manual inner extra strut
+% \rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}
+\def\lc@TypesetRewritingRule#1#2{\setbox0=\hbox{\let\lc@enablechars\relax\RLC[\the\c@lc@colorcycle]{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize#1\nodepart{two}\box0};}}
 
 \endinput

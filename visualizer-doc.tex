@@ -31,15 +31,18 @@
    {\\lcDoShadeSameVariables}{\textcolor{purple}{\textbackslash lcDoShadeSameVariables}}{23}
    {\\lcDoNotStrutLine}{\textcolor{purple}{\textbackslash lcDoNotStrutLine}}{17}
    {\\lcDoStrutLine}{\textcolor{purple}{\textbackslash lcDoStrutLine}}{14}
+   {\\lcCreateNewRewritingRule}{\textcolor{purple}{\textbackslash lcCreateNewRewritingRule}}{25}
    {\\lcMaximumParenthesisRangeDrawDepth}{\textcolor{purple}{\textbackslash lcMaximumParenthesisRangeDrawDepth}}{35}
    {\\lcSetDuplicateVariableMixin}{\textcolor{purple}{\textbackslash lcSetDuplicateVariableMixin}}{28}
    {\\reducemarks}{\textcolor{purple}{\textbackslash reducemarks}}{12}
-   {\\mark}{\textcolor{purple}{\textbackslash mark}}{5}
+   {\\mark}{\textcolor{purple}{\textbackslash mark}}5
    {\\a}{\textcolor{gray}{\textbackslash a}}2
    {\\b}{\textcolor{gray}{\textbackslash b}}2
    {\\c}{\textcolor{gray}{\textbackslash c}}2
+   {\\cons}{\textcolor{orange}{\textbackslash cons}}5
    {\\f}{\textcolor{gray}{\textbackslash f}}2
    {\\x}{\textcolor{gray}{\textbackslash x}}2
+   {\\y}{\textcolor{gray}{\textbackslash y}}2
    {\\.}{\textcolor{gray}{\textbackslash .}}2
    {\\centerline}{\textcolor{purple}{\textbackslash centerline}}{11}
    {\\Y}{\textcolor{purple}{\textbackslash Y}}2
@@ -127,12 +130,18 @@
 
 
    Marks work even within tikzpictures:
-
-
    \begin{center}
       \begin{tikzpicture}
          \node[fill=lightgray!80!orange!40!white,rounded corners=2pt, inner sep=5pt] at (0,0) {\RLC{\Y \equiv \\f\.\mark{A}{\(\\x\.\f \(\x \x\)\)} \mark{B}{\(\\x\.\f \(\x \x\)\)}}};
          \reducemarks{B}{A}[bend right=10]
       \end{tikzpicture}
    \end{center}
+
+   With |\lcCreateNewRewritingRule| you can create a new rewriting rule (this is work in progress).
+   So with |\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}| you can now use |\cons| within your \(\lambda\)-calculus expressions. Therefore, \lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}|\LC{\\x.\cons \x}| yields:
+
+   \LC{\\x.\cons \x}.
+
+   There is a starred version as well, that types just the name: |\LC{\\x.\cons* \x}| yields: \LC{\\x.\cons* \x}
+
 \end{document}
