@@ -210,6 +210,7 @@
    \let\mark\lc@mark
    % \lc@init@colorcycle % done globally
    % set to 0 even if unbalanced
+   % TODO: disable this in a nested so that brackets are not incorrectly visualized
    \c@lc@bracketlevel\z@
    \setcounter{lc@colorcycle}{#1}%
 }
@@ -224,6 +225,7 @@
 \newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
 
 % cs | name | rewrite reuls
+% TODO: new style for starred variant (just the lightgray background node without the body and width)
 \def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\textsf{\textit{#2}}\xspace}{\lc@TypesetRewritingRule{#2}{#3}\xspace}}}}
 
 \usetikzlibrary{shapes.multipart}
@@ -231,4 +233,42 @@
 % \rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}
 \def\lc@TypesetRewritingRule#1#2{\setbox0=\hbox{\let\lc@enablechars\relax\RLC[\the\c@lc@colorcycle]{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize#1\nodepart{two}\box0};}}
 
+% TODO: allow to disable default rewrite rules
+\lcCreateNewRewritingRule\true{true}{\\{x,y}\.\x}%
+\lcCreateNewRewritingRule\false{false}{\\{x,y}\.\y}%
+\lcCreateNewRewritingRule\ifelse{ifelse}{\\{p,a,b}\.\p \a \b}%
+% TODO: allow aliasses for rewrite rules (ite for ifelse)
+
+% TODO: find a way so they do not disturb tikz
+\lcCreateNewRewritingRule\Land{and}{\\{p,q}\.\p \q \p}%
+\lcCreateNewRewritingRule\Lor{or}{\\{p,q}\.\p \p \q}%
+\lcCreateNewRewritingRule\Lnot{not}{\\{p,a,b}\.\p \b \a}%
+
+% TODO: simple variant that uses the name for the command sequence as well?
+\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}%
+\lcCreateNewRewritingRule\head{head}{\\{d}\.\d \true}%
+\lcCreateNewRewritingRule\tail{tail}{\\{d}\.\d \false}%
+\lcCreateNewRewritingRule\nil{nil}{\\x\.\true}%
+% TODO: find a way so they do not disturb latex
+\lcCreateNewRewritingRule\Lnull{null}{\\d\.\d \(\\{x,y}\.\false\)}%
+
+% TODO: allow something like this but with macro expansion so that \num{3} automatically yields the \L-term for numbers
+
+% \lcCreateNewRewritingRule\num{}{\\{x,y,c}\.\c \x \y}%
+\appto\lc@enableshortcuts{\def\num#1{#1}}%
+
+\lcCreateNewRewritingRule\pair{pair}{\\{a,b,f}\.\f \a \b}%
+
+\lcCreateNewRewritingRule\succ{succ}{\\{n,f,x}\.\f \(\n \f \x\)}%
+\lcCreateNewRewritingRule\add{add}{\\{m,n,f,x}\.\m \f \(\n \f \x\)}%
+\lcCreateNewRewritingRule\mult{mult}{\\{n,m,f}\.\m \(\n \f\)}%
+% TODO: option to only expand until level X so that it does not automatically expand within isZero...
+% TODO: beamer animation support
+\lcCreateNewRewritingRule\isZero{isZero}{\\n\.\n \(\\y\.\false\) \true}%
+\lcCreateNewRewritingRule\pred{pred}{\\{n,f,x}\.\n \(\\{g,h}\.\h \(\g \f\)\) \(\\u.\x\) \(\\u.\u\)}%
+
+\lcCreateNewRewritingRule\Ycomb{\textbf{Y}}{\\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}%
+
+% TODO: lualatex allow lambda unicode symbol
+% TODO: allow to insert unicode breaks
 \endinput
