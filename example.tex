@@ -7,15 +7,21 @@
 
 \begin{document}
 \preview
-\begin{minipage}{.625\linewidth}%
-% \LC{\\{a,x}.\b (\a (\\b.(\\a.\b) \b \c \a \x))}%
-% \bigskip
+\begin{minipage}{.725\linewidth}%
+\LC{\\{a,x}.\b (\a (\\b.(\\a.\b) \b \c \a \x))}%
+\bigskip
 
-% \LC{\Y \equiv \\f.(\\x.\f (\x \x)) (\\x.\f (\x \x))}
-% \bigskip
+\LC{\Y \equiv \\f.(\\x.\f (\x \x)) (\\x.\f (\x \x))}
+\bigskip
 
-\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}
-\LC{\\x.\\x.\cons \x}
+\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}%
+\lcCreateNewRewritingRule\true{true}{\\{x,y}.\x}%
+\lcCreateNewRewritingRule\nil{nil}{\\x.\true}%
+\LC{\\x.\\x.\cons \x \nil}
+
+\lcDoNotShadeSameVariables
+\LC{\\x.\\x.\cons \x \nil}
+
 \end{minipage}
 \endpreview
 \end{document}
