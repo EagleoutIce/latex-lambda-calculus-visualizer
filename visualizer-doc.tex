@@ -146,9 +146,14 @@
 
    With this, the faculty function becomes (scaled down):
 
-   \lcDisableLambdaRanges % current bugfix (no time)
    {%
       \tiny\LC{\Y (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
    }
 
+   With |\lcDisableLambdaRanges| we get:
+
+   \lcDisableLambdaRanges
+   {%
+      \tiny\LC{\Y (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
+   }
 \end{document}

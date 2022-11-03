@@ -13,6 +13,7 @@
 % TODO: replace xargs by manual construction!
 \RequirePackage{xargs}
 
+% TODO: update so wie can limit nesting depths of drawings too (similar to lcMaximumParenthesisRangeDrawDepth)
 \newif\iflcdrawlambdaranges
 \let\lcEnableLambdaRanges\lcdrawlambdarangestrue
 \let\lcDisableLambdaRanges\lcdrawlambdarangesfalse
@@ -202,16 +203,19 @@
 \newcommand*\lc@mark[3][3pt]{\lc@tikzmarknode[outer ysep=#1]{#2}{\lc@strut}#3\lc@tikzmarknode[outer ysep=#1]{#2@}{\lc@strut}}%
 \def\lc@tikzmarknode{\ifcsname scope\endcsname \expandafter\subnode\else \expandafter\tikzmarknode\fi}
 
+\newif\iflc@reset@on@init@
+\lc@reset@on@init@true
 \def\lc@enable@base#1{%
-   \let\\\relax
    \let\\\lc@lambda
-   \lc@enablechars
    \lc@enableshortcuts
    \let\mark\lc@mark
    % \lc@init@colorcycle % done globally
    % set to 0 even if unbalanced
-   % TODO: disable this in a nested so that brackets are not incorrectly visualized
-   \c@lc@bracketlevel\z@
+   % TODO: find others to reset
+   \iflc@reset@on@init@
+      \lc@enablechars
+      \c@lc@bracketlevel\z@
+   \fi
    \setcounter{lc@colorcycle}{#1}%
 }
 \outer\long\def\LC{\begingroup\lc@enable@cc\@LC}
@@ -231,7 +235,7 @@
 \usetikzlibrary{shapes.multipart}
 % manual inner extra strut
 % \rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}
-\def\lc@TypesetRewritingRule#1#2{\setbox0=\hbox{\let\lc@enablechars\relax\RLC[\the\c@lc@colorcycle]{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize#1\nodepart{two}\box0};}}
+\def\lc@TypesetRewritingRule#1#2{\setbox0=\hbox{\lc@reset@on@init@false\RLC[\the\c@lc@colorcycle]{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize#1\nodepart{two}\box0};}}
 
 % TODO: allow to disable default rewrite rules
 \lcCreateNewRewritingRule\true{true}{\\{x,y}\.\x}%
