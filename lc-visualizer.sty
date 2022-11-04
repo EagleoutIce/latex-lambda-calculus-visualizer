@@ -72,6 +72,13 @@
       rectangle split,
       rectangle split part fill={lightgray!55!white,none},
       rectangle split parts=2
+   },
+   lc@node@replacement@collapsed/.style={
+      draw=lightgray!25!white,
+      rounded corners=3pt,
+      thick,
+      fill={lightgray!25!white},
+      font=\sffamily\itshape
    }
 }
 \colorlet{lc@bracketcolor}{lightgray}
@@ -228,12 +235,14 @@
 \newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
 
 % cs | name | rewrite reuls
-\def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\textsf{\textit{#2}}\xspace}{\lc@TypesetRewritingRule{#2}{#3}\xspace}}}}
+\def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\lc@TypesetRewritingRuleCollapsed{#2}\xspace}{\lc@TypesetRewritingRule{#2}{#3}\xspace}}}}
 
 \usetikzlibrary{shapes.multipart}
 % manual inner extra strut
 % \rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}
 \def\lc@TypesetRewritingRule#1#2{\setbox0=\hbox{\lc@reset@on@init@false\RLC[\the\c@lc@colorcycle]{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize#1\nodepart{two}\box0};}}
+
+\def\lc@TypesetRewritingRuleCollapsed#1{\tikz[baseline=(@.base)]{\node[lc@node@replacement@collapsed] (@) {#1};}}
 
 % TODO: allow to disable default rewrite rules
 \lcCreateNewRewritingRule\true{true}{\\{x,y}\.\x}%
