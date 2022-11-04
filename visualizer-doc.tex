@@ -27,15 +27,22 @@
    {\\tikzset}{\textcolor{purple}{\textbackslash tikzset}}8
    {\\lcSetColorMixin}{\textcolor{purple}{\textbackslash lcSetColorMixin}}{16}
    {\\lcSetColors}{\textcolor{purple}{\textbackslash lcSetColors}}{12}
+   {\\lcDoNotShadeSameVariables}{\textcolor{purple}{\textbackslash lcDoNotShadeSameVariables}}{26}
+   {\\lcDoShadeSameVariables}{\textcolor{purple}{\textbackslash lcDoShadeSameVariables}}{23}
+   {\\lcDoNotStrutLine}{\textcolor{purple}{\textbackslash lcDoNotStrutLine}}{17}
+   {\\lcDoStrutLine}{\textcolor{purple}{\textbackslash lcDoStrutLine}}{14}
+   {\\lcCreateNewRewritingRule}{\textcolor{purple}{\textbackslash lcCreateNewRewritingRule}}{25}
    {\\lcMaximumParenthesisRangeDrawDepth}{\textcolor{purple}{\textbackslash lcMaximumParenthesisRangeDrawDepth}}{35}
    {\\lcSetDuplicateVariableMixin}{\textcolor{purple}{\textbackslash lcSetDuplicateVariableMixin}}{28}
    {\\reducemarks}{\textcolor{purple}{\textbackslash reducemarks}}{12}
-   {\\mark}{\textcolor{purple}{\textbackslash mark}}{5}
+   {\\mark}{\textcolor{purple}{\textbackslash mark}}5
    {\\a}{\textcolor{gray}{\textbackslash a}}2
    {\\b}{\textcolor{gray}{\textbackslash b}}2
    {\\c}{\textcolor{gray}{\textbackslash c}}2
+   {\\cons}{\textcolor{orange}{\textbackslash cons}}5
    {\\f}{\textcolor{gray}{\textbackslash f}}2
    {\\x}{\textcolor{gray}{\textbackslash x}}2
+   {\\y}{\textcolor{gray}{\textbackslash y}}2
    {\\.}{\textcolor{gray}{\textbackslash .}}2
    {\\centerline}{\textcolor{purple}{\textbackslash centerline}}{11}
    {\\Y}{\textcolor{purple}{\textbackslash Y}}2
@@ -46,6 +53,7 @@
 \lstMakeShortInline|
 \def\ltx#1{\lstinline/#1/}
 \interfootnotelinepenalty=10000
+\lcDoNotStrutLine
 
 \usepackage{bm}
 \lcSetLambda{\bm\lambda}
@@ -66,7 +74,7 @@
 
    \LC{(\\a.\\b.\a (\b \\b.\b \a)) a c}
 
-   There is also |\RLC|, a variant that does not do any catcode magic and that can be used inside other macros. So |\centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f (\x \x\)\) \(\\x\.\f \(\x \x\)\)}}| yields:
+   There is also |\RLC|, a variant that does not do any catcode magic and that can be used inside other macros. So |\centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}}| yields:
 
    \centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}}
 
@@ -88,7 +96,8 @@
       The package will try its best to keep colors in sync and recognizable:
       |\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}| yields: \LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}. But in general, do not re-use variables with different bindings that often within the same expression.
       If you want to change the mixin for each step (local to current group), use |\lcSetDuplicateVariableMixin|. So |\lcSetDuplicateVariableMixin{#1!40!green}| yields: {\lcSetDuplicateVariableMixin{#1!87!green}\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}}
-
+      If you do not like like the mixin alltogether, you can disable it locally by |\lcDoNotShadeSameVariables| (vs. |\lcDoShadeSameVariables|). This yields:
+      {\lcDoNotShadeSameVariables\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}}
       By changing the tikz-style of |lc@node| you can modify the behavior of highlighted nodes (|#1| is the color).
       The following examples all use |\LC{(\\a.\a (\\b.\b \c)) \a \c}| and make the |\tikzset|-command local to the group:
       \begin{itemize}
@@ -117,4 +126,34 @@
       This yields:
       \LC{(\\a[a].\a[a2] \b \c) \mark{b}{(\\b.\b)}}\reducemarks{b}{a}[bend right=10]\reducemarks[south]{a}{a2}[green,bend right=20,-latex]
 
-   \end{document}
+   By default, the package will automatically enlarge the line skip limit to ensure that your \(\lambda\)-Expressions have enough space (e.g., for presentations). You can disable this with |\lcDoNotStrutLine| (vs. |\lcDoStrutLine|). Here a strutted example: {\lcDoStrutLine\LC{(\\a.\a (\\b.\b \c)) \a \c}}.
+
+
+   Marks work even within tikzpictures:
+   \begin{center}
+      \begin{tikzpicture}
+         \node[fill=lightgray!80!orange!40!white,rounded corners=2pt, inner sep=5pt] at (0,0) {\RLC{\Y \equiv \\f\.\mark{A}{\(\\x\.\f \(\x \x\)\)} \mark{B}{\(\\x\.\f \(\x \x\)\)}}};
+         \reducemarks{B}{A}[bend right=10]
+      \end{tikzpicture}
+   \end{center}
+
+   With |\lcCreateNewRewritingRule| you can create a new rewriting rule (this is work in progress).
+   So with |\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}| you can now use |\cons| within your \(\lambda\)-calculus expressions. Therefore, \lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}|\LC{\\x.\cons \x}| yields:
+
+   \LC{\\x.\cons \x}.
+
+   There is a starred version as well, that types just the name: |\LC{\\x.\cons* \x}| yields: \LC{\\x.\cons* \x}.
+
+   With this, the faculty function becomes (scaled down):
+
+   {%
+      \tiny\LC{\Y (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
+   }
+
+   With |\lcDisableLambdaRanges| we get:
+
+   \lcDisableLambdaRanges
+   {%
+      \tiny\LC{\Y (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
+   }
+\end{document}
