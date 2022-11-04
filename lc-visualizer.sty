@@ -237,6 +237,12 @@
 % cs | name | rewrite reuls
 \def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\lc@TypesetRewritingRuleCollapsed{#2}\xspace}{\lc@TypesetRewritingRule{#2}{#3}\xspace}}}}
 
+\def\lcCreateNewArgumentRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\def\lc@second{#2}\lc@TypesetArgumentRewritingRuleCollapsed}{\def\lc@second{#2}\def\lc@third{#3}\lc@TypesetArgumentRewritingRule}}}}
+
+\def\lc@TypesetArgumentRewritingRuleCollapsed#1{\def\@arg{#1}\lc@TypesetRewritingRuleCollapsed{\lc@second}\xspace}
+\def\lc@TypesetArgumentRewritingRule#1{\def\@arg{#1}\lc@TypesetRewritingRule{\lc@second}{\lc@third}\xspace}
+
+
 \usetikzlibrary{shapes.multipart}
 % manual inner extra strut
 % \rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}
@@ -263,10 +269,11 @@
 % TODO: find a way so they do not disturb latex
 \lcCreateNewRewritingRule\Lnull{null}{\\d\.\d \(\\{x,y}\.\false\)}%
 
-% TODO: allow something like this but with macro expansion so that \num{3} automatically yields the \L-term for numbers
 
+\def\lc@construct@number#1{\ifnum#1=0 \x\else\f \ifnum#1>1 \(\fi\expandafter\lc@construct@number\expandafter{\the\numexpr#1-1}\ifnum#1>1 \)\fi\fi}
+\lcCreateNewArgumentRewritingRule\num{\@arg}{\\{f,x}\.\lc@construct@number{\@arg}}
 % \lcCreateNewRewritingRule\num{}{\\{x,y,c}\.\c \x \y}%
-\appto\lc@enableshortcuts{\def\num#1{#1}}%
+
 
 \lcCreateNewRewritingRule\pair{pair}{\\{a,b,f}\.\f \a \b}%
 
