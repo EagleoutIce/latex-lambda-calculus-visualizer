@@ -14,12 +14,10 @@
 \LC{\Y \equiv \\f.(\\x.\f (\x \x)) (\\x.\f (\x \x))}
 \bigskip
 
-\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}%
-\lcCreateNewRewritingRule\true{true}{\\{x,y}.\x}%
-\lcCreateNewRewritingRule\nil{nil}{\\x.\true}%
 \LC{\\x.\\x.\cons \x \nil}
 
 \lcDoNotShadeSameVariables
+\lcMaximumRewritingRuleExpandDepth{2}
 \LC{\\x.\\x.\cons \x \nil}
 
 \end{minipage}
