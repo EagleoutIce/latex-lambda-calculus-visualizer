@@ -36,7 +36,7 @@
 \def\lc@enableshortcuts{%
 \let\mathequiv\equiv
 \def\equiv{\ensuremath{\mathequiv}\xspace}%
-\def\Y{\mbox{\textbf{Y}}\xspace}% TODO highlight Y combinator
+\def\Y{\mbox{\textbf{Y}}\xspace}%
 }
 \def\lc@init@colorcycle#1{\@tempcnta\z@\@for\@col:={#1}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
 
@@ -179,7 +179,6 @@
    }%
 }%
 
-% TODO replacements like \cons
 % TODO allow to draw arrows
 % TODO reductions! (first only the symbols)
 \xspaceaddexceptions{\lc@close}%
