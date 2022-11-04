@@ -269,7 +269,6 @@
 % TODO: find a way so they do not disturb latex
 \lcCreateNewRewritingRule\Lnull{null}{\\d\.\d \(\\{x,y}\.\false\)}%
 
-% TODO: allow something like this but with macro expansion so that \num{3} automatically yields the \L-term for numbers
 
 \def\lc@construct@number#1{\ifnum#1=0 \x\else\f \ifnum#1>1 \(\fi\expandafter\lc@construct@number\expandafter{\the\numexpr#1-1}\ifnum#1>1 \)\fi\fi}
 \lcCreateNewArgumentRewritingRule\num{\@arg}{\\{f,x}\.\lc@construct@number{\@arg}}
