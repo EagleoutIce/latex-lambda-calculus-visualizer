@@ -35,6 +35,7 @@
    {\\lcMaximumParenthesisRangeDrawDepth}{\textcolor{purple}{\textbackslash lcMaximumParenthesisRangeDrawDepth}}{35}
    {\\lcSetDuplicateVariableMixin}{\textcolor{purple}{\textbackslash lcSetDuplicateVariableMixin}}{28}
    {\\reducemarks}{\textcolor{purple}{\textbackslash reducemarks}}{12}
+   {\\lcMaximumRewritingRuleExpandDepth}{\textcolor{purple}{\textbackslash lcMaximumRewritingRuleExpandDepth}}{34}
    {\\mark}{\textcolor{purple}{\textbackslash mark}}5
    {\\a}{\textcolor{gray}{\textbackslash a}}2
    {\\b}{\textcolor{gray}{\textbackslash b}}2
@@ -42,11 +43,18 @@
    {\\cons}{\textcolor{orange}{\textbackslash cons}}5
    {\\f}{\textcolor{gray}{\textbackslash f}}2
    {\\x}{\textcolor{gray}{\textbackslash x}}2
+   {\\n}{\textcolor{gray}{\textbackslash n}}2
    {\\y}{\textcolor{gray}{\textbackslash y}}2
    {\\.}{\textcolor{gray}{\textbackslash .}}2
    {\\centerline}{\textcolor{purple}{\textbackslash centerline}}{11}
    {\\Y}{\textcolor{purple}{\textbackslash Y}}2
    {\\equiv}{\textcolor{purple}{\textbackslash equiv}}6
+   {\\Ycomb}{\textcolor{orange}{\textbackslash Ycomb}}6
+   {\\ifelse}{\textcolor{orange}{\textbackslash ifelse}}7
+   {\\num}{\textcolor{orange}{\textbackslash num}}4
+   {\\mult}{\textcolor{orange}{\textbackslash mult}}5
+   {\\pred}{\textcolor{orange}{\textbackslash pred}}5
+   {\\isZero}{\textcolor{orange}{\textbackslash isZero}}7
    {\\\\}{\textcolor{teal}{\textbackslash \textbackslash}}2
 }
 \lstset{basicstyle=\ttfamily,keepspaces,breaklines,language=ltx}
@@ -144,17 +152,22 @@
 
    There is a starred version as well, that types just the name: |\LC{\\x.\cons* \x}| yields: \LC{\\x.\cons* \x}.
 
-   With this, the faculty function becomes (scaled down):
+   With this, the faculty function defined like this: |\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}| becomes (scaled down):
 
    {%
-      \tiny\LC{\Y (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
+      \tiny\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
    }
 
    With |\lcDisableLambdaRanges| we get:
 
-   \lcDisableLambdaRanges
    {%
-      \tiny\LC{\Y (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
+      \lcDisableLambdaRanges
+      \tiny\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
    }
 
+   With |\lcMaximumRewritingRuleExpandDepth| you can control recursive expansion (the default is~\(1\)). So |\lcMaximumRewritingRuleExpandDepth{2}| results in:
+
+   {\lcMaximumRewritingRuleExpandDepth{2}%
+      \tiny\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
+   }
 \end{document}
