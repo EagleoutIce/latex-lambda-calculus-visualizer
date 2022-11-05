@@ -148,25 +148,26 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
       %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{)}}$%
    }%
    % draw stuff around
-   \ifnum\c@lc@bracketlevel<\lc@max@bracket@drawdepth
-      \tikz[overlay,remember picture]{\draw[lightgray,opacity=.42,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\the\c@lc@bracketlevel]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north east);}%
-   \fi
-   \ifcsname lc@lambdas\lc@lastbracket\endcsname
-      \iflcdrawlambdaranges
-         \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
-         \@tempcnta\z@ % level offset within same bracketlevel
-         \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
-            % TODO allow to customize schrinking factors etc
-            \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
-            % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
-            \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=1pt-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
-            \advance\@tempcnta\@ne
-         }%
-      \fi
-      % we clear, even if disabled:
-      \expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
-   \fi
+   \lc@draw@ranges
 }
+\def\lc@draw@ranges{\ifnum\c@lc@bracketlevel<\lc@max@bracket@drawdepth
+\tikz[overlay,remember picture]{\draw[lightgray,opacity=.42,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\the\c@lc@bracketlevel]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north east);}%
+\fi
+\ifcsname lc@lambdas\lc@lastbracket\endcsname
+\iflcdrawlambdaranges
+   \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
+   \@tempcnta\z@ % level offset within same bracketlevel
+   \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
+      % TODO allow to customize schrinking factors etc
+      \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
+      % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
+      \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=1pt-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
+      \advance\@tempcnta\@ne
+   }%
+\fi
+% we clear, even if disabled:
+\expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
+\fi}
 \newcommandx*\lc@lambda[3][1={},3={}]{%
    \@tempcnta\z@
    % TODO: allow custom colors for multiple letters?
@@ -278,7 +279,7 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 % TODO: lambda vis intent resets within nestings
 \usetikzlibrary{shapes.multipart}
 \def\lc@rewrite@inner@strut{\rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}}
-\def\lc@TypesetRewritingRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\RLC[\the\c@lc@colorcycle]{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize\lc@rewrite@name@strut#1\nodepart{two}\lc@rewrite@inner@strut\box0};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
+\def\lc@TypesetRewritingRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\advance\c@lc@bracketlevel\@ne\RLC[\the\c@lc@colorcycle]{#2}\stepcounter{lc@markerindex}\lc@tikzmarknode{lc@\the\c@lc@markerindex}{\lc@strut}\expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize\lc@rewrite@name@strut#1\nodepart{two}\lc@rewrite@inner@strut\box0};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
 
 \def\lc@TypesetRewritingRuleCollapsed#1{\tikz[baseline=(@.base)]{\node[lc@node@replacement@collapsed] (@) {\lc@rewrite@name@strut#1};}}
 
