@@ -263,6 +263,7 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \def\lcRewriteRulesNameStrut#1{\def\lc@rewrite@name@strut{#1}}
 \lcRewriteRulesNameStrut{}
 
+% TODO: bracket/lambda range highlighter within rewrite rules (i.e. like closing brace)
 
 % cs | name | rewrite rules
 \def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\lc@TypesetRewritingRuleCollapsed{#2}\xspace}{\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth \lc@TypesetRewritingRule{#2}{#3}\else \lc@TypesetRewritingRuleCollapsed{#2}\fi\xspace}}}}
