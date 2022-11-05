@@ -31,6 +31,10 @@
 \let\lcDoNotShadeSameVariables\lcshadeSameVaiablesfalse
 \lcDoShadeSameVariables
 
+\newif\iflcSingleLambdasForMultiple
+\let\lcDoSingleLambdasForMultiple\lcSingleLambdasForMultipletrue
+\let\lcDoNotSingleLambdasForMultiple\lcSingleLambdasForMultiplefalse
+
 \def\lcMaximumParenthesisRangeDrawDepth#1{\def\lc@max@bracket@drawdepth{#1}}
 \lcMaximumParenthesisRangeDrawDepth{0}
 
@@ -198,7 +202,8 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
       }%
       \ifstrempty{#3}{\def\lc@markname{lc@last}}{\def\lc@markname{#3}}%
       \expandafter\expandafter\expandafter\lc@colorvar\expandafter\expandafter\expandafter{\expandafter\@col\expandafter}\expandafter{\@letter}{\lc@markname}%
-      \advance\@tempcnta\@ne
+      % this ensures separate lambdas if wanted
+      \iflcSingleLambdasForMultiple\else\advance\@tempcnta\@ne\fi
    }%
 }%
 
@@ -271,7 +276,6 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 
 \def\lc@TypesetRewritingRuleCollapsed#1{\tikz[baseline=(@.base)]{\node[lc@node@replacement@collapsed] (@) {#1};}}
 
-% TODO: variant of \\{.,.} that  still places a \lambda before each
 \iflc@load@default@rewrites
 \lcCreateNewRewritingRule\true{true}{\\{x,y}\.\x}%
 \lcCreateNewRewritingRule\false{false}{\\{x,y}\.\y}%
