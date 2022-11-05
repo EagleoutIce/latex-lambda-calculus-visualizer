@@ -4,6 +4,13 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{lc-visualizer}[2022/07/24 Florian Sihler - Highlighting lambda calculus expressions]
 
+\newif\iflc@load@default@rewrites
+\lc@load@default@rewritestrue
+
+\DeclareOption{default-rewrites}{\lc@load@default@rewritestrue}
+\DeclareOption{no-default-rewrites}{\lc@load@default@rewritesfalse}
+\ProcessOptions*
+
 \RequirePackage{tikz}
 \usetikzlibrary{tikzmark}
 \RequirePackage{xspace} % :3
@@ -256,7 +263,7 @@
 
 \def\lc@TypesetRewritingRuleCollapsed#1{\tikz[baseline=(@.base)]{\node[lc@node@replacement@collapsed] (@) {#1};}}
 
-% TODO: allow to disable default rewrite rules
+\iflc@load@default@rewrites
 \lcCreateNewRewritingRule\true{true}{\\{x,y}\.\x}%
 \lcCreateNewRewritingRule\false{false}{\\{x,y}\.\y}%
 \lcCreateNewRewritingRule\ifelse{ifelse}{\\{p,a,b}\.\p \a \b}%
@@ -275,11 +282,8 @@
 % TODO: find a way so they do not disturb latex
 \lcCreateNewRewritingRule\Lnull{null}{\\d\.\d \(\\{x,y}\.\false\)}%
 
-
 \def\lc@construct@number#1{\ifnum#1=0 \x\else\f \ifnum#1>1 \(\fi\expandafter\lc@construct@number\expandafter{\the\numexpr#1-1}\ifnum#1>1 \)\fi\fi}
 \lcCreateNewArgumentRewritingRule\num{\@arg}{\\{f,x}\.\lc@construct@number{\@arg}}
-% \lcCreateNewRewritingRule\num{}{\\{x,y,c}\.\c \x \y}%
-
 
 \lcCreateNewRewritingRule\pair{pair}{\\{a,b,f}\.\f \a \b}%
 
@@ -292,6 +296,7 @@
 \lcCreateNewRewritingRule\pred{pred}{\\{n,f,x}\.\n \(\\{g,h}\.\h \(\g \f\)\) \(\\u.\x\) \(\\u.\u\)}%
 
 \lcCreateNewRewritingRule\Ycomb{\textbf{Y}}{\\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}%
+\fi
 
 % TODO: lualatex allow lambda unicode symbol
 % TODO: allow to insert unicode breaks
