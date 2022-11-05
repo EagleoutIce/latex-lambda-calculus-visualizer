@@ -233,6 +233,8 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \lc@reset@on@init@true
 \def\lc@enable@base#1{%
    \let\\\lc@lambda
+   \let\Rewrite\lc@TypesetRewritingRule
+   \let\RewriteCollapsed\lc@TypesetRewritingRuleCollapsed
    \lc@enableshortcuts
    \let\mark\lc@mark
    % \lc@init@colorcycle % done globally
