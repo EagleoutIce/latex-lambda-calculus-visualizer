@@ -194,16 +194,17 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
       % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
       % only draw lambda symbol if first in comfort
       \ifnum\the\@tempcnta<\@ne\else% insert the space before so brackets are better
-      \phantom{\ensuremath{\lc@lambdasymbol}}\fi
+      \iflcSingleLambdasForMultiple\else\phantom{\ensuremath{\lc@lambdasymbol}}\fi\fi
       \lc@tikzmarknode{lc@\the\c@lc@markerindex}{\ifnum\the\@tempcnta<\@ne
          % TODO: mixin for lambda symbol
          \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
+         \else % TODO: clean that up
+         \iflcSingleLambdasForMultiple\lc@dot\ensuremath{\color{\@col!80!black}\lc@lambdasymbol}\fi
          \fi
       }%
       \ifstrempty{#3}{\def\lc@markname{lc@last}}{\def\lc@markname{#3}}%
       \expandafter\expandafter\expandafter\lc@colorvar\expandafter\expandafter\expandafter{\expandafter\@col\expandafter}\expandafter{\@letter}{\lc@markname}%
-      % this ensures separate lambdas if wanted
-      \iflcSingleLambdasForMultiple\else\advance\@tempcnta\@ne\fi
+      \advance\@tempcnta\@ne
    }%
 }%
 
