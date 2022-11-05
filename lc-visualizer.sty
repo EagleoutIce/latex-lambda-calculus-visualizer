@@ -192,12 +192,12 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
       % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
       % only draw lambda symbol if first in comfort
       \ifnum\the\@tempcnta<\@ne\else% insert the space before so brackets are better
-      \iflcSingleLambdasForMultiple\else\phantom{\ensuremath{\lc@lambdasymbol}}\fi\fi
+      \iflcSingleLambdasForMultiple\lc@dot\else\phantom{\ensuremath{\lc@lambdasymbol}}\fi\fi
       \lc@tikzmarknode{lc@\the\c@lc@markerindex}{\ifnum\the\@tempcnta<\@ne
          % TODO: mixin for lambda symbol
          \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
          \else % TODO: clean that up
-         \iflcSingleLambdasForMultiple\lc@dot\ensuremath{\color{\@col!80!black}\lc@lambdasymbol}\fi
+         \iflcSingleLambdasForMultiple\ensuremath{\color{\@col!80!black}\lc@lambdasymbol}\fi
          \fi
       }%
       \ifstrempty{#3}{\def\lc@markname{lc@last}}{\def\lc@markname{#3}}%
@@ -263,6 +263,7 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \def\lcRewriteRulesNameStrut#1{\def\lc@rewrite@name@strut{#1}}
 \lcRewriteRulesNameStrut{}
 
+% TODO: bracket/lambda range highlighter within rewrite rules (i.e. like closing brace)
 
 % cs | name | rewrite rules
 \def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\lc@TypesetRewritingRuleCollapsed{#2}\xspace}{\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth \lc@TypesetRewritingRule{#2}{#3}\else \lc@TypesetRewritingRuleCollapsed{#2}\fi\xspace}}}}
