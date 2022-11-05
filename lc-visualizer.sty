@@ -58,14 +58,6 @@
 \lcSetDuplicateVariableMixin{#1!65!lightgray!78!black}
 
 \tikzset{
-   lc@node/.style={
-      fill=\lc@colormix{#1},
-      rounded corners=3pt,
-      inner ysep=1pt,
-      inner xsep=2.25pt,
-      fill opacity=.25,
-      text opacity=1
-   },
    lc@abstraction@bracket/.style={
       lightgray!92!#1,
       opacity=.575,
@@ -88,6 +80,23 @@
       font=\sffamily\itshape
    }
 }
+
+\newocmmand\lcEnableGlow[1][90]{\tikzset{lc@node/.append style={fill=\lc@colormix{##1},
+rounded corners=3pt,
+inner ysep=1pt,
+inner xsep=2.25pt,
+fill opacity=.25,
+text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
+\def\lcDisableGlow{\tikzset{lc@node/.style={
+   fill=\lc@colormix{##1},
+   rounded corners=3pt,
+   inner ysep=1pt,
+   inner xsep=2.25pt,
+   fill opacity=.25,
+   text opacity=1
+}}}
+\lcDisableGlow
+
 \colorlet{lc@bracketcolor}{lightgray}
 
 \def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
