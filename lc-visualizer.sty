@@ -50,7 +50,7 @@
 \def\lc@init@colorcycle#1{\@tempcnta\z@\@for\@col:={#1}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
 
 \let\lcSetColors\lc@init@colorcycle
-\lcSetColors{teal,lime!90!black,red,violet,orange,pink,green,yellow,cyan,magenta,olive,purple,blue,brown}
+\lcSetColors{teal,lime!90!black,red,violet,orange,pink,green,blue!75!orange,yellow,magenta,olive,purple,blue,brown}
 
 % TODO: make those macros more customizable
 \def\lcSetColorMixin#1{\def\lc@colormix##1{#1}}
