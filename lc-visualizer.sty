@@ -264,7 +264,7 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \def\lc@TypesetArgumentRewritingRuleCollapsed#1{\def\@arg{#1}\lc@TypesetRewritingRuleCollapsed{\lc@second}\xspace}
 \def\lc@TypesetArgumentRewritingRule#1{\def\@arg{#1}\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth  \lc@TypesetRewritingRule{\lc@second}{\lc@third}\else \lc@TypesetRewritingRuleCollapsed{\lc@second}\fi\xspace}
 
-
+% TODO: lambda vis intent resets within nestings
 \usetikzlibrary{shapes.multipart}
 \def\lc@rewrite@strut{\rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}}
 \def\lc@TypesetRewritingRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\RLC[\the\c@lc@colorcycle]{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize#1\nodepart{two}\lc@rewrite@strut\box0};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
