@@ -36,6 +36,7 @@
    {\\lcSetDuplicateVariableMixin}{\textcolor{purple}{\textbackslash lcSetDuplicateVariableMixin}}{28}
    {\\reducemarks}{\textcolor{purple}{\textbackslash reducemarks}}{12}
    {\\lcMaximumRewritingRuleExpandDepth}{\textcolor{purple}{\textbackslash lcMaximumRewritingRuleExpandDepth}}{34}
+   {\\lcEnableGlow}{\textcolor{purple}{\textbackslash lcEnableGlow}}{13}
    {\\mark}{\textcolor{purple}{\textbackslash mark}}5
    {\\a}{\textcolor{gray}{\textbackslash a}}2
    {\\b}{\textcolor{gray}{\textbackslash b}}2
@@ -165,9 +166,9 @@
       \tiny\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
    }
 
-   With |\lcMaximumRewritingRuleExpandDepth| you can control recursive expansion (the default is~\(1\)). So |\lcMaximumRewritingRuleExpandDepth{2}| results in:
+   With |\lcMaximumRewritingRuleExpandDepth| you can control recursive expansion (the default is~\(1\)). So |\lcMaximumRewritingRuleExpandDepth{2}| results in (additionally, |\lcEnableGlow| is active):
 
-   {\lcMaximumRewritingRuleExpandDepth{2}%
+   {\lcMaximumRewritingRuleExpandDepth{2}\lcEnableGlow
       \tiny\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
    }
 \end{document}
