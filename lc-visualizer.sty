@@ -281,6 +281,9 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \def\lc@rewrite@inner@strut{\rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}}
 \def\lc@TypesetRewritingRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\advance\c@lc@bracketlevel\@ne\RLC[\the\c@lc@colorcycle]{#2}\stepcounter{lc@markerindex}\lc@tikzmarknode{lc@\the\c@lc@markerindex}{\lc@strut}\ifcsname lc@lastbracket\endcsname\expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}\fi}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize\lc@rewrite@name@strut#1\nodepart{two}\lc@rewrite@inner@strut\box0};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
 
+% TODO: integrate this correctly
+\def\lcBelowRewriteRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\advance\c@lc@bracketlevel\@ne\RLC[\the\c@lc@colorcycle]{#2}\stepcounter{lc@markerindex}\lc@tikzmarknode{lc@\the\c@lc@markerindex}{\lc@strut}\ifcsname lc@lastbracket\endcsname\expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}\fi}\tikz[baseline=(@.base)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\lc@rewrite@inner@strut\box0\nodepart{two}\scriptsize\lc@rewrite@name@strut#1};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
+
 \def\lc@TypesetRewritingRuleCollapsed#1{\tikz[baseline=(@.base)]{\node[lc@node@replacement@collapsed] (@) {\lc@rewrite@name@strut#1};}}
 
 \iflc@load@default@rewrites
