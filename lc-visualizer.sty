@@ -258,8 +258,13 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \def\lcDoNotStrutLine{\let\lc@LineStrut\@empty}%
 \lcDoStrutLine
 
-\newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
-\newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
+\def\lcMakeBox{\let\lc@mbox\mbox}%
+\def\lcMakeNoBox{\let\lc@mbox\@empty}%
+\lcMakeBox
+
+
+\newcommand*\@LC[2][0]{\lc@mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
+\newcommand*\RLC[2][0]{\lc@mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
 
 
 \def\lcMaximumRewritingRuleExpandDepth#1{\def\lc@max@rewriting@rule@expanddepth{#1}}
