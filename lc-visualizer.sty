@@ -50,7 +50,7 @@
 \def\lc@init@colorcycle#1{\@tempcnta\z@\@for\@col:={#1}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
 
 \let\lcSetColors\lc@init@colorcycle
-\lcSetColors{teal,lime!90!black,red,violet,orange,pink,green,blue!75!orange,yellow,magenta,olive,purple,blue,brown}
+\lcSetColors{teal,lime!90!black,red,violet,orange,pink,green,blue!75!orange,black,yellow,magenta,olive,purple,blue,brown}
 
 % TODO: make those macros more customizable
 \def\lcSetColorMixin#1{\def\lc@colormix##1{#1}}
@@ -174,10 +174,21 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \fi}
 \newcommandx*\lc@lambda[3][1={},3={}]{%
    \@tempcnta\z@
-   % TODO: allow custom colors for multiple letters?
+   % init empty to stay secure:
+   \@for\@letter:={#2}\do{%
+      \expandafter\def\csname @tmp@lc@col\the\@tempcnta\endcsname{}%
+      \advance\@tempcnta\@ne
+   }%
+   \@tempcnta\z@
+   \@for\@col:=#1\do{%
+      \expandafter\edef\csname @tmp@lc@col\the\@tempcnta\endcsname{\@col}%
+      \advance\@tempcnta\@ne
+   }%
+   \@tempcnta\z@
    \@for\@letter:={#2}\do{%
       % if nothing is selected, we use the colorcycle
-      \ifstrempty{#1}{%
+      \edef\@tmp{\csname @tmp@lc@col\the\@tempcnta\endcsname}%
+      \expandafter\ifstrempty\expandafter{\@tmp}{%
          % if there already is a color, lighten it
          \ifcsname\@letter @col\endcsname
             \iflcshadeSameVaiables
@@ -186,7 +197,7 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
          \else
             \lc@colorcycle
          \fi
-      }{\edef\@col{#1}}% otherwise, use the picked color
+      }{\edef\@col{\csname @tmp@lc@col\the\@tempcnta\endcsname}}% otherwise, use the picked color
       % ensure a unique index
       \stepcounter{lc@markerindex}%
       % now store the lambdaindex with the current nestinglevel:
