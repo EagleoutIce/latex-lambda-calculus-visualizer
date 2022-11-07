@@ -1,6 +1,6 @@
 # `lc-visualizer`, a LaTeX λ-Calculus Visualizer
 
-[![made-with-latex](https://img.shields.io/badge/Made%20with-LaTeX-1f425f.svg)](https://www.latex-project.org/) [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/GPL-3.0) [![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com) [![Build Example](https://github.com/EagleoutIce/latex-lambda-calculus-visualizer/actions/workflows/compile-examples.yaml/badge.svg)](https://github.com/EagleoutIce/latex-lambda-calculus-visualizer/actions/workflows/compile-examples.yaml)
+[![made-with-latex](https://img.shields.io/badge/Made%20with-LaTeX-1f425f.svg)](https://www.latex-project.org/) [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com) [![Build Example](https://github.com/EagleoutIce/latex-lambda-calculus-visualizer/actions/workflows/compile-examples.yaml/badge.svg)](https://github.com/EagleoutIce/latex-lambda-calculus-visualizer/actions/workflows/compile-examples.yaml)
 
 A small and work-in-progress package to visualize lambda calculus expressions in LaTeX (see the [documentation](https://media.githubusercontent.com/media/EagleoutIce/latex-lambda-calculus-visualizer/gh-pages/build/visualizer-doc.pdf)).
 
