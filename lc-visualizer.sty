@@ -4,6 +4,11 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{lc-visualizer}[2022/07/24 Florian Sihler - Highlighting lambda calculus expressions]
 
+\newif\iflc@load@default@rewrites \lc@load@default@rewritestrue
+\DeclareOption{default-rewrites}{\lc@load@default@rewritestrue}
+\DeclareOption{no-default-rewrites}{\lc@load@default@rewritesfalse}
+\ProcessOptions*
+
 \RequirePackage{tikz}
 \usetikzlibrary{tikzmark}
 \RequirePackage{xspace} % :3
@@ -24,6 +29,10 @@
 \let\lcDoNotShadeSameVariables\lcshadeSameVaiablesfalse
 \lcDoShadeSameVariables
 
+\newif\iflcSingleLambdasForMultiple
+\let\lcDoSingleLambdasForMultiple\lcSingleLambdasForMultipletrue
+\let\lcDoNotSingleLambdasForMultiple\lcSingleLambdasForMultiplefalse
+
 \def\lcMaximumParenthesisRangeDrawDepth#1{\def\lc@max@bracket@drawdepth{#1}}
 \lcMaximumParenthesisRangeDrawDepth{0}
 
@@ -41,7 +50,7 @@
 \def\lc@init@colorcycle#1{\@tempcnta\z@\@for\@col:={#1}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
 
 \let\lcSetColors\lc@init@colorcycle
-\lcSetColors{teal,lime!90!black,red,green,violet,yellow,pink,orange,cyan,magenta,olive,purple,blue,brown}
+\lcSetColors{teal,lime!90!black,red,violet,orange,pink,green,blue!75!orange,black,yellow,magenta,olive,purple,blue,brown}
 
 % TODO: make those macros more customizable
 \def\lcSetColorMixin#1{\def\lc@colormix##1{#1}}
@@ -51,14 +60,6 @@
 \lcSetDuplicateVariableMixin{#1!65!lightgray!78!black}
 
 \tikzset{
-   lc@node/.style={
-      fill=\lc@colormix{#1},
-      rounded corners=3pt,
-      inner ysep=1pt,
-      inner xsep=2.25pt,
-      fill opacity=.25,
-      text opacity=1
-   },
    lc@abstraction@bracket/.style={
       lightgray!92!#1,
       opacity=.575,
@@ -73,6 +74,10 @@
       rectangle split part fill={lightgray!55!white,none},
       rectangle split parts=2
    },
+   lc@node@replacement@inv/.style={
+      lc@node@replacement,
+      rectangle split part fill={none,lightgray!55!white}
+   },
    lc@node@replacement@collapsed/.style={
       draw=lightgray!25!white,
       rounded corners=3pt,
@@ -81,6 +86,23 @@
       font=\sffamily\itshape
    }
 }
+
+\newcommand*\lcEnableGlow[1][90]{\tikzset{lc@node/.append style={fill=\lc@colormix{##1},
+rounded corners=3pt,
+inner ysep=1pt,
+inner xsep=2.25pt,
+fill opacity=.25,
+text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
+\def\lcDisableGlow{\tikzset{lc@node/.style={
+   fill=\lc@colormix{##1},
+   rounded corners=3pt,
+   inner ysep=1pt,
+   inner xsep=2.25pt,
+   fill opacity=.25,
+   text opacity=1
+}}}
+\lcDisableGlow
+
 \colorlet{lc@bracketcolor}{lightgray}
 
 \def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
@@ -130,31 +152,43 @@
       %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{)}}$%
    }%
    % draw stuff around
-   \ifnum\c@lc@bracketlevel<\lc@max@bracket@drawdepth
-      \tikz[overlay,remember picture]{\draw[lightgray,opacity=.42,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\the\c@lc@bracketlevel]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north east);}%
-   \fi
-   \ifcsname lc@lambdas\lc@lastbracket\endcsname
-      \iflcdrawlambdaranges
-         \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
-         \@tempcnta\z@ % level offset within same bracketlevel
-         \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
-            % TODO allow to customize schrinking factors etc
-            \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
-            % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
-            \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=1pt-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
-            \advance\@tempcnta\@ne
-         }%
-      \fi
-      % we clear, even if disabled:
-      \expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
-   \fi
+   \lc@draw@ranges
 }
+\def\lc@draw@ranges{\ifnum\c@lc@bracketlevel<\lc@max@bracket@drawdepth
+\tikz[overlay,remember picture]{\draw[lightgray,opacity=.42,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\the\c@lc@bracketlevel]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north east);}%
+\fi
+\ifcsname lc@lambdas\lc@lastbracket\endcsname
+\iflcdrawlambdaranges
+   \protected@edef\@tmp{\csname lc@lambdas\lc@lastbracket\endcsname}%
+   \@tempcnta\z@ % level offset within same bracketlevel
+   \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
+      % TODO allow to customize schrinking factors etc
+      \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
+      % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
+      \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=1pt-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
+      \advance\@tempcnta\@ne
+   }%
+\fi
+% we clear, even if disabled:
+\expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
+\fi}
 \newcommandx*\lc@lambda[3][1={},3={}]{%
    \@tempcnta\z@
-   % TODO: allow custom colors for multiple letters?
+   % init empty to stay secure:
+   \@for\@letter:={#2}\do{%
+      \expandafter\def\csname @tmp@lc@col\the\@tempcnta\endcsname{}%
+      \advance\@tempcnta\@ne
+   }%
+   \@tempcnta\z@
+   \@for\@col:=#1\do{%
+      \expandafter\edef\csname @tmp@lc@col\the\@tempcnta\endcsname{\@col}%
+      \advance\@tempcnta\@ne
+   }%
+   \@tempcnta\z@
    \@for\@letter:={#2}\do{%
       % if nothing is selected, we use the colorcycle
-      \ifstrempty{#1}{%
+      \edef\@tmp{\csname @tmp@lc@col\the\@tempcnta\endcsname}%
+      \expandafter\ifstrempty\expandafter{\@tmp}{%
          % if there already is a color, lighten it
          \ifcsname\@letter @col\endcsname
             \iflcshadeSameVaiables
@@ -163,7 +197,7 @@
          \else
             \lc@colorcycle
          \fi
-      }{\edef\@col{#1}}% otherwise, use the picked color
+      }{\edef\@col{\csname @tmp@lc@col\the\@tempcnta\endcsname}}% otherwise, use the picked color
       % ensure a unique index
       \stepcounter{lc@markerindex}%
       % now store the lambdaindex with the current nestinglevel:
@@ -174,10 +208,12 @@
       % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
       % only draw lambda symbol if first in comfort
       \ifnum\the\@tempcnta<\@ne\else% insert the space before so brackets are better
-      \phantom{\ensuremath{\lc@lambdasymbol}}\fi
+      \iflcSingleLambdasForMultiple\lc@dot\else\phantom{\ensuremath{\lc@lambdasymbol}}\fi\fi
       \lc@tikzmarknode{lc@\the\c@lc@markerindex}{\ifnum\the\@tempcnta<\@ne
          % TODO: mixin for lambda symbol
          \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
+         \else % TODO: clean that up
+         \iflcSingleLambdasForMultiple\ensuremath{\color{\@col!80!black}\lc@lambdasymbol}\fi
          \fi
       }%
       \ifstrempty{#3}{\def\lc@markname{lc@last}}{\def\lc@markname{#3}}%
@@ -213,6 +249,10 @@
 \lc@reset@on@init@true
 \def\lc@enable@base#1{%
    \let\\\lc@lambda
+   \let\Rewrite\lc@TypesetRewritingRule
+   \let\RewriteCollapsed\lc@TypesetRewritingRuleCollapsed
+   \let\CycleColor\lc@colorcycle
+   \let\lcBelowRewriteRule\lc@BelowRewriteRule
    \lc@enableshortcuts
    \let\mark\lc@mark
    % \lc@init@colorcycle % done globally
@@ -231,14 +271,24 @@
 \def\lcDoNotStrutLine{\let\lc@LineStrut\@empty}%
 \lcDoStrutLine
 
-\newcommand*\@LC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
-\newcommand*\RLC[2][0]{\mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
+\def\lcMakeBox{\let\lc@mbox\mbox}%
+\def\lcMakeNoBox{\let\lc@mbox\@empty}%
+\lcMakeBox
+
+
+\newcommand*\@LC[2][0]{\lc@mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
+\newcommand*\RLC[2][0]{\lc@mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
 
 
 \def\lcMaximumRewritingRuleExpandDepth#1{\def\lc@max@rewriting@rule@expanddepth{#1}}
 \lcMaximumRewritingRuleExpandDepth{1}
 
 \newcount\c@lc@current@rewriteexpansiondepth
+
+\def\lcRewriteRulesNameStrut#1{\def\lc@rewrite@name@strut{#1}}
+\lcRewriteRulesNameStrut{}
+
+% TODO: bracket/lambda range highlighter within rewrite rules (i.e. like closing brace)
 
 % cs | name | rewrite rules
 \def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\lc@TypesetRewritingRuleCollapsed{#2}\xspace}{\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth \lc@TypesetRewritingRule{#2}{#3}\else \lc@TypesetRewritingRuleCollapsed{#2}\fi\xspace}}}}
@@ -248,15 +298,20 @@
 \def\lc@TypesetArgumentRewritingRuleCollapsed#1{\def\@arg{#1}\lc@TypesetRewritingRuleCollapsed{\lc@second}\xspace}
 \def\lc@TypesetArgumentRewritingRule#1{\def\@arg{#1}\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth  \lc@TypesetRewritingRule{\lc@second}{\lc@third}\else \lc@TypesetRewritingRuleCollapsed{\lc@second}\fi\xspace}
 
-
+% TODO: lambda vis intent resets within nestings
 \usetikzlibrary{shapes.multipart}
-% manual inner extra strut
-% \rule[\dimexpr-\dp0-2pt]{0pt}{\dimexpr\dp0+\ht0+4pt}
-\def\lc@TypesetRewritingRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\RLC[\the\c@lc@colorcycle]{#2}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize#1\nodepart{two}\box0};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
+\def\lc@rewrite@inner@strut{\rule[\dimexpr-\dp0-\lc@rewrite@inner@strut@lower]{0pt}{\dimexpr\dp0+\ht0+\lc@rewrite@inner@strut@upper+\lc@rewrite@inner@strut@lower}}
+% upper | lower
+\def\lcUpdateInnerStrut#1#2{\def\lc@rewrite@inner@strut@upper{#1}\def\lc@rewrite@inner@strut@lower{#2}}
+\lcUpdateInnerStrut{2pt}{2pt}
 
-\def\lc@TypesetRewritingRuleCollapsed#1{\tikz[baseline=(@.base)]{\node[lc@node@replacement@collapsed] (@) {#1};}}
+\def\lc@TypesetRewritingRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\advance\c@lc@bracketlevel\@ne\RLC[\the\c@lc@colorcycle]{#2}\stepcounter{lc@markerindex}\lc@tikzmarknode{lc@\the\c@lc@markerindex}{\lc@strut}\ifcsname lc@lastbracket\endcsname\expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}\fi}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize\lc@rewrite@name@strut#1\nodepart{two}\lc@rewrite@inner@strut\box0};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
 
-% TODO: allow to disable default rewrite rules
+\def\lc@BelowRewriteRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\advance\c@lc@bracketlevel\@ne\RLC[\the\c@lc@colorcycle]{#2}\stepcounter{lc@markerindex}\lc@tikzmarknode{lc@\the\c@lc@markerindex}{\lc@strut}\ifcsname lc@lastbracket\endcsname\expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}\fi}\tikz[baseline=(@.base)]{\node[lc@node@replacement@inv,inner ysep=1pt] (@) {\lc@rewrite@inner@strut\box0\nodepart{two}\scriptsize\lc@rewrite@name@strut#1};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
+
+\def\lc@TypesetRewritingRuleCollapsed#1{\tikz[baseline=(@.base)]{\node[lc@node@replacement@collapsed] (@) {\lc@rewrite@name@strut#1};}}
+
+\iflc@load@default@rewrites
 \lcCreateNewRewritingRule\true{true}{\\{x,y}\.\x}%
 \lcCreateNewRewritingRule\false{false}{\\{x,y}\.\y}%
 \lcCreateNewRewritingRule\ifelse{ifelse}{\\{p,a,b}\.\p \a \b}%
@@ -275,11 +330,8 @@
 % TODO: find a way so they do not disturb latex
 \lcCreateNewRewritingRule\Lnull{null}{\\d\.\d \(\\{x,y}\.\false\)}%
 
-
 \def\lc@construct@number#1{\ifnum#1=0 \x\else\f \ifnum#1>1 \(\fi\expandafter\lc@construct@number\expandafter{\the\numexpr#1-1}\ifnum#1>1 \)\fi\fi}
 \lcCreateNewArgumentRewritingRule\num{\@arg}{\\{f,x}\.\lc@construct@number{\@arg}}
-% \lcCreateNewRewritingRule\num{}{\\{x,y,c}\.\c \x \y}%
-
 
 \lcCreateNewRewritingRule\pair{pair}{\\{a,b,f}\.\f \a \b}%
 
@@ -292,6 +344,7 @@
 \lcCreateNewRewritingRule\pred{pred}{\\{n,f,x}\.\n \(\\{g,h}\.\h \(\g \f\)\) \(\\u.\x\) \(\\u.\u\)}%
 
 \lcCreateNewRewritingRule\Ycomb{\textbf{Y}}{\\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}%
+\fi
 
 % TODO: lualatex allow lambda unicode symbol
 % TODO: allow to insert unicode breaks

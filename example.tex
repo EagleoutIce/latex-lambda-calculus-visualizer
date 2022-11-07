@@ -4,10 +4,13 @@
 \usepackage[prefix=]{xcolor-material}
 \usepackage{lc-visualizer}
 \usepackage[active,tightpage]{preview}
+% \lcRewriteRulesNameStrut{\strut}
+\lcDoSingleLambdasForMultiple
+\lcEnableGlow
 
 \begin{document}
 \preview
-\begin{minipage}{.725\linewidth}%
+\begin{minipage}{.775\linewidth}%
 \LC{\\{a,x}.\b (\a (\\b.(\\a.\b) \b \c \a \x))}%
 \bigskip
 
@@ -15,10 +18,10 @@
 \bigskip
 
 \LC{\\x.\\x.\cons \x \nil}
-
+\LC{\lcBelowRewriteRule{XX}{\\[black,green]{x,y}.\x~\y}}
 \lcDoNotShadeSameVariables
 \lcMaximumRewritingRuleExpandDepth{2}
-\LC{\\x.\\x.\cons \x \nil}
+\LC{\\x.\\x.(\cons \x) \nil}
 
 \end{minipage}
 \endpreview
