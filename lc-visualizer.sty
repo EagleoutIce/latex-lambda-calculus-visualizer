@@ -256,10 +256,10 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
    \lc@enableshortcuts
    \let\mark\lc@mark
    % \lc@init@colorcycle % done globally
-   % set to 0 even if unbalanced
    % TODO: find others to reset
    \iflc@reset@on@init@
       \lc@enablechars
+      % set to 0 even if unbalanced
       \c@lc@bracketlevel\z@
    \fi
    \setcounter{lc@colorcycle}{#1}%
