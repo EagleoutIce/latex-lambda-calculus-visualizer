@@ -256,10 +256,10 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
    \lc@enableshortcuts
    \let\mark\lc@mark
    % \lc@init@colorcycle % done globally
-   % set to 0 even if unbalanced
    % TODO: find others to reset
    \iflc@reset@on@init@
       \lc@enablechars
+      % set to 0 even if unbalanced
       \c@lc@bracketlevel\z@
    \fi
    \setcounter{lc@colorcycle}{#1}%
@@ -275,10 +275,8 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \def\lcMakeNoBox{\let\lc@mbox\@empty}%
 \lcMakeBox
 
-
 \newcommand*\@LC[2][0]{\lc@mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
 \newcommand*\RLC[2][0]{\lc@mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
-
 
 \def\lcMaximumRewritingRuleExpandDepth#1{\def\lc@max@rewriting@rule@expanddepth{#1}}
 \lcMaximumRewritingRuleExpandDepth{1}
@@ -289,7 +287,6 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \lcRewriteRulesNameStrut{}
 
 % TODO: bracket/lambda range highlighter within rewrite rules (i.e. like closing brace)
-
 % cs | name | rewrite rules
 \def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\lc@TypesetRewritingRuleCollapsed{#2}\xspace}{\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth \lc@TypesetRewritingRule{#2}{#3}\else \lc@TypesetRewritingRuleCollapsed{#2}\fi\xspace}}}}
 
@@ -342,7 +339,6 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 % TODO: beamer animation support
 \lcCreateNewRewritingRule\isZero{isZero}{\\n\.\n \(\\y\.\false\) \true}%
 \lcCreateNewRewritingRule\pred{pred}{\\{n,f,x}\.\n \(\\{g,h}\.\h \(\g \f\)\) \(\\u.\x\) \(\\u.\u\)}%
-
 \lcCreateNewRewritingRule\Ycomb{\textbf{Y}}{\\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}%
 \fi
 
