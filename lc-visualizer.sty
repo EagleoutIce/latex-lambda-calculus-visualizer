@@ -36,6 +36,9 @@
 \def\lcMaximumParenthesisRangeDrawDepth#1{\def\lc@max@bracket@drawdepth{#1}}
 \lcMaximumParenthesisRangeDrawDepth{0}
 
+% TODO: more colors locked like lightgray?
+\colorlet{lc@vis@white}{white}
+
 % hacky but this way i do not have to make anything active :3
 \def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{% TODO: allow optional arguments for mark for them too
    \expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}%
@@ -67,22 +70,22 @@
       rounded corners=2.33pt
    },
    lc@node@replacement/.style={
-      draw=lightgray!55!white,
+      draw=lightgray!55!lc@vis@white,
       rounded corners=3pt,
       thick,
       rectangle split,
-      rectangle split part fill={lightgray!55!white,none},
+      rectangle split part fill={lightgray!55!lc@vis@white,none},
       rectangle split parts=2
    },
    lc@node@replacement@inv/.style={
       lc@node@replacement,
-      rectangle split part fill={none,lightgray!55!white}
+      rectangle split part fill={none,lightgray!55!lc@vis@white}
    },
    lc@node@replacement@collapsed/.style={
-      draw=lightgray!25!white,
+      draw=lightgray!25!lc@vis@white,
       rounded corners=3pt,
       thick,
-      fill={lightgray!25!white},
+      fill={lightgray!25!lc@vis@white},
       font=\sffamily\itshape
    }
 }
