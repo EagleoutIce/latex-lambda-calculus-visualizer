@@ -38,9 +38,13 @@
 
 % hacky but this way i do not have to make anything active :3
 \def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{% TODO: allow optional arguments for mark for them too
-   \expandafter\expandafter\expandafter\edef\expandafter\csname\@l\endcsname{\@l\noexpand\xspace}%
-   \csgundef{\@l @col}% clear global colordef
+   \expandafter\lc@enablechar\expandafter{\@l}% clear global colordef
 }}%
+\def\lc@enablechar#1{%
+   \expandafter\edef\csname#1\endcsname{#1\noexpand\xspace}%
+   \csgundef{#1@col}% clear global colordef
+}
+\let\lcEnableChar\lc@enablechar
 
 \def\lc@enableshortcuts{%
 \let\mathequiv\equiv
