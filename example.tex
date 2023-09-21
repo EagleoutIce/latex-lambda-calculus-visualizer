@@ -10,19 +10,16 @@
 
 \begin{document}
 \preview
-\begin{minipage}{.775\linewidth}%
-\LC{\\{a,x}.\b (\a (\\b.(\\a.\b) \b \c \a \x))}%
+\LC{\\{a,x}.\b (\a (\\b.(\\a.\b) \mark{bb}{\b} \c \a \x))}%
 \bigskip
 
 \LC{\Y \equiv \\f.(\\x.\f (\x \x)) (\\x.\f (\x \x))}
 \bigskip
 
-\LC{\\x.\\x.\cons \x \nil}
+\LC{\\x.\\x.\cons \x \nil}\\
 \LC{\lcBelowRewriteRule{XX}{\\[black,green]{x,y}.\x~\y}}
 \lcDoNotShadeSameVariables
 \lcMaximumRewritingRuleExpandDepth{2}
 \LC{\\x.\\x.(\cons \x) \nil}
-
-\end{minipage}
 \endpreview
 \end{document}
