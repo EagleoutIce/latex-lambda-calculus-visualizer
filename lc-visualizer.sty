@@ -253,8 +253,16 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 }}
 \let\reducemarks\lc@reducemarks
 
-\def\lc@mark@sep{3pt}% within nested marks, it should be 0
-\newcommand*\lc@mark[3][\lc@mark@sep]{\lc@tikzmarknode[outer ysep=#1]{#2}{\lc@strut}{\let\lc@mark@sep\z@ #3}\lc@tikzmarknode[outer ysep=#1]{#2@}{\lc@strut}}%
+\def\lc@mark@sep@default{3pt}
+\let\lc@mark@sep\lc@mark@sep@default% within nested marks, it should be 0
+\newcount\c@lc@mark@nest
+\newcommand*\lc@mark[3][\lc@mark@sep]{\lc@tikzmarknode[outer ysep=#1]{#2}{\lc@strut}%
+\let\lc@mark@sep\z@
+\global\advance\c@lc@mark@nest\@ne
+#3%
+\global\advance\c@lc@mark@nest\m@ne
+\ifnum\c@lc@mark@nest=\z@\let\lc@mark@sep\lc@mark@sep@default\fi
+\lc@tikzmarknode[outer ysep=#1]{#2@}{\lc@strut}}%
 \def\lc@tikzmarknode{\ifcsname scope\endcsname \expandafter\subnode\else \expandafter\tikzmarknode\fi}
 
 \newif\iflc@reset@on@init@
