@@ -116,8 +116,12 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \lcSetLambda{\lambda}
 \def\lc@strut{\rule[-\dp\z@]\z@{\dimexpr\ht\strutbox+\dp\z@}}
 % color | letter | markname
-\def\lc@colorvar#1#2#3{\setbox\z@=\hbox{g}\mark{#3}{\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\lc@strut#2};}}%
-\expandafter\renewcommand\csname#2\endcsname[1][lc@last]{\lc@colorvar{#1}{#2}{##1}\xspace}\def\lc@curcol{#1}%
+\def\lc@colorvar#1#2#3{\setbox\z@=\hbox{g}\lc@mark{#3}{\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\lc@strut#2};}}%
+\expandafter\renewcommand\csname#2\endcsname[1][lc@last]{%
+   % detect nested
+   \lc@colorvar{#1}{#2}{##1}%
+   \ifx\lc@mark@sep\z@\else\xspace\fi
+}\def\lc@curcol{#1}%
 % assign it globally so that even other groups will start from here
 \expandafter\xdef\csname#2@col\endcsname{#1}%
 }
@@ -249,7 +253,8 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 }}
 \let\reducemarks\lc@reducemarks
 
-\newcommand*\lc@mark[3][3pt]{\lc@tikzmarknode[outer ysep=#1]{#2}{\lc@strut}#3\lc@tikzmarknode[outer ysep=#1]{#2@}{\lc@strut}}%
+\def\lc@mark@sep{3pt}% within nested marks, it should be 0
+\newcommand*\lc@mark[3][\lc@mark@sep]{\lc@tikzmarknode[outer ysep=#1]{#2}{\lc@strut}{\let\lc@mark@sep\z@ #3}\lc@tikzmarknode[outer ysep=#1]{#2@}{\lc@strut}}%
 \def\lc@tikzmarknode{\ifcsname scope\endcsname \expandafter\subnode\else \expandafter\tikzmarknode\fi}
 
 \newif\iflc@reset@on@init@
