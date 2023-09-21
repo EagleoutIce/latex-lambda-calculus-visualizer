@@ -253,7 +253,7 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 }}
 \let\reducemarks\lc@reducemarks
 
-\def\lc@mark@sep@default{3pt}
+\def\lc@mark@sep@default{.1\p@}
 \let\lc@mark@sep\lc@mark@sep@default% within nested marks, it should be 0
 \newcount\c@lc@mark@nest
 \newcommand*\lc@mark[3][\lc@mark@sep]{\lc@tikzmarknode[outer ysep=#1]{#2}{\lc@strut}%
