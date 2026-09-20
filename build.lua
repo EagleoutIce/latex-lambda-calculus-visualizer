@@ -9,12 +9,15 @@
 bundle = ""
 module = "lc-visualizer"
 ctanpkg = module
-builddir = os.getenv("TMPDIR")
+local tmpdir = os.getenv("TMPDIR")
+if tmpdir == nil or tmpdir == "" then tmpdir = "/tmp" end
+builddir = tmpdir .. "/" .. module
 
 -- Package version ===================================================
-local handle = io.popen("git describe --tags $(git rev-list --tags --max-count=1)")
+local handle = io.popen("git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null")
 local oldtag = handle:read("*a")
 handle:close()
+if oldtag == "" then oldtag = "v1.0" end
 newsubtag = string.sub(oldtag, 4)
 newmajortag = string.sub(oldtag, 0, 3)
 if (options["target"] == "tag") then
@@ -44,8 +47,8 @@ function update_tag(file, content, tagname, tagdate)
         content = string.gsub(content, "\\ProvidesPackage{(.-)}%[%d%d%d%d%/%d%d%/%d%d version v%d%.%d+",
             "\\ProvidesPackage{%1}[" .. tagdate .. " version " .. packageversion)
         return content
-    elseif string.match(file, "*-doc.tex$") then
-        content = string.gsub(content, "\\date{Version v%d%.%d+ \\textendash\\ %d%d%d%d%/%d%d%/%d%d",
+    elseif string.match(file, "%-doc%.tex$") then
+        content = string.gsub(content, "\\date{Version v%d%.%d+ \\textendash{} %d%d%d%d%/%d%d%/%d%d",
             "\\date{Version " .. packageversion .. " \\textendash{} " .. tagdate)
         return content
     end
@@ -53,7 +56,7 @@ function update_tag(file, content, tagname, tagdate)
 end
 
 -- committing retagged file and tag the commit =======================
-require('build-private.lua')
+pcall(require, 'build-private')
 
 function tag_hook(tagname)
     git("add", "*.sty")
@@ -68,12 +71,23 @@ function tag_hook(tagname)
 end
 
 -- collecting files for ctan =========================================
-typesetfiles = { module .. "-doc.tex" }
+typesetfiles = { "visualizer-doc.tex" }
+
+testfiledir = "tests"
+testsuppdir = testfiledir .. "/support"
+checkengines = {"pdftex"}
+checkruns = 2
+
+function docinit_hook()
+    cp("xlistings.sty", "xlistings", typesetdir)
+    cp("*.cfg", "xlistings/langs", typesetdir)
+    return 0
+end
 
 textfiles = {"README.md"}
 ctanreadme = "README.md"
 
-installfiles = {"*.sty", "*.tex", "*.code"}
+installfiles = {"*.sty"}
 sourcefiles = installfiles
 unpackfiles = {}
 
@@ -84,6 +98,7 @@ packtdszip = false
 flatten = true
 
 -- configuring ctan upload ===========================================
+uploadconfig = uploadconfig or {}
 uploadconfig = {
     author = uploadconfig.author,
     uploader = uploadconfig.uploader,

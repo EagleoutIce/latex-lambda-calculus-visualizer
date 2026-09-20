@@ -1,0 +1,91 @@
+\documentclass{article}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\input{lc-test}
+\lcCreateNewRewritingRule\K{K}{\\a.\y}
+\lcCreateNewRewritingRule\C{C}{\\y.\x}
+\lcCreateNewRewritingRule\X{X}{\x}
+\lcCreateNewRewritingRule\Q{Q}{\true \x}
+\lcCreateNewArgumentRewritingRule\twice{twice}{\\x.\lcArg (\lcArg \x)}
+\lcCreateNewArgumentRewritingRule\fourx{fourx}{\twice{\twice{\lcArg}}}
+\lcCreateNewArgumentRewritingRule\kx{kx}{\\x.\lcArg}
+\lcCreateNewRewritingRule\T{T}{\twice{\y}}
+\begin{document}
+\START
+\Test{(\\x.\\x.\\x.\x) \a \b \c}{\c}[beta,beta,beta]
+\Test{(\\{x,y,x}.\x \y) \a \b \c}{\c \b}[beta,beta,beta]
+\Test{(\\x.(\\y.\y) \x) \y}{\y}[beta,beta]
+\Test{(\\x.\\y.\\z.\x) (\y \z)}{\\{y'}.\\{z'}.\y \z}[alpha,beta]
+\Test{(\\x.\\y.\\y.\x) \y}{\\{y'}.\\{y''}.\y}[alpha,beta]
+\Test{\\x.(\\y.\\x.\y) \x \x}{\\x.\x}[alpha,beta,beta]
+\Test{(\\x.\\y.\x \lcVar{y'}) \y}{\\{y''}.\y \lcVar{y'}}[alpha,beta]
+\Test{(\\x.\\y.\x) \y (\\{y'}.\lcVar{y'})}{\y}[alpha,beta,beta]
+\Test{(\\x.\\y.\\{y'}.\x) \y}{\\{y''}.\\{y'}.\y}[alpha,beta]
+\Test{(\\{x'}.\\x.\lcVar{x'}) \x}{\\{x''}.\x}[alpha,beta]
+\Test{(\\x.\\{x'}.\x) \x}{\\{x'}.\x}[beta]
+\Test{(\\x.\\{x'}.\\{x''}.\x) (\lcVar{x'} \lcVar{x''})}{\\{x'''}.\\{x''''}.\lcVar{x'} \lcVar{x''}}[alpha,beta]
+\Test{\pair \f \a}{\\{f'}.\lcVar{f'} \f \a}[delta,alpha,beta,beta]
+\Test{\\z.(\\x.\\y.\x) \y \z}{\\{y'}.\y}[eta,alpha,beta]
+\Test{\x (\\y.(\\z.\z) \y)}{\x (\\z.\z)}[eta]
+\Test{\\x.\\y.\true \x \y}{\true}[eta,eta]
+\Test{\\x.\X \x}{\\x.\x \x}[delta]
+\Test[delta=false]{\\x.\X \x}{\\x.\X \x}[]
+\Test{\add \num{0} \num{0}}{\num{0}}[delta,beta,beta,delta,beta,beta,eta,eta]
+\Test{(\\y.\K \a) \b}{\b}[beta,beta]
+\Test{(\\y.\\x.\y) \C}{\\{x'}.\C}[alpha,beta]
+\Test{(\\x.\\y.\C) \y}{\\{y'}.\\{y''}.\y}[alpha,beta]
+\Test{(\\x.\x \x) \X}{\x \X}[beta,delta]
+\Test{\\y.\T \y}{\\y.\y (\y \y)}[delta,delta,beta]
+\Test{(\\x.\Q) \y}{\\{y'}.\y}[beta,delta,alpha,beta]
+\Test{(\\y.\Q) \x}{\Q}[beta]
+\Test{\foo \x}{\foo \x}[]
+\Test{\twice{\\x.\x} \a}{\a}[delta,beta,beta,beta]
+\Test{\twice{\x \lcVar{x'}} \a}{\x \lcVar{x'} (\x \lcVar{x'} \a)}[delta,beta]
+\Test{\twice{\x}}{\twice{\x}}[]
+\Test{\fourx{\f} \a}{\f (\f (\f (\f \a)))}[delta,beta,beta,beta]
+\Test{(\\y.\kx{\y}) \x}{\\{x'}.\x}[alpha,beta]
+\Test{\num{007} \f \a}{\f (\f (\f (\f (\f (\f (\f \a))))))}[delta,beta,beta]
+\Test[max-steps=3]{\true* \a \b}{\a}[delta,beta,beta]
+\Test[max-steps=2]{\true* \a \b}{(\\y.\a) \b}[delta,beta,...]
+\Test[max-steps=0]{(\\x.\x) \y}{(\\x.\x) \y}[...]
+\Test[max-steps=3]{\Ycomb \x}{(\\{x'}.\x (\lcVar{x'} \lcVar{x'})) (\\{x''}.\x (\lcVar{x''} \lcVar{x''}))}[delta,alpha,beta,...]
+\TestParse{\mark{a}{\mark{b}{\\x.\x}} \mark{c}{\y}}{(\\x.\x) \y}
+\TestParse{{{\\x.\x}}{\y}}{(\\x.\x) \y}
+\TestParse{(\\x.\x\) \y}{(\\x.\x) \y}
+\TestParse{\\{x,,y}.\x}{\\x.\\y.\x}
+\TestParse{\\ x .\x}{\\x.\x}
+\TestParse{\\x.\x \\y.\y}{\\x.(\x (\\y.\y))}
+\TestParse{\\{ foo }.\lcVar{ foo }}{\\{foo}.\lcVar{foo}}
+\TestParse{\x' \y''}{\lcVar{x'} \lcVar{y''}}
+\TestParse{\mark{xx}{\\x}.\\x.\x}{\\x.\\x.\x}
+\Test{(\\x.\RLC{\x \x}) \y}{\y \y}[beta]
+\TestParse{\lcVar{foo}[m] \y}{\lcVar{foo} \y}
+\Test{\ifelse \false yes no}{\lcVar{no}}
+\Test{(\\x.\x \x) 42}{42 42}
+\TestParse{\\x'.\x'}{\\{x'}.\lcVar{x'}}
+\TestParse{\x\,\y\ \z\;\quad}{\x \y \z}
+\TestEq{\x}{\\x.\x}{false}
+\TestEq{\\{x'}.\lcVar{x'}}{\\{x''}.\lcVar{x''}}{true}
+\TestEq{\lcVar{x'}}{\lcVar{x''}}{false}
+\TestEq{\\x.\\x.\x}{\\y.\\x.\x}{true}
+\TestEq{\\x.\\x.\x}{\\x.\\y.\x}{false}
+\TestEq{\\x.\X}{\\y.\y}{true}
+\TestEq{\\x.\X}{\\y.\X}{false}
+\TestEq{\num{1}}{\\f.\\x.\f \x}{true}
+\TestEq{\num{2}}{\succ \num{1}}{false}
+\TestEq{\twice{\y}}{\T}{true}
+\TestEq{\\y.\T}{\\z.\T}{false}
+\TestEq{\alpha}{\beta}{false}
+\TestShown[hide={alpha,beta,eta,delta}]{\true* \a \b}{0,* 3}
+\TestShown[hide={delta, beta}]{\true* \a \b}{0,* 3}
+\TestShown[from=2,to=1]{\true* \a \b}{0,* 3}
+\TestShown[skip={1-2}]{\true* \a \b}{0,* 3}
+\TestShown[skip={2-1}]{\true* \a \b}{0,* 3}
+\setbox0\vbox{\lcReduce[max-steps=40]{(\\x.\x \x \x) (\\x.\x \x \x)}\lcReduce[max-steps=40]{(\\x.\x \x \x) (\\x.\x \x \x)}}\TYPE{memo \lcLastStepCount}
+\TestShown[from=-5,to=100]{\true* \a \b}{0,delta 1,beta 2,beta 3}
+\TestShown[hide=beta]{(\\x.\x) \y}{0,beta 1}
+\TestShown[max-steps=0]{(\\x.\x \x) (\\x.\x \x)}{0}
+\TestShown[compact,max-steps=2]{(\\x.\x \x) (\\x.\x \x)}{0,beta* 2}
+\TestShown[hide=delta,compact]{\succ \num{0}}{0,beta* 5,eta 6}
+\TestShown[compact,hide=beta,to=2]{\ListNull (\cons \a \b)}{0,* 8}
+\END

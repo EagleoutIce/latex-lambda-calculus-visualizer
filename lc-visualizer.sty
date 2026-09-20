@@ -2,7 +2,7 @@
 % Licensed under MIT License
 % https://opensource.org/licenses/MIT
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{lc-visualizer}[2022/07/24 Florian Sihler - Highlighting lambda calculus expressions]
+\ProvidesPackage{lc-visualizer}[2026/09/19 version v1.1 Florian Sihler - Highlighting lambda calculus expressions]
 
 \newif\iflc@load@default@rewrites \lc@load@default@rewritestrue
 \DeclareOption{default-rewrites}{\lc@load@default@rewritestrue}
@@ -10,61 +10,64 @@
 \ProcessOptions*
 
 \RequirePackage{tikz}
-\usetikzlibrary{tikzmark}
-\RequirePackage{xspace} % :3
+\usetikzlibrary{tikzmark,fit}
+\RequirePackage{xspace}
 \RequirePackage{etoolbox}
 % TODO: make packages optional?
 \RequirePackage{amsmath}
 % TODO: replace xargs by manual construction!
 \RequirePackage{xargs}
 
-% TODO: update so wie can limit nesting depths of drawings too (similar to lcMaximumParenthesisRangeDrawDepth)
 \newif\iflcdrawlambdaranges
-\let\lcEnableLambdaRanges\lcdrawlambdarangestrue
-\let\lcDisableLambdaRanges\lcdrawlambdarangesfalse
-\lcEnableLambdaRanges
+\lcdrawlambdarangesfalse
 
 \newif\iflcshadeSameVaiables
-\let\lcDoShadeSameVariables\lcshadeSameVaiablestrue
-\let\lcDoNotShadeSameVariables\lcshadeSameVaiablesfalse
-\lcDoShadeSameVariables
+\lcshadeSameVaiablestrue
 
 \newif\iflcSingleLambdasForMultiple
-\let\lcDoSingleLambdasForMultiple\lcSingleLambdasForMultipletrue
-\let\lcDoNotSingleLambdasForMultiple\lcSingleLambdasForMultiplefalse
 
-\def\lcMaximumParenthesisRangeDrawDepth#1{\def\lc@max@bracket@drawdepth{#1}}
-\lcMaximumParenthesisRangeDrawDepth{0}
+\def\lc@max@bracket@drawdepth{0}
 
 % TODO: more colors locked like lightgray?
 \colorlet{lc@vis@white}{white}
 
-% hacky but this way i do not have to make anything active :3
-\def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,j,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{% TODO: allow optional arguments for mark for them too
-   \expandafter\lc@enablechar\expandafter{\@l}% clear global colordef
-}}%
+% a macro per letter, so nothing has to be made active for a variable
+\def\lc@enablechars{\@for\@l:={a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}\do{%
+   \expandafter\lc@defletter\expandafter{\@l}%
+}\lc@usednames\gdef\lc@usednames{}}%
+\def\lc@usednames{}
+% only the names that were colored need undoing; the rest are built on first use
+\def\lc@clearcol#1{\csgundef{lc@col@#1}\csgundef{lc@var@#1}}
+\def\lc@defletter#1{\expandafter\def\csname#1\endcsname{\lc@var{#1}}}
+% the parser has to know the name as well, or it would read the macro as a constant
+\def\lc@enableletter#1{\lc@defletter{#1}\lc@enablechar{#1}\csgdef{lc@enabled@#1}{}}
 \def\lc@enablechar#1{%
-   \expandafter\edef\csname#1\endcsname{#1\noexpand\xspace}%
-   \csgundef{#1@col}% clear global colordef
+   \expandafter\def\csname lc@var@#1\endcsname{\lc@varplain{#1}}%
+   \csgundef{lc@col@#1}% clear global colordef
 }
-\let\lcEnableChar\lc@enablechar
+\protected\def\lc@var#1{\@ifnextchar'{\lc@var@prime{#1}}{\lc@usevar{#1}}}
+\def\lc@var@prime#1'{\lc@var{#1'}}
+\protected\def\lc@usevar#1{\ifcsname lc@var@#1\endcsname\else\expandafter\def\csname lc@var@#1\endcsname{\lc@varplain{#1}}\fi\csname lc@var@#1\endcsname}
+\def\lc@showname#1{\if\relax\detokenize{#1}\relax\else\lc@shown#1\@nil\fi}
+\def\lc@shown#1#2\@nil{#1\ifx'#1\kern\z@\fi\ifx\relax#2\relax\else\lc@shown#2\@nil\fi}
+\let\lcEnableChar\lc@enableletter
 
 \def\lc@enableshortcuts{%
-\let\mathequiv\equiv
 \def\equiv{\ensuremath{\mathequiv}\xspace}%
 \def\Y{\mbox{\textbf{Y}}\xspace}%
 }
-\def\lc@init@colorcycle#1{\@tempcnta\z@\@for\@col:={#1}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
+\let\mathequiv\equiv
+\AddToHook{begindocument/end}{\let\mathequiv\equiv}
+\newif\iflc@colorsdirty \lc@colorsdirtytrue
+\def\lc@clearfoldcache{}
+\newif\iflc@rulesdirty \lc@rulesdirtytrue
+\def\lc@init@colorcycle#1{\lc@colorsdirtytrue\@tempcnta\z@\@for\@col:={#1}\do{\expandafter\expandafter\expandafter\edef\expandafter\csname lc@color@\the\@tempcnta\endcsname{\@col}\advance\@tempcnta\@ne}\edef\lc@colors@exclusivemax{\the\@tempcnta}}%
 
-\let\lcSetColors\lc@init@colorcycle
-\lcSetColors{teal,lime!90!black,red,violet,orange,pink,green,blue!75!orange,black,yellow,magenta,olive,purple,blue,brown}
+\lc@init@colorcycle{teal,lime!90!black,red,violet,orange,green,blue!75!orange,magenta,olive,purple,blue,brown}
 
-% TODO: make those macros more customizable
-\def\lcSetColorMixin#1{\def\lc@colormix##1{#1}}
-\lcSetColorMixin{#1!85!lightgray}
+\def\lc@colormix#1{#1!85!lightgray}
 
-\def\lcSetDuplicateVariableMixin#1{\def\lc@colormix@doublevar##1{#1}}
-\lcSetDuplicateVariableMixin{#1!65!lightgray!78!black}
+\def\lc@colormix@doublevar#1{#1!65!lightgray!78!black}
 
 \tikzset{
    lc@abstraction@bracket/.style={
@@ -94,13 +97,13 @@
    }
 }
 
-\newcommand*\lcEnableGlow[1][90]{\tikzset{lc@node/.append style={fill=\lc@colormix{##1},
+\newcommand*\lc@glow@on[1][90]{\tikzset{lc@node/.append style={fill=\lc@colormix{##1},
 rounded corners=3pt,
 inner ysep=1pt,
 inner xsep=2.25pt,
 fill opacity=.25,
 text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
-\def\lcDisableGlow{\tikzset{lc@node/.style={
+\def\lc@glow@off{\tikzset{lc@node/.style={
    fill=\lc@colormix{##1},
    rounded corners=3pt,
    inner ysep=1pt,
@@ -108,65 +111,98 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
    fill opacity=.25,
    text opacity=1
 }}}
-\lcDisableGlow
+\lc@glow@off
 
 \colorlet{lc@bracketcolor}{lightgray}
 
-\def\lcSetLambda#1{\def\lc@lambdasymbol{#1}}
-\lcSetLambda{\lambda}
+\def\lc@lambdasymbol{\lambda}
 \def\lc@strut{\rule[-\dp\z@]\z@{\dimexpr\ht\strutbox+\dp\z@}}
+% the redex of the next step, underlined so it also shows without colors
+\def\lcSetRedexLine#1{\def\lc@redex@style{#1}}
+\lcSetRedexLine{\color{black!55}}
+\newcommand\lcRedexLine[1]{\begingroup\setbox\z@\hbox{#1}%
+   \sbox\tw@{\lower\dimexpr\dp\z@+.18em\hbox{\lc@redex@style\vrule\@height.4\p@\@width\wd\z@}}%
+   \wd\tw@\z@\box\tw@\box\z@\endgroup}
 % color | letter | markname
-\def\lc@colorvar#1#2#3{\setbox\z@=\hbox{g}\lc@mark{#3}{\tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\lc@strut#2};}}%
-\expandafter\renewcommand\csname#2\endcsname[1][lc@last]{%
-   % detect nested
-   \lc@colorvar{#1}{#2}{##1}%
-   \ifx\lc@mark@sep\z@\else\xspace\fi
-}\def\lc@curcol{#1}%
+% a variable is its name in its own color; the TikZ node behind it is a key away
+\newif\iflc@varbg
+\lc@varbgtrue
+\def\lc@textmix#1{#1!80!black}
+\def\lc@varnode#1#2{\iflc@varbg
+      \tikz[baseline=(@.base)]{\node[lc@node=#1] (@) {\lc@strut\lc@showname{#2}};}%
+   \else \textcolor{\lc@textmix{#1}}{\lc@strut\lc@showname{#2}}\fi}
+% the same variable in the same color and size always looks the same, so typeset it once
+\newcount\lc@vboxes % how many variable boxes we already keep
+\def\lc@fontkey{\f@size @\f@family @\f@series @\f@shape @\lc@vstyleid @\iflc@varbg n\else t\fi}
+\def\lc@cachedbox#1#2{\edef\lc@vkey{lc@vbox@#1@\lc@fontkey}%
+\ifcsname\lc@vkey\endcsname
+   \expandafter\usebox\csname\lc@vkey\endcsname
+\else
+   \ifnum\lc@vboxes<2000
+      \global\advance\lc@vboxes\@ne
+      \begingroup\let\wlog\@gobble\expandafter\newsavebox\csname\lc@vkey\endcsname\endgroup
+      \global\expandafter\setbox\csname\lc@vkey\endcsname\hbox{#2}%
+      \expandafter\usebox\csname\lc@vkey\endcsname
+   \else
+      #2%
+   \fi
+\fi}
+\def\lc@varbox#1#2{\lc@cachedbox{v@#2@#1}{\lc@varnode{#1}{#2}}}
+% a style that changes how a variable looks belongs to the key of its box, and it
+% ends with the group that set it, which a global counter would not
+\def\lc@vstyleid{}
+\def\lc@vdirty#1{\protected@edef\lc@vstyleid{\lc@vstyleid @\detokenize{#1}}}
+\def\lc@lastmark{lc@last}
+\protected\def\lc@varplain#1{\lc@ifbracket{\lc@varplain@{#1}}{\lc@showname{#1}\xspace}}
+\def\lc@varplain@#1#2#3]{\lc@mark{#3}{\lc@showname{#1}}\xspace}
+\protected\def\lc@varopt#1#2{\lc@ifbracket{\lc@varopt@{#1}{#2}}{\lc@varset{#1}{#2}{lc@last}}}
+\def\lc@varopt@#1#2#3#4]{\lc@varset{#1}{#2}{#4}}
+\protected\def\lc@varset#1#2#3{\lc@colorvar{#1}{#2}{#3}\ifx\lc@mark@sep\z@\else\xspace\fi}
+\def\lc@colorvar#1#2#3{\setbox\z@=\hbox{g}\protected@edef\lc@thismark{#3}%
+\iflc@marks\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi
+   {\lc@mark{#3}}%
+   {\ifx\lc@thismark\lc@lastmark\expandafter\lc@nomark\else\expandafter\lc@mark\expandafter{\lc@thismark}\fi}%
+{\lc@varbox{#1}{#2}}%
+\expandafter\let\csname lc@var@#2\endcsname\relax
+\expandafter\def\csname lc@var@#2\endcsname{\lc@varopt{#1}{#2}}%
+\def\lc@curcol{#1}%
 % assign it globally so that even other groups will start from here
-\expandafter\xdef\csname#2@col\endcsname{#1}%
+\expandafter\xdef\csname lc@col@#2\endcsname{#1}%
+\xdef\lc@usednames{\lc@usednames\noexpand\lc@clearcol{#2}}%
 }
-\newcounter{lc@colorcycle}% switch to newcount?
-% TODO: start from 0 so there is no weird shift
+\newif\iflc@colorbyname
+\def\lc@nextcolor{\iflc@colorbyname\expandafter\lc@assigncolor\expandafter{\@letter}\else\lc@colorcycle\fi}
+\newcounter{lc@colorcycle}
 \def\lc@colorcycle{\ifnum\thelc@colorcycle<\lc@colors@exclusivemax\else
    \setcounter{lc@colorcycle}{0}% assume at least one
 \fi
 \edef\@col{\csname lc@color@\thelc@colorcycle\endcsname}\stepcounter{lc@colorcycle}}%
 \def\lc@dot{\textcolor{\lc@colormix{\@col}!21!black}{.}}
-% TODO color brackets/larger to match
+% TODO: mixin for the color of the lambda symbol
+\def\lc@lambdaglyph{\ensuremath{\color{\@col!80!black}\lc@lambdasymbol}}
 \newcount\c@lc@bracketlevel
 \newcount\c@lc@markerindex % current index for tikzmark, will not be reset!
-% TODO colors brackets?
+% every parenthesis gets its own marker index, which a range can point at
 \def\lc@open{%
-   % first we advance the bracketindex to ensure unique
    \stepcounter{lc@markerindex}%
-   % now store the bracketindex with the current nestinglevel:
    \edef\lc@bracket@mark{\the\c@lc@markerindex}%
-   % now, store the opening brace in the node
-   \lc@tikzmarknode{lc@\the\c@lc@markerindex}{%
-      % the opening brace
+   \lc@bindernode{lc@\the\c@lc@markerindex}{%
       \mbox{\color{lc@bracketcolor}(}%
-      %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{(}}$%
    }%
-   % enter the grouping level
    \begingroup\advance\c@lc@bracketlevel\@ne
 }
 \def\lc@close{%
-   % leave grouping level
    \xdef\lc@lastbracket{\the\c@lc@bracketlevel}%
    \endgroup
-   % assure unique index
    \stepcounter{lc@markerindex}%
-   % store draw the brace
-   \lc@tikzmarknode{lc@\the\c@lc@markerindex}{%
-      % the closing brace
+   \lc@bindernode{lc@\the\c@lc@markerindex}{%
       \mbox{\color{lc@bracketcolor})}%
-      %$\underset{\mbox{\tiny\color{lightgray}\the\c@lc@bracketlevel}}{\mbox{)}}$%
    }%
-   % draw stuff around
    \lc@draw@ranges
 }
-\def\lc@draw@ranges{\ifnum\c@lc@bracketlevel<\lc@max@bracket@drawdepth
-\tikz[overlay,remember picture]{\draw[lightgray,opacity=.42,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\the\c@lc@bracketlevel]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\the\c@lc@bracketlevel]lc@\the\c@lc@markerindex.north east);}%
+\def\lc@clamp#1#2{\ifnum#1<\z@ 0\else\ifnum#1>#2 #2\else\number#1\fi\fi}
+\def\lc@draw@ranges{\edef\lc@rl{\lc@clamp\c@lc@bracketlevel2}\ifnum\c@lc@bracketlevel<\lc@max@bracket@drawdepth
+\tikz[overlay,remember picture]{\draw[lightgray,opacity=.42,thin,rounded corners=1pt] ([yshift=-3pt+0.75pt*\lc@rl]lc@\lc@bracket@mark.south west) rectangle ([yshift=3pt-0.75pt*\lc@rl]lc@\the\c@lc@markerindex.north east);}%
 \fi
 \ifcsname lc@lambdas\lc@lastbracket\endcsname
 \iflcdrawlambdaranges
@@ -175,17 +211,23 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
    \expandafter\@tfor\expandafter\@lc@ltarget\expandafter:\expandafter=\@tmp\do{%
       % TODO allow to customize schrinking factors etc
       \edef\@lc@color{\csname lc@lambdacolor@\@lc@ltarget\endcsname}%
-      % \typeout{Target: \@lc@ltarget (\@lc@color) -> \the\c@lc@markerindex}%
-      \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\the\c@lc@bracketlevel+.5pt*\the\@tempcnta]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\the\c@lc@bracketlevel-.5pt*\the\@tempcnta,xshift=1pt-.5pt*\the\@tempcnta]lc@\the\c@lc@markerindex.north west);}%
+      \tikz[overlay,remember picture]{\draw[lc@abstraction@bracket=\@lc@color] ([yshift=-5pt+1.5pt*\lc@rl+.5pt*\lc@clamp\@tempcnta3]lc@\@lc@ltarget.south west) rectangle ([yshift=4pt-1.5pt*\lc@rl-.5pt*\lc@clamp\@tempcnta3,xshift=1pt-.5pt*\lc@clamp\@tempcnta3]lc@\the\c@lc@markerindex.north west);}%
       \advance\@tempcnta\@ne
    }%
 \fi
-% we clear, even if disabled:
+% the hooks go even when no range was drawn
 \expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}%
 \fi}
+\protected\def\lc@lambdafront{\lc@ifbracket\lc@lambdafront@{\def\lc@lcol{}\lc@lambdabinder}}
+\def\lc@lambdafront@#1#2]{\def\lc@lcol{#2}\lc@lambdabinder}
+\def\lc@lambdabinder#1{\def\lc@lbind{#1}\lc@lambdaprimes}
+\def\lc@lambdaprimes{\@ifnextchar'\lc@lambdaprime{\expandafter\lc@lambdacall\expandafter{\lc@lbind}}}
+\def\lc@lambdaprime'{\expandafter\def\expandafter\lc@lbind\expandafter{\lc@lbind'}\lc@lambdaprimes}
+\def\lc@lambdacall#1{\def\lc@lnames{#1}\lc@ifbracket\lc@lambdamark\lc@lambdaplain}
+\def\lc@lambdamark#1#2]{\expandafter\lc@lambda\expandafter[\lc@lcol]{\lc@lnames}[#2]}
+\def\lc@lambdaplain{\expandafter\lc@lambda\expandafter[\lc@lcol]{\lc@lnames}}
 \newcommandx*\lc@lambda[3][1={},3={}]{%
    \@tempcnta\z@
-   % init empty to stay secure:
    \@for\@letter:={#2}\do{%
       \expandafter\def\csname @tmp@lc@col\the\@tempcnta\endcsname{}%
       \advance\@tempcnta\@ne
@@ -197,35 +239,29 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
    }%
    \@tempcnta\z@
    \@for\@letter:={#2}\do{%
-      % if nothing is selected, we use the colorcycle
+      \edef\@letter{\lc@trim\@letter}%
+      % no color was picked, so take the next one of the cycle
       \edef\@tmp{\csname @tmp@lc@col\the\@tempcnta\endcsname}%
       \expandafter\ifstrempty\expandafter{\@tmp}{%
-         % if there already is a color, lighten it
-         \ifcsname\@letter @col\endcsname
+         % the name already has a color, which a second binder lightens
+         \ifcsname lc@col@\@letter\endcsname
             \iflcshadeSameVaiables
-               \edef\@col{\lc@colormix@doublevar{\csname\@letter @col\endcsname}}%
-            \else \lc@colorcycle \fi
+               \edef\@col{\lc@colormix@doublevar{\csname lc@col@\@letter\endcsname}}%
+            \else \lc@nextcolor \fi
          \else
-            \lc@colorcycle
+            \lc@nextcolor
          \fi
       }{\edef\@col{\csname @tmp@lc@col\the\@tempcnta\endcsname}}% otherwise, use the picked color
-      % ensure a unique index
       \stepcounter{lc@markerindex}%
-      % now store the lambdaindex with the current nestinglevel:
-      % by adding a hook to the nesting level of the lambda, first it is reached on a closing brace we draw
-      % deal with outermost no-bracket level? => we do not draw
+      % the closing parenthesis of this level draws the range of the binder
       \expandafter\xdef\csname lc@lambdacolor@\the\c@lc@markerindex\endcsname{\@col}%
       \expandafter\xappto\csname lc@lambdas\the\c@lc@bracketlevel\endcsname{{\the\c@lc@markerindex}}%
-      % \typeout{Added \the\c@lc@markerindex. Now at: \csname lc@lambdas\the\c@lc@bracketlevel\endcsname}%
-      % only draw lambda symbol if first in comfort
-      \ifnum\the\@tempcnta<\@ne\else% insert the space before so brackets are better
-      \iflcSingleLambdasForMultiple\lc@dot\else\phantom{\ensuremath{\lc@lambdasymbol}}\fi\fi
-      \lc@tikzmarknode{lc@\the\c@lc@markerindex}{\ifnum\the\@tempcnta<\@ne
-         % TODO: mixin for lambda symbol
-         \ensuremath{\color{\@col!80!black}\lc@lambdasymbol}%
-         \else % TODO: clean that up
-         \iflcSingleLambdasForMultiple\ensuremath{\color{\@col!80!black}\lc@lambdasymbol}\fi
-         \fi
+      \ifnum\the\@tempcnta<\@ne\else% the gap stands before the binder, not behind it
+      \iflcSingleLambdasForMultiple\lc@dot\else\lc@binder@gap\fi\fi
+      % the first binder always shows its lambda, the ones behind it only on request
+      \lc@bindernode{lc@\the\c@lc@markerindex}{%
+         \ifnum\the\@tempcnta<\@ne \lc@lambdaglyph
+         \else \iflcSingleLambdasForMultiple\lc@lambdaglyph\fi\fi
       }%
       \ifstrempty{#3}{\def\lc@markname{lc@last}}{\def\lc@markname{#3}}%
       \expandafter\expandafter\expandafter\lc@colorvar\expandafter\expandafter\expandafter{\expandafter\@col\expandafter}\expandafter{\@letter}{\lc@markname}%
@@ -233,23 +269,82 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
    }%
 }%
 
-% TODO allow to draw arrows
-% TODO reductions! (first only the symbols)
 \xspaceaddexceptions{\lc@close}%
 \def\lc@enable@cc{%
 \catcode`\(=\active \scantokens{\let(}\lc@open
 \catcode`\)=\active \scantokens{\let)}\lc@close
 \catcode`.=\active \scantokens{\let.}\lc@dot
+\catcode`[=\active \scantokens{\let[}\lc@listopen
 }
+% inside a term [ is active and opens a list, so a mark has to accept both forms
+% [a, b] is \cons a (\cons b \nil), also in \LC and \RLC
+% the scanner only collects what stands between the brackets, \__lc_list_items:n
+% cuts that text into the elements, for the box here and for the parser alike
+\newcount\lc@listdepth % how deep in nested lists the scanner is
+\protected\def\lc@listopen{\lc@listdepth\z@\def\lc@listbody{}\lc@listscan}
+\def\lc@listscan{\futurelet\@let@token\lc@listscan@}
+\def\lc@listscan@{%
+   \ifx\@let@token\@sptoken \let\lc@listnext\lc@listspace
+   \else\ifx\@let@token\bgroup \let\lc@listnext\lc@listgroup
+   \else\ifx\@let@token\lc@listopen \let\lc@listnext\lc@listnest
+   \else\ifx\@let@token[\let\lc@listnext\lc@listnest
+   \else\ifx\@let@token\lc@listend \let\lc@listnext\lc@listclose
+   \else\ifx\@let@token]\let\lc@listnext\lc@listclose
+   \else\ifx\@let@token\egroup \let\lc@listnext\lc@listeof
+   \else\let\lc@listnext\lc@listgrab\fi\fi\fi\fi\fi\fi\fi
+   \lc@listnext}
+\def\lc@listend{]}
+% \list{a, b} hands its argument to the scanner, in a term as well as in a box
+\protected\def\lcListOf#1{\lc@listopen#1\lc@listend}
+\def\lc@listtake#1{\appto\lc@listbody{#1}\lc@listscan}
+\def\lc@listgroup#1{\lc@listtake{{#1}}}
+\def\lc@listnest#1{\advance\lc@listdepth\@ne\lc@listtake{#1}}
+\def\lc@listspace{\expandafter\lc@listspace@\expandafter{\lc@listbody}}
+\def\lc@listspace@#1{\def\lc@listbody{#1 }\lc@eatspace}
+\expandafter\def\expandafter\lc@eatspace\space{\lc@listscan}
+% the body of a rule with an argument holds \@arg, whose tokens are the list
+\def\lc@listgrab#1{\def\lc@listnext{\lc@listtake{#1}}%
+   \ifcsname @arg\endcsname
+      \ifx#1\@arg \def\lc@listnext{\expandafter\lc@listscan#1}\fi
+   \fi
+   \lc@listnext}
+\def\lc@listclose#1{\def\lc@listnext{\lc@buildlist@}%
+   \ifnum\lc@listdepth>\z@ \advance\lc@listdepth\m@ne
+      \def\lc@listnext{\lc@listtake{#1}}%
+   \fi
+   \lc@listnext}
+\def\lc@buildlist@{\expandafter\lc@buildlist\expandafter{\lc@listbody}}
+\def\lc@listeof{\lc@listmissing\lc@buildlist@}
+\def\lc@ifbracket#1#2{\def\lc@brtrue{#1}\def\lc@brfalse{#2}%
+   \futurelet\@let@token\lc@ifbracket@}
+\def\lc@ifbracket@{%
+   \ifx\@let@token\lc@listopen \let\lc@brnext\lc@brtrue
+   \else\ifx\@let@token[\let\lc@brnext\lc@brtrue
+   \else\let\lc@brnext\lc@brfalse\fi\fi
+   \lc@brnext}
 \def\lc@enable@default{%
 \let\(\lc@open
 \let\)\lc@close
 \let\.\lc@dot
 }
-\newcommandx*\lc@reducemarks[4][1=north,4={}]{\tikz[overlay,remember picture]{
-   \path(#2.#1) -- (#2@.#1) coordinate[pos=.5] (@1);
-   \path(#3.#1) -- (#3@.#1) coordinate[pos=.5] (@2);
-   \draw[->,lightgray,bend right,#4] (@1) to (@2);
+\def\lc@arrow@pos{.5}
+\def\lcSetBinderGap#1{\def\lc@binder@gap{#1}}
+\lcSetBinderGap{\,}
+\def\lc@flat@dy{.9em}
+\def\lcSetStepMark#1{\def\lc@stepmark##1{#1}}
+% the relation #1 of kind #2, with the mark #3 of the steps it merges
+\def\lc@stepabove#1#2#3{\if\relax\detokenize{#3}\relax#1\else\overset{#3}{#1}\fi\sb{#2}}
+\def\lc@stepbehind#1#2#3{#1\sb{#2}\if\relax\detokenize{#3}\relax\else\,#3\fi}
+\let\lcStepSymbol\lc@stepabove
+% what a row tells the arrow that follows it, also in an exported reduction
+\def\lcStepState#1#2{\gdef\lcSteps{#1}\gdef\lcStepMark{#2}}
+\lcSetStepMark{\textcolor{black!55}{\scriptscriptstyle #1{*}}}
+\newcommandx*\lc@reducemarks[4][1=north,4={}]{%
+   \def\lc@flat@dy{.9em}\ifstrequal{#1}{south}{\def\lc@flat@dy{-.9em}}{}%
+   \tikz[overlay,remember picture]{
+   \path(#2.#1) -- (#2@.#1) coordinate[pos=\lc@arrow@pos] (@1);
+   \path(#3.#1) -- (#3@.#1) coordinate[pos=\lc@arrow@pos] (@2);
+   \draw[-latex,gray,lc@flat,#4] (@1.center) to (@2.center);
 }}
 \let\reducemarks\lc@reducemarks
 
@@ -259,23 +354,36 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \newcommand*\lc@mark[3][\lc@mark@sep]{\lc@tikzmarknode[outer ysep=#1]{#2}{\lc@strut}%
 \let\lc@mark@sep\z@
 \global\advance\c@lc@mark@nest\@ne
-#3%
+#3\unskip
 \global\advance\c@lc@mark@nest\m@ne
 \ifnum\c@lc@mark@nest=\z@\let\lc@mark@sep\lc@mark@sep@default\fi
 \lc@tikzmarknode[outer ysep=#1]{#2@}{\lc@strut}}%
 \def\lc@tikzmarknode{\ifcsname scope\endcsname \expandafter\subnode\else \expandafter\tikzmarknode\fi}
+% a node is only needed when a range, a bracket range or an arrow refers to it
+\def\lc@ifnodes{\iflcdrawlambdaranges\expandafter\@firstoftwo\else\expandafter\lc@ifnodes@i\fi}
+\def\lc@ifnodes@i{\iflc@marks\expandafter\@firstoftwo\else\expandafter\lc@ifnodes@ii\fi}
+\def\lc@ifnodes@ii{\ifnum\lc@max@bracket@drawdepth>\z@\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
+\def\lc@bindernode#1#2{\lc@ifnodes{\lc@tikzmarknode{#1}{#2}}{#2}}
+\newif\iflc@marks % whether every variable gets marker nodes an arrow can point at
+\newcommand*\lc@nomark[2][\lc@mark@sep]{\lc@strut\let\lc@mark@sep\z@
+\global\advance\c@lc@mark@nest\@ne
+#2\unskip
+\global\advance\c@lc@mark@nest\m@ne
+\ifnum\c@lc@mark@nest=\z@\let\lc@mark@sep\lc@mark@sep@default\fi
+\lc@strut}% the same nesting and struts, without the marker nodes
 
 \newif\iflc@reset@on@init@
 \lc@reset@on@init@true
 \def\lc@enable@base#1{%
-   \let\\\lc@lambda
+   \let\[\lc@listopen
+   \let\]\lc@listend
+   \let\\\lc@lambdafront
    \let\Rewrite\lc@TypesetRewritingRule
    \let\RewriteCollapsed\lc@TypesetRewritingRuleCollapsed
    \let\CycleColor\lc@colorcycle
    \let\lcBelowRewriteRule\lc@BelowRewriteRule
    \lc@enableshortcuts
    \let\mark\lc@mark
-   % \lc@init@colorcycle % done globally
    % TODO: find others to reset
    \iflc@reset@on@init@
       \lc@enablechars
@@ -284,85 +392,2282 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
    \fi
    \setcounter{lc@colorcycle}{#1}%
 }
-\outer\long\def\LC{\begingroup\lc@enable@cc\@LC}
+% the optional argument is read before the term, whose catcodes differ
+\protected\def\LC{\begingroup\lc@LCopt}
+\newcommand*\lc@LCopt[1][0]{\lc@enable@cc\lc@LCbody{#1}}
+\protected\long\def\lc@LCbody#1#2{\@LC[#1]{#2}}
 
 \def\lc@@LineStrut{\rule[\dimexpr-\dp\strutbox-4.5pt]\z@{\dimexpr\ht\strutbox+\dp\strutbox+9pt}}
-\def\lcDoStrutLine{\let\lc@LineStrut\lc@@LineStrut}%
-\def\lcDoNotStrutLine{\let\lc@LineStrut\@empty}%
-\lcDoStrutLine
+\def\lc@auto@LineStrut{\iflcdrawlambdaranges\lc@@LineStrut\fi}
+\let\lc@LineStrut\lc@auto@LineStrut
 
-\def\lcMakeBox{\let\lc@mbox\mbox}%
-\def\lcMakeNoBox{\let\lc@mbox\@empty}%
-\lcMakeBox
+\let\lc@mbox\mbox
 
-\newcommand*\@LC[2][0]{\lc@mbox{\ttfamily\lc@LineStrut\lc@enable@base{#1}#2}\endgroup}
-\newcommand*\RLC[2][0]{\lc@mbox{\ttfamily\lc@LineStrut\lc@enable@default\lc@enable@base{#1}#2}}
+\def\lc@font{\ttfamily}
+% load the term font before any term, so no .fd is read inside a \csname
+\AtBeginDocument{\begingroup\setbox\z@\hbox{\lc@font\selectfont x}\endgroup}
+\newcommand*\@LC[2][0]{\lc@mbox{\lc@base@opt{#1}\lc@font\selectfont\lc@LineStrut#2}\endgroup}
+\newcommand*\RLC[2][0]{\lc@mbox{\lc@enable@default\lc@base@opt{#1}\lc@font\selectfont\lc@LineStrut#2}}
 
-\def\lcMaximumRewritingRuleExpandDepth#1{\def\lc@max@rewriting@rule@expanddepth{#1}}
-\lcMaximumRewritingRuleExpandDepth{1}
+\def\lcNewStyle#1#2{\expandafter\def\csname lc@style@#1\endcsname{\lcSetup{#2}}}
+\lcNewStyle{plain}{colors=black,shade-same=false,lambda-ranges=false,node-style={fill=none,inner xsep=.5pt},bracket-color=.}
+\lcNewStyle{plain-math}{style=plain,font=\normalfont\itshape,lambda=\ensuremath{\lambda}}
+
+\def\lc@ruledepth#1{\def\lc@max@rewriting@rule@expanddepth{#1}}
+\lc@ruledepth{1}
 
 \newcount\c@lc@current@rewriteexpansiondepth
 
-\def\lcRewriteRulesNameStrut#1{\def\lc@rewrite@name@strut{#1}}
-\lcRewriteRulesNameStrut{}
+\def\lc@rewrite@name@strut{}
 
 % TODO: bracket/lambda range highlighter within rewrite rules (i.e. like closing brace)
 % cs | name | rewrite rules
-\def\lcCreateNewRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\lc@TypesetRewritingRuleCollapsed{#2}\xspace}{\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth \lc@TypesetRewritingRule{#2}{#3}\else \lc@TypesetRewritingRuleCollapsed{#2}\fi\xspace}}}}
+\def\lcCreateNewRewritingRule#1#2#3{\lc@register@rule{#1}{#3}\gappto\lc@enableshortcuts{\def#1{\@ifstar{\lc@TypesetRewritingRuleCollapsed{#2}\xspace}{\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth \lc@TypesetRewritingRule{#2}{#3}\else \lc@TypesetRewritingRuleCollapsed{#2}\fi\xspace}}}}
 
-\def\lcCreateNewArgumentRewritingRule#1#2#3{\appto\lc@enableshortcuts{\def#1{\@ifstar{\def\lc@second{#2}\lc@TypesetArgumentRewritingRuleCollapsed}{\def\lc@second{#2}\def\lc@third{#3}\lc@TypesetArgumentRewritingRule}}}}
+\def\lcCreateNewArgumentRewritingRule#1#2#3{\lc@register@rule{#1}{#3}\expandafter\gdef\csname lc@argrule@\expandafter\@gobble\string#1\endcsname{}\csgundef{lc@rawargrule@\expandafter\@gobble\string#1}\gappto\lc@enableshortcuts{\def#1{\@ifstar{\def\lc@second{#2}\lc@TypesetArgumentRewritingRuleCollapsed}{\def\lc@second{#2}\def\lc@third{#3}\lc@TypesetArgumentRewritingRule}}}}
 
-\def\lc@TypesetArgumentRewritingRuleCollapsed#1{\def\@arg{#1}\lc@TypesetRewritingRuleCollapsed{\lc@second}\xspace}
-\def\lc@TypesetArgumentRewritingRule#1{\def\@arg{#1}\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth  \lc@TypesetRewritingRule{\lc@second}{\lc@third}\else \lc@TypesetRewritingRuleCollapsed{\lc@second}\fi\xspace}
+% the argument of such a rule reaches its body as it was written, not as a term
+\def\lcRawArgumentRule#1{\csgdef{lc@rawargrule@\expandafter\@gobble\string#1}{}}
+\def\lc@TypesetArgumentRewritingRuleCollapsed#1{\def\@arg{#1}\let\lcArg\@arg\lc@TypesetRewritingRuleCollapsed{\lc@second}\xspace}
+\def\lc@TypesetArgumentRewritingRule#1{\def\@arg{#1}\let\lcArg\@arg\ifnum\c@lc@current@rewriteexpansiondepth<\lc@max@rewriting@rule@expanddepth  \lc@TypesetRewritingRule{\lc@second}{\lc@third}\else \lc@TypesetRewritingRuleCollapsed{\lc@second}\fi\xspace}
 
 % TODO: lambda vis intent resets within nestings
 \usetikzlibrary{shapes.multipart}
 \def\lc@rewrite@inner@strut{\rule[\dimexpr-\dp0-\lc@rewrite@inner@strut@lower]{0pt}{\dimexpr\dp0+\ht0+\lc@rewrite@inner@strut@upper+\lc@rewrite@inner@strut@lower}}
 % upper | lower
-\def\lcUpdateInnerStrut#1#2{\def\lc@rewrite@inner@strut@upper{#1}\def\lc@rewrite@inner@strut@lower{#2}}
-\lcUpdateInnerStrut{2pt}{2pt}
+\def\lc@rewrite@inner@strut@upper{1pt}\def\lc@rewrite@inner@strut@lower{1pt}
 
-\def\lc@TypesetRewritingRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\advance\c@lc@bracketlevel\@ne\RLC[\the\c@lc@colorcycle]{#2}\stepcounter{lc@markerindex}\lc@tikzmarknode{lc@\the\c@lc@markerindex}{\lc@strut}\ifcsname lc@lastbracket\endcsname\expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}\fi}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=1pt] (@) {\scriptsize\lc@rewrite@name@strut#1\nodepart{two}\lc@rewrite@inner@strut\box0};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
+% the same rule, in the same colors, looks the same in every row of a reduction
+\def\lc@rulebox@salt{}
+\newif\iflc@inrulename % inside the name of a rule, where a nested rule is only text
+\def\lc@rulename#1{\begingroup\lc@inrulenametrue#1\unskip\endgroup}
+% the strut around the name is part of the look, so it belongs to the key of the box
+\def\lc@strutkey{\detokenize\expandafter{\lc@rewrite@name@strut}}
+\def\lc@TypesetRewritingRule#1#2{\iflc@inrulename\lc@rulename{#1}\else\iflc@colorbyname
+   \ifx\lc@rulebox@salt\@empty\lc@TypesetRewritingRule@{#1}{#2}\else
+   \iflcdrawlambdaranges\lc@TypesetRewritingRule@{#1}{#2}\else
+   \iflc@marks\lc@TypesetRewritingRule@{#1}{#2}\else
+   \ifnum\lc@max@bracket@drawdepth>\z@\lc@TypesetRewritingRule@{#1}{#2}\else
+   \protected@edef\lc@boxname{#1}\edef\lc@boxname{\detokenize\expandafter{\lc@boxname}}%
+   \lc@cachedbox{R@\lc@boxname @\lc@strutkey @\lc@rulebox@salt}{\lc@TypesetRewritingRule@{#1}{#2}}\fi\fi\fi\fi
+   \else\lc@TypesetRewritingRule@{#1}{#2}\fi\fi}
+\def\lc@TypesetRewritingRule@#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\advance\c@lc@bracketlevel\@ne\RLC[\the\c@lc@colorcycle]{#2}\stepcounter{lc@markerindex}\lc@bindernode{lc@\the\c@lc@markerindex}{\lc@strut}\expandafter\xdef\csname lc@lambdas\the\c@lc@bracketlevel\endcsname{}}\tikz[baseline=(@.two)]{\node[lc@node@replacement,inner ysep=.5pt,inner xsep=2pt] (@) {\scriptsize\lc@rewrite@name@strut\lc@rulename{#1}\nodepart{two}\lc@rewrite@inner@strut\box0};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
 
-\def\lc@BelowRewriteRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\advance\c@lc@bracketlevel\@ne\RLC[\the\c@lc@colorcycle]{#2}\stepcounter{lc@markerindex}\lc@tikzmarknode{lc@\the\c@lc@markerindex}{\lc@strut}\ifcsname lc@lastbracket\endcsname\expandafter\xdef\csname lc@lambdas\lc@lastbracket\endcsname{}\fi}\tikz[baseline=(@.base)]{\node[lc@node@replacement@inv,inner ysep=1pt] (@) {\lc@rewrite@inner@strut\box0\nodepart{two}\scriptsize\lc@rewrite@name@strut#1};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
+\def\lc@BelowRewriteRule#1#2{\global\advance\c@lc@current@rewriteexpansiondepth\@ne\setbox0=\hbox{\lc@reset@on@init@false\advance\c@lc@bracketlevel\@ne\RLC[\the\c@lc@colorcycle]{#2}\stepcounter{lc@markerindex}\lc@bindernode{lc@\the\c@lc@markerindex}{\lc@strut}\expandafter\xdef\csname lc@lambdas\the\c@lc@bracketlevel\endcsname{}}\tikz[baseline=(@.base)]{\node[lc@node@replacement@inv,inner ysep=.5pt,inner xsep=2pt] (@) {\lc@rewrite@inner@strut\box0\nodepart{two}\scriptsize\lc@rewrite@name@strut\lc@rulename{#1}};}\global\advance\c@lc@current@rewriteexpansiondepth\m@ne}
 
-\def\lc@TypesetRewritingRuleCollapsed#1{\tikz[baseline=(@.base)]{\node[lc@node@replacement@collapsed] (@) {\lc@rewrite@name@strut#1};}}
+\def\lc@TypesetRewritingRuleCollapsed#1{\iflc@inrulename\lc@rulename{#1}\else
+   \protected@edef\lc@boxname{#1}%
+   \edef\lc@boxname{\detokenize\expandafter{\lc@boxname}}%
+   \lc@cachedbox{r@\lc@boxname @\lc@strutkey}%
+   {\tikz[baseline=(@.base)]{\node[lc@node@replacement@collapsed] (@) {\lc@rewrite@name@strut\lc@rulename{#1}};}}\fi}
 
-\iflc@load@default@rewrites
-\lcCreateNewRewritingRule\true{true}{\\{x,y}\.\x}%
-\lcCreateNewRewritingRule\false{false}{\\{x,y}\.\y}%
-\lcCreateNewRewritingRule\ifelse{ifelse}{\\{p,a,b}\.\p \a \b}%
-% TODO: allow aliasses for rewrite rules (ite for ifelse)
+\def\lc@rule@names{}
+\def\lc@register@rule#1#2{\global\lc@rulesdirtytrue\lc@clearfoldcache%
+   \lc@checkrulename{\expandafter\@gobble\string#1}%
+   \expandafter\gdef\csname lc@rule@body@\expandafter\@gobble\string#1\endcsname{#2}%
+   \xdef\lc@rule@names{\lc@rule@names{\expandafter\@gobble\string#1}}}
 
-% TODO: find a way so they do not disturb tikz
-\lcCreateNewRewritingRule\Land{and}{\\{p,q}\.\p \q \p}%
-\lcCreateNewRewritingRule\Lor{or}{\\{p,q}\.\p \p \q}%
-\lcCreateNewRewritingRule\Lnot{not}{\\{p,a,b}\.\p \b \a}%
+% A term is a triple {v}{<name>}{}, {l}{<name>}{<body>}, {a}{<fun>}{<arg>} or {c}{<tokens>}{<term>}:
+% a constant typeset as <tokens> that binds like the unfolded rule <term> (empty for other macros).
+\ExplSyntaxOn
 
-% TODO: simple variant that uses the name for the command sequence as well?
-\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}%
-\lcCreateNewRewritingRule\head{head}{\\{d}\.\d \true}%
-\lcCreateNewRewritingRule\tail{tail}{\\{d}\.\d \false}%
-\lcCreateNewRewritingRule\nil{nil}{\\x\.\true}%
-% TODO: find a way so they do not disturb latex
-\lcCreateNewRewritingRule\Lnull{null}{\\d\.\d \(\\{x,y}\.\false\)}%
+\tl_new:N \g__lc_in_tl % the token stream the parser still has to read
+\tl_new:N \g__lc_start_tl % the term as parsed, before any reduction
+\tl_new:N \g__lc_ret_tl % where the recursive helpers hand back a term
+\tl_new:N \g__lc_new_tl % the term after the step that was just found
+\tl_new:N \g__lc_marked_tl % the same step, with its redex marked for typesetting
+\tl_new:N \g__lc_result_tl % the final term of the reduction
+\tl_new:N \l__lc_acc_tl % application built up while parsing a sequence
+\tl_new:N \l__lc_head_tl % the token currently at the front of the input
+\tl_new:N \l__lc_text_lambda_tl % how the plain text of a term writes the binder
+\tl_new:N \l__lc_symbol_width_tl % the width the relation of a row is set to
+\tl_new:N \l__lc_row_sep_tl % the space between two rows
+\tl_new:N \l__lc_saved_in_tl % saves the outer input across a nested parse
+\tl_new:N \l__lc_tmp_tl % scratch term
+\tl_new:N \l__lc_term_tl % the term the reducer is currently working on
+\seq_new:N \l__lc_out_seq % the typeset rows, collected before output
+\str_new:N \l__lc_name_str % the variable or rule name being read
+\str_new:N \l__lc_new_str % the fresh name a renaming binds to
+\str_new:N \g__lc_kind_str % which kind of step was found, empty if none
+\str_new:N \g__lc_fresh_str % candidate fresh name while avoiding capture
+\str_new:N \l__lc_layout_str % lines or inline, how the rows are laid out
+\seq_new:N \g__lc_names_seq % names collected while walking a term
+\seq_new:N \g__lc_avoid_seq % names a fresh variable must not clash with
+\int_new:N \g__lc_steps_int % how many steps the last reduction took
+\bool_new:N \g__lc_avoid_bool % whether the avoid list is already built
+\bool_new:N \l__lc_store_bool % whether every step has to be kept for output
+\seq_new:N \g__lc_shown_seq % the steps that actually became a row
+\seq_new:N \l__lc_bound_seq % binders in scope while collecting free names
+\seq_new:N \l__lc_fvN_seq % free names the argument brings into the body
+\seq_new:N \l__lc_binders_seq % the binders of one abstraction, in order
+\seq_new:N \l__lc_unfolding_seq % rules being unfolded, to catch recursion
+\tl_new:N \l__lc_arg_tl % the argument handed to a rewriting rule
+\clist_new:N \l__lc_binders_clist % the binder list of an abstraction before splitting
+\bool_new:N \l__lc_continue_bool % keeps the atom loop of a sequence running
+\bool_new:N \l__lc_loop_bool % keeps the reduction loop running
+\bool_new:N \g__lc_renamed_bool % set when a step had to rename, i.e. alpha
+\bool_new:N \g__lc_nf_bool % whether a normal form was actually reached
+\bool_new:N \l__lc_eta_bool % option: allow eta steps
+\bool_new:N \l__lc_delta_bool % option: allow delta steps, unfolding rules
+\bool_new:N \l__lc_arrows_bool % option: draw the arrow from argument to binder
+\int_new:N \l__lc_max_int % the max-steps limit for one reduction
+\int_new:N \l__lc_count_int % steps done so far, also reused for counting
+\int_new:N \l__lc_mark_int % per-row counter making the tikz marks unique
+\str_const:Ne \c__lc_bs_str { \c_backslash_str }
+\regex_const:Nn \c__lc_name_regex { \A [A-Za-z] [A-Za-z0-9]* '* \Z } % what counts as a variable name
+\regex_const:Nn \c__lc_letter_regex { \A [a-z] \Z } % single lowercase letter, the built-in variables
+\cs_generate_variant:Nn \regex_match:NnT { Ne } % match against an expanded subject
+\prg_new_protected_conditional:Npnn \__lc_if_keys:n #1 { F } % a key list has a `=' or a comma
+  {
+    \tl_if_in:nnTF {#1} { = }
+      { \prg_return_true: }
+      { \tl_if_in:nnTF {#1} { , } { \prg_return_true: } { \prg_return_false: } }
+  }
+\cs_new_protected:Npn \lc@base@opt #1 % the optional argument of a term: color start or keys
+  {
+    \tl_set:Nn \l__lc_tmp_tl {#1}
+    \__lc_if_keys:nF {#1} { \tl_set:Ne \l__lc_tmp_tl {#1} }
+    \exp_args:NNV \regex_match:NnTF \c__lc_number_regex \l__lc_tmp_tl
+      { \tl_set_eq:NN \l__lc_color_tl \l__lc_tmp_tl }
+      { \tl_set:Nn \l__lc_color_tl { 0 } \lcSetup {#1} }
+    \exp_args:NV \lc@enable@base \l__lc_color_tl
+  }
+\cs_new_protected:Npn \lc@checkvarname % guards the named-variable form against bad names
+  {
+    \__lc_if_var_name:VTF \lc@name
+      { \exp_args:NV \lc@var \lc@name }
+      { \msg_error:nnV { lc-visualizer } { bad-name } \lc@name }
+  }
+\cs_new_protected:Npn \lc@checkrulename #1 % a rule must not shadow a single-letter variable
+  { \regex_match:NeT \c__lc_letter_regex {#1} { \msg_error:nne { lc-visualizer } { rule-name } {#1} } }
+\regex_const:Nn \c__lc_alnum_regex { \A [A-Za-z0-9] \Z } % one letter or digit, used to read words
+\regex_const:Nn \c__lc_digits_regex { \A [0-9]+ \Z } % a bare number, typeset as a constant
+\regex_const:Nn \c__lc_numeral_regex { \A \\ \. \\ \. ( \( \[2\] \  )* \[1\] \)* \Z } % a de Bruijn church numeral, for folding
+\regex_const:Nn \c__lc_number_regex { \A \s* \+? \d+ \s* \Z } % an integer rule argument
 
-\def\lc@construct@number#1{\ifnum#1=0 \x\else\f \ifnum#1>1 \(\fi\expandafter\lc@construct@number\expandafter{\the\numexpr#1-1}\ifnum#1>1 \)\fi\fi}
-\lcCreateNewArgumentRewritingRule\num{\@arg}{\\{f,x}\.\lc@construct@number{\@arg}}
+\bool_new:N \g__lc_error_bool % set when an error happened, blocks caching
+\cs_new_protected:Npn \__lc_error:nn { \bool_gset_true:N \g__lc_error_bool \msg_error:nn } % error that also marks the run as failed
+\cs_new_protected:Npn \__lc_error:nnn { \bool_gset_true:N \g__lc_error_bool \msg_error:nnn }
+\cs_generate_variant:Nn \__lc_error:nnn { nne , nnV }
+\msg_new:nnn { lc-visualizer } { no-beamer } % beamer keys asked for outside of beamer
+  { The~option~beamer~only~works~in~beamer~documents. }
+\msg_new:nnn { lc-visualizer } { cache-shared } % two reductions writing the same cache file
+  { The~cache~file~`#1'~is~used~by~different~reductions. }
+\msg_new:nnn { lc-visualizer } { negative-steps } % max-steps below zero
+  { max-steps~must~not~be~negative~(got~`#1'). }
+\msg_new:nnn { lc-visualizer } { tooltips } % tooltips need a pdf-producing engine
+  { The~option~tooltips~needs~pdfTeX~or~LuaTeX. }
+\msg_new:nnn { lc-visualizer } { cache-foreign } % refuse to clobber a file we did not write
+  { Refusing~to~overwrite~`#1',~which~is~no~cache~file~of~lc-visualizer. }
+\msg_new:nnn { lc-visualizer } { unknown-fold } % fold asked for a rule that does not exist
+  { Unknown~rule~`#1'~for~fold~(give~the~name~of~its~macro,~without~argument). }
+\msg_new:nnn { lc-visualizer } { unbalanced } % leftover input after parsing a term
+  { Unbalanced~parentheses~in~lambda~term~`#1'. }
+\msg_new:nnn { lc-visualizer } { missing-paren } % a group was opened but never closed
+  { Missing~`)'~in~lambda~term. }
+\msg_new:nnn { lc-visualizer } { empty } % nothing to parse where a term was expected
+  { Empty~lambda~term~(or~abstraction~without~body). }
+\msg_new:nnn { lc-visualizer } { bad-name } % a variable name that is no legal name
+  { `#1'~is~no~variable~name~(letters~and~digits~starting~with~a~letter,~optionally~followed~by~primes). }
+\msg_new:nnn { lc-visualizer } { rule-name } % a rule name that collides with a variable
+  { `#1'~is~the~variable~`#1'~and~cannot~name~a~rewriting~rule;~use~a~longer~name. }
+\msg_new:nnn { lc-visualizer } { bad-number } % a numeric rule argument that is no integer
+  { `#1'~is~no~integer. }
+\msg_new:nnn { lc-visualizer } { missing-argument } % a rule with an argument was used without one
+  { The~rewriting~rule~`#1'~needs~an~argument. }
+\msg_new:nnn { lc-visualizer } { recursive-rule } % a rule that unfolds into itself
+  { The~rewriting~rule~`#1'~uses~itself~and~cannot~be~unfolded. }
+\msg_new:nnn { lc-visualizer } { missing-dot } % binders not followed by the dot
+  { Missing~`.'~after~the~binders~of~an~abstraction. }
+\msg_new:nnn { lc-visualizer } { unexpected } % a token that cannot start an atom
+  { Unexpected~`#1'~in~lambda~term. }
+\msg_new:nnn { lc-visualizer } { max-steps } % reduction stopped before a normal form
+  { Stopped~reducing~after~#1~steps~without~reaching~a~normal~form~(increase~max-steps~if~there~is~one). }
 
-\lcCreateNewRewritingRule\pair{pair}{\\{a,b,f}\.\f \a \b}%
+\cs_new:Npn \__lc_kind:n #1 { \__lc_kind_aux:nnn #1 } % the tag of a term: v, l, a or c
+\cs_new:Npn \__lc_kind_aux:nnn #1#2#3 { \exp_not:n {#1} } % picks the tag out of the triple
 
-\lcCreateNewRewritingRule\succ{succ}{\\{n,f,x}\.\f \(\n \f \x\)}%
-\lcCreateNewRewritingRule\add{add}{\\{m,n,f,x}\.\m \f \(\n \f \x\)}%
-\lcCreateNewRewritingRule\mult{mult}{\\{n,m,f}\.\m \(\n \f\)}%
-% TODO: option to only expand until level X so that it does not automatically expand within isZero...
-% TODO: beamer animation support
-\lcCreateNewRewritingRule\isZero{isZero}{\\n\.\n \(\\y\.\false\) \true}%
-\lcCreateNewRewritingRule\pred{pred}{\\{n,f,x}\.\n \(\\{g,h}\.\h \(\g \f\)\) \(\\u.\x\) \(\\u.\u\)}%
-\lcCreateNewRewritingRule\Ycomb{\textbf{Y}}{\\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}%
-\fi
+\cs_new_protected:Npn \__lc_trim: { \tl_gtrim_spaces:N \g__lc_in_tl } % drop leading spaces of the parser input
+\cs_new_protected:Npn \__lc_pop: { \tl_gset:Nx \g__lc_in_tl { \tl_tail:N \g__lc_in_tl } } % consume the token at the front of the input
+\cs_new_protected:Npn \__lc_head: { \tl_set:Nx \l__lc_head_tl { \tl_head:N \g__lc_in_tl } } % look at the front of the input without consuming
 
-% TODO: lualatex allow lambda unicode symbol
-% TODO: allow to insert unicode breaks
+\prg_new_protected_conditional:Npnn \__lc_if_head_str:n #1 { T, F, TF } % is the next token this character
+  {
+    \tl_if_empty:NTF \g__lc_in_tl
+      { \prg_return_false: }
+      {
+        \exp_args:NV \tl_if_head_is_N_type:nTF \g__lc_in_tl
+          {
+            \__lc_head:
+            \str_if_eq:eeTF { \exp_after:wN \token_to_str:N \l__lc_head_tl } {#1}
+              { \prg_return_true: } { \prg_return_false: }
+          }
+          { \prg_return_false: }
+      }
+  }
+
+\cs_new_protected:Npn \__lc_if_either:nnTF #1#2#3#4 % is the next token one of two characters
+  { \__lc_if_head_str:nTF {#1} {#3} { \__lc_if_head_str:nTF {#2} {#3} {#4} } }
+
+\prg_new_protected_conditional:Npnn \__lc_if_var_name:n #1 { T, F, TF } % is this string a legal variable name
+  { \regex_match:NnTF \c__lc_name_regex {#1} { \prg_return_true: } { \prg_return_false: } }
+\cs_generate_variant:Nn \__lc_if_var_name:nTF { V } % test on a variable holding the name
+\cs_generate_variant:Nn \__lc_if_var_name:nF { V }
+\cs_generate_variant:Nn \tl_trim_spaces:n { o } % trim a once-expanded argument
+\cs_new:Npn \lc@trim #1 { \tl_trim_spaces:o {#1} } % user-level trimming of a name
+
+\cs_new:Npn \__lc_name:n #1 % the name of a token, control sequence or not
+  {
+    \tl_if_single_token:nTF {#1}
+      { \token_if_cs:NTF #1 { \cs_to_str:N #1 } { \tl_to_str:n {#1} } }
+      { \tl_to_str:n {#1} }
+  }
+
+\cs_new_protected:Npn \__lc_parse:nN #1#2 % parse a lambda term into the triple form
+  {
+    \group_begin:
+      \tl_set_eq:NN \l__lc_saved_in_tl \g__lc_in_tl
+      \tl_gset:Nn \g__lc_in_tl {#1}
+      \__lc_parse_seq:
+      \__lc_trim:
+      \tl_if_empty:NF \g__lc_in_tl
+        { \__lc_error:nne { lc-visualizer } { unbalanced } { \tl_to_str:n {#1} } }
+      \tl_gset_eq:NN \g__lc_in_tl \l__lc_saved_in_tl
+    \group_end:
+    \tl_set_eq:NN #2 \g__lc_ret_tl
+  }
+\cs_generate_variant:Nn \__lc_parse:nN { V , e } % parse from a variable or an expanded argument
+
+\cs_new_protected:Npn \__lc_parse_seq: % a sequence of atoms, applied left to right
+  {
+    \group_begin:
+      \tl_clear:N \l__lc_acc_tl
+      \bool_set_true:N \l__lc_continue_bool
+      \bool_while_do:Nn \l__lc_continue_bool { \__lc_parse_atom: }
+      \tl_if_empty:NT \l__lc_acc_tl
+        {
+          \__lc_error:nn { lc-visualizer } { empty }
+          \tl_set:Nn \l__lc_acc_tl { {c}{}{} }
+        }
+      \tl_gset_eq:NN \g__lc_ret_tl \l__lc_acc_tl
+    \group_end:
+  }
+
+\cs_new_protected:Npn \__lc_push: % apply what was just parsed to what came before
+  {
+    \tl_if_empty:NTF \l__lc_acc_tl
+      { \tl_set_eq:NN \l__lc_acc_tl \g__lc_ret_tl }
+      { \tl_set:Nx \l__lc_acc_tl { {a} { \exp_not:V \l__lc_acc_tl } { \exp_not:V \g__lc_ret_tl } } }
+  }
+
+\cs_new_protected:Npn \__lc_parse_atom: % one atom: group, variable, lambda or constant
+  {
+    \__lc_trim:
+    \tl_if_empty:NTF \g__lc_in_tl
+      { \bool_set_false:N \l__lc_continue_bool }
+      {
+        \exp_args:NV \tl_if_head_is_group:nTF \g__lc_in_tl
+          {
+            \__lc_head:
+            \__lc_pop:
+            \__lc_parse:VN \l__lc_head_tl \l__lc_head_tl
+            \tl_gset_eq:NN \g__lc_ret_tl \l__lc_head_tl
+            \__lc_push:
+          }
+          {
+            \__lc_head:
+            \exp_last_unbraced:NV \__lc_parse_token:N \l__lc_head_tl
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__lc_parse_token:N #1 % dispatch on the token that starts an atom
+  {
+    \token_if_cs:NTF #1
+      {
+        \str_set:Nx \l__lc_name_str { \cs_to_str:N #1 }
+        \str_case:VnF \l__lc_name_str
+          {
+            { ( } { \__lc_pop: \__lc_parse_paren: }
+            { ) } { \bool_set_false:N \l__lc_continue_bool }
+            { [ } { \__lc_pop: \__lc_parse_list: }
+            { . } { \__lc_error:nne { lc-visualizer } { unexpected } { \c_backslash_str . } \__lc_pop: }
+            { mark } { \__lc_pop: \__lc_parse_mark: }
+            { lcListOf } { \__lc_pop: \__lc_parse_list_arg: }
+            { lcVar } { \__lc_pop: \__lc_parse_named_var: }
+            { RLC } { \__lc_pop: \__lc_skip_optional: }
+            { LC } { \__lc_pop: \__lc_skip_optional: }
+            { lc@argument } { \__lc_pop: \str_set:Nn \l__lc_name_str { @ } \__lc_push_var: }
+            { ~ } { \__lc_pop: }
+            { , } { \__lc_pop: }
+            { ; } { \__lc_pop: }
+            { quad } { \__lc_pop: }
+          }
+          {
+            \str_if_eq:NNTF \l__lc_name_str \c__lc_bs_str
+              { \__lc_pop: \__lc_parse_lambda: }
+              {
+                \regex_match:NVTF \c__lc_letter_regex \l__lc_name_str
+                  { \__lc_take_var: }
+                  {
+                    % a name of \lcEnableChar is a variable as well, every other macro is a constant
+                    \cs_if_exist:cTF { lc@enabled@ \l__lc_name_str }
+                      { \__lc_take_var: }
+                      { \__lc_pop: \__lc_parse_const:N #1 }
+                  }
+              }
+          }
+      }
+      {
+        \str_set:Nx \l__lc_name_str { \token_to_str:N #1 }
+        \str_case:VnF \l__lc_name_str
+          {
+            { ( } { \__lc_pop: \__lc_parse_paren: }
+            { ) } { \bool_set_false:N \l__lc_continue_bool }
+            { [ } { \__lc_pop: \__lc_parse_list: }
+            { . } { \__lc_error:nnn { lc-visualizer } { unexpected } { . } \__lc_pop: }
+            { * } { \__lc_error:nnn { lc-visualizer } { unexpected } { * } \__lc_pop: }
+          }
+          {
+            \__lc_pop:
+            \str_if_eq:NNF \l__lc_name_str \c_tilde_str
+              {
+                \__lc_word:
+                \__lc_if_var_name:VTF \l__lc_name_str
+                  { \__lc_primes: \__lc_push_var: }
+                  {
+                    \regex_match:NVTF \c__lc_digits_regex \l__lc_name_str
+                      { \tl_gset:Nx \g__lc_ret_tl { {c} { \l__lc_name_str } {} } \__lc_push: }
+                      { \__lc_parse_char_const:N #1 }
+                  }
+              }
+          }
+      }
+  }
+\cs_new_protected:Npn \__lc_parse_char_const:N #1 % a character that is no variable becomes a constant
+  {
+    \tl_set:Nn \l__lc_tmp_tl {#1}
+    \str_if_eq:VnTF \l__lc_name_str { $ }
+      { \__lc_take_until_dollar: }
+      {
+        \token_if_active:NT #1
+          {
+            \int_compare:nNnT { `#1 } > { 191 }
+              {
+                \prg_replicate:nn
+                  { \int_compare:nNnTF { `#1 } > { 239 } { 3 } { \int_compare:nNnTF { `#1 } > { 223 } { 2 } { 1 } } }
+                  { \__lc_take_one: }
+              }
+          }
+      }
+    \tl_gset:Nx \g__lc_ret_tl { {c} { \exp_not:V \l__lc_tmp_tl } {} }
+    \__lc_push:
+  }
+\cs_new_protected:Npn \__lc_word: % read the rest of a multi-letter name
+  { \regex_match:NVT \c__lc_alnum_regex \l__lc_name_str { \__lc_word_loop: } }
+\cs_new_protected:Npn \__lc_word_loop: % keep taking letters and digits of the name
+  {
+    \exp_args:NV \tl_if_head_is_N_type:nT \g__lc_in_tl
+      {
+        \__lc_head:
+        \str_set:Ne \l__lc_db_str { \exp_after:wN \token_to_str:N \l__lc_head_tl }
+        \regex_match:NVT \c__lc_alnum_regex \l__lc_db_str
+          {
+            \__lc_pop:
+            \str_put_right:NV \l__lc_name_str \l__lc_db_str
+            \__lc_word_loop:
+          }
+      }
+  }
+\cs_new_protected:Npn \__lc_take_one: % move one token from the input into the constant
+  {
+    \exp_args:NV \tl_if_head_is_group:nTF \g__lc_in_tl
+      { \tl_put_right:Nx \l__lc_tmp_tl { { \tl_head:N \g__lc_in_tl } } }
+      { \tl_put_right:Nx \l__lc_tmp_tl { \tl_head:N \g__lc_in_tl } }
+    \__lc_pop:
+  }
+\cs_new_protected:Npn \__lc_take_until_dollar: % keep math mode of a constant in one piece
+  {
+    \tl_if_empty:NF \g__lc_in_tl
+      {
+        \__lc_if_head_str:nTF { $ }
+          { \__lc_pop: \tl_put_right:Nn \l__lc_tmp_tl { $ } }
+          { \__lc_take_one: \__lc_take_until_dollar: }
+      }
+  }
+
+% a mark follows its item directly, [a, b] behind a space is a list of its own
+\cs_new_protected:Npn \__lc_skip_optional: % ignore the optional argument of a marked item
+  { \__lc_if_head_str:nT { [ } { \__lc_pop: \__lc_skip_to_bracket: } }
+\cs_new_protected:Npn \__lc_skip_to_bracket: % throw away input up to the closing bracket
+  {
+    \__lc_trim:
+    \tl_if_empty:NF \g__lc_in_tl
+      { \__lc_if_head_str:nTF { ] } { \__lc_pop: } { \__lc_pop: \__lc_skip_to_bracket: } }
+  }
+
+\seq_new:N \l__lc_list_seq % the elements of a list written as [a, b]
+\bool_new:N \l__lc_listgo_bool % the list scanner has not seen its closing bracket yet
+\tl_new:N \l__lc_body_tl % the text between the brackets
+\tl_new:N \l__lc_item_tl % the element being read
+\int_new:N \l__lc_depth_int % how deep in nested lists the scanner is
+\int_new:N \l__lc_atoms_int % atoms of the element, more than one is an application
+\bool_new:N \l__lc_arg_cs_bool % the last atom was a control sequence, a group is its argument
+\str_new:N \l__lc_head_str % the name of the token at the front of the text
+\msg_new:nnn { lc-visualizer } { missing-bracket } { Missing~`]'~in~a~list. }
+\msg_new:nnn { lc-visualizer } { step-mark-place } % a place the step mark cannot stand in
+  { step-mark-place~is~`above'~or~`behind'~(got~`#1'). }
+\cs_new_protected:Npn \lc@listmissing % the same complaint, from the scanner of the box
+  { \__lc_error:nn { lc-visualizer } { missing-bracket } }
+
+\cs_new_protected:Npn \__lc_parse_list: % [a, b, c] reads as \cons a (\cons b (\cons c \nil))
+  {
+    \__lc_list_body:
+    \exp_args:NV \__lc_list_items:n \l__lc_body_tl
+    \tl_set:Nn \l__lc_tmp_tl { \nil }
+    \seq_reverse:N \l__lc_list_seq
+    % each element is a group, so an element that is an application stays one term
+    \seq_map_inline:Nn \l__lc_list_seq
+      {
+        \tl_set:Nx \l__lc_tmp_tl
+          {
+            \exp_not:N \cons { \__lc_list_text:nn ##1 } { \exp_not:V \l__lc_tmp_tl }
+          }
+      }
+    \tl_gput_left:Nx \g__lc_in_tl { { \exp_not:V \l__lc_tmp_tl } }
+  }
+\cs_new_protected:Npn \__lc_parse_list_arg: % \lcListOf{a, b} is the same as [a, b]
+  {
+    \__lc_trim:
+    \__lc_head:
+    \__lc_pop:
+    \tl_gput_left:Nx \g__lc_in_tl { \exp_not:V \l__lc_head_tl ] }
+    \__lc_parse_list:
+  }
+\cs_new:Npn \__lc_list_text:nn #1#2 { \exp_not:n {#2} } % an element without its atom count
+\cs_new:Npn \__lc_list_paren:nn #1#2 % an element, in parentheses if it is an application
+  {
+    \int_compare:nNnTF {#1} > { 1 }
+      { \exp_not:N \lc@open \exp_not:n {#2} \exp_not:N \lc@close }
+      { \exp_not:n {#2} }
+  }
+% the cons chain the box of \LC and \RLC shows, where parentheses are what groups
+\cs_new_protected:Npn \lc@buildlist #1
+  {
+    \__lc_list_items:n {#1}
+    \tl_set:Nn \l__lc_tmp_tl { \nil }
+    \seq_reverse:N \l__lc_list_seq
+    \bool_set_true:N \l__lc_listgo_bool % the innermost tail is \nil and needs no parentheses
+    \seq_map_inline:Nn \l__lc_list_seq
+      {
+        \tl_set:Nx \l__lc_tmp_tl
+          {
+            \exp_not:N \cons \__lc_list_paren:nn ##1
+            \bool_if:NTF \l__lc_listgo_bool
+              { \exp_not:N \nil }
+              { \exp_not:N \lc@open \exp_not:V \l__lc_tmp_tl \exp_not:N \lc@close }
+          }
+        \bool_set_false:N \l__lc_listgo_bool
+      }
+    % the list may stand as the argument of an application, so it keeps its parentheses
+    \lc@open \tl_use:N \l__lc_tmp_tl \lc@close
+  }
+
+\cs_new_protected:Npn \__lc_list_body: % the text up to the bracket that closes the list
+  {
+    \tl_clear:N \l__lc_body_tl
+    \int_zero:N \l__lc_depth_int
+    \bool_set_true:N \l__lc_listgo_bool
+    \bool_while_do:Nn \l__lc_listgo_bool { \__lc_list_token: }
+  }
+\cs_new_protected:Npn \__lc_list_token: % one token of the text, from the parser input
+  {
+    \tl_if_empty:NTF \g__lc_in_tl
+      {
+        \__lc_error:nn { lc-visualizer } { missing-bracket }
+        \bool_set_false:N \l__lc_listgo_bool
+      }
+      {
+        \exp_args:NV \tl_if_head_is_space:nTF \g__lc_in_tl
+          { \tl_put_right:Nn \l__lc_body_tl { ~ } \__lc_trim: }
+          { \__lc_list_token_aux: }
+      }
+  }
+\cs_new_protected:Npn \__lc_list_token_aux: % one token that is no space
+  {
+    \exp_args:NV \tl_if_head_is_group:nTF \g__lc_in_tl
+      { \__lc_list_move:n { group } }
+      {
+        \__lc_if_either:nnTF { ] } { \c_backslash_str ] }
+          {
+            \__lc_pop:
+            \int_compare:nNnTF \l__lc_depth_int > { 0 }
+              { \int_decr:N \l__lc_depth_int \tl_put_right:Nn \l__lc_body_tl { ] } }
+              { \bool_set_false:N \l__lc_listgo_bool }
+          }
+          {
+            \__lc_if_either:nnTF { [ } { \c_backslash_str [ }
+              { \int_incr:N \l__lc_depth_int \__lc_list_move:n { token } }
+              { \__lc_list_move:n { token } }
+          }
+      }
+  }
+\cs_new_protected:Npn \__lc_list_move:n #1 % move the next token or group into the text
+  {
+    \__lc_head:
+    \str_if_eq:nnTF {#1} { group }
+      { \tl_put_right:Nx \l__lc_body_tl { { \exp_not:V \l__lc_head_tl } } }
+      { \tl_put_right:Nx \l__lc_body_tl { \exp_not:V \l__lc_head_tl } }
+    \__lc_pop:
+  }
+
+% the elements of "a, b, c", where a comma inside brackets or parentheses does not
+% separate.  An element of more than one atom is an application, which a box has to
+% put in parentheses of its own, while the parser only wraps every element in braces.
+\cs_new_protected:Npn \__lc_list_items:n #1
+  {
+    \tl_set:Nn \l__lc_body_tl {#1}
+    \seq_clear:N \l__lc_list_seq
+    \int_zero:N \l__lc_depth_int
+    \__lc_item_reset:
+    \bool_set_true:N \l__lc_listgo_bool
+    \bool_while_do:Nn \l__lc_listgo_bool
+      {
+        \tl_if_empty:NTF \l__lc_body_tl
+          { \bool_set_false:N \l__lc_listgo_bool }
+          { \__lc_item_token: }
+      }
+    \__lc_item_put:
+  }
+\cs_new_protected:Npn \__lc_item_reset: % begin the next element
+  {
+    \tl_clear:N \l__lc_item_tl
+    \int_zero:N \l__lc_atoms_int
+    \bool_set_false:N \l__lc_arg_cs_bool
+  }
+\cs_new_protected:Npn \__lc_item_put: % close the element, dropping it when it is empty
+  {
+    \tl_trim_spaces:N \l__lc_item_tl
+    \tl_if_empty:NF \l__lc_item_tl
+      {
+        \seq_put_right:Nx \l__lc_list_seq
+          { { \int_use:N \l__lc_atoms_int } { \exp_not:V \l__lc_item_tl } }
+      }
+    \__lc_item_reset:
+  }
+\cs_new_protected:Npn \__lc_item_drop: % throw the token at the front of the text away
+  { \tl_set:Nx \l__lc_body_tl { \tl_tail:N \l__lc_body_tl } }
+\cs_new_protected:Npn \__lc_item_take: % move that token into the element
+  {
+    \tl_put_right:Nx \l__lc_item_tl { \exp_not:V \l__lc_head_tl }
+    \__lc_item_drop:
+  }
+\cs_new_protected:Npn \__lc_item_atom: % only what stands outside of brackets is an atom
+  { \int_compare:nNnT \l__lc_depth_int = { 0 } { \int_incr:N \l__lc_atoms_int } }
+\cs_new_protected:Npn \__lc_item_token: % one space, group or token of the text
+  {
+    \exp_args:NV \tl_if_head_is_space:nTF \l__lc_body_tl
+      {
+        \tl_if_empty:NF \l__lc_item_tl { \tl_put_right:Nn \l__lc_item_tl { ~ } }
+        \tl_trim_spaces:N \l__lc_body_tl
+      }
+      {
+        \tl_set:Nx \l__lc_head_tl { \tl_head:N \l__lc_body_tl }
+        \exp_args:NV \tl_if_head_is_group:nTF \l__lc_body_tl
+          {
+            % a group behind a control sequence is its argument and no atom of its own
+            \bool_if:NF \l__lc_arg_cs_bool { \__lc_item_atom: }
+            \tl_put_right:Nx \l__lc_item_tl { { \exp_not:V \l__lc_head_tl } }
+            \__lc_item_drop:
+          }
+          { \__lc_item_char: }
+      }
+  }
+\cs_new_protected:Npn \__lc_item_char: % one token, which may open or close a group
+  {
+    \str_set:Ne \l__lc_head_str { \exp_args:NV \__lc_name:n \l__lc_head_tl }
+    \str_case:VnF \l__lc_head_str
+      {
+        { , }
+          {
+            \int_compare:nNnTF \l__lc_depth_int = { 0 }
+              { \__lc_item_drop: \__lc_item_put: }
+              { \__lc_item_take: }
+          }
+        { [ } { \__lc_item_open: }
+        { ( } { \__lc_item_open: }
+        { ] } { \__lc_item_close: }
+        { ) } { \__lc_item_close: }
+      }
+      {
+        \__lc_item_atom:
+        \bool_set:Nn \l__lc_arg_cs_bool
+          { \exp_last_unbraced:NV \token_if_cs_p:N \l__lc_head_tl }
+        \__lc_item_take:
+      }
+  }
+\cs_new_protected:Npn \__lc_item_open: % a nested list or a parenthesis is one atom
+  {
+    \__lc_item_atom:
+    \int_incr:N \l__lc_depth_int
+    \bool_set_false:N \l__lc_arg_cs_bool
+    \__lc_item_take:
+  }
+\cs_new_protected:Npn \__lc_item_close:
+  {
+    \int_compare:nNnT \l__lc_depth_int > { 0 } { \int_decr:N \l__lc_depth_int }
+    \bool_set_false:N \l__lc_arg_cs_bool
+    \__lc_item_take:
+  }
+
+\cs_new_protected:Npn \__lc_parse_paren: % a parenthesised subterm
+  {
+    \__lc_parse_seq:
+    \__lc_trim:
+    \__lc_if_either:nnTF { ) } { \c_backslash_str ) }
+      { \__lc_pop: }
+      { \__lc_error:nn { lc-visualizer } { missing-paren } }
+    \__lc_push:
+  }
+
+\cs_new_protected:Npn \__lc_parse_lambda: % an abstraction, one node per binder
+  {
+    \__lc_skip_optional:
+    \__lc_trim:
+    \seq_clear:N \l__lc_binders_seq
+    \exp_args:NV \tl_if_head_is_group:nTF \g__lc_in_tl
+      {
+        \__lc_head:
+        \__lc_pop:
+        \clist_set:NV \l__lc_binders_clist \l__lc_head_tl
+        \clist_map_inline:Nn \l__lc_binders_clist
+          {
+            \str_set:Nx \l__lc_name_str { \__lc_name:n {##1} }
+            \__lc_add_binder:
+          }
+      }
+      {
+        \__lc_head:
+        \__lc_pop:
+        \str_set:Nx \l__lc_name_str { \exp_args:NV \__lc_name:n \l__lc_head_tl }
+        \__lc_primes:
+        \__lc_add_binder:
+      }
+    \seq_if_empty:NT \l__lc_binders_seq
+      { \__lc_error:nnn { lc-visualizer } { bad-name } { } }
+    \__lc_skip_optional:
+    \__lc_trim:
+    \__lc_if_either:nnTF { . } { \c_backslash_str . }
+      { \__lc_pop: } { \__lc_error:nn { lc-visualizer } { missing-dot } }
+    \__lc_parse_seq:
+    \seq_map_inline:Nn \l__lc_binders_seq
+      { \tl_gset:Nx \g__lc_ret_tl { {l} {##1} { \exp_not:V \g__lc_ret_tl } } }
+    \__lc_push:
+  }
+
+\cs_new_protected:Npn \__lc_parse_mark: % a mark is transparent, only its content is a term
+  {
+    \__lc_skip_optional:
+    \__lc_trim:
+    \__lc_pop:
+    \__lc_trim:
+    \exp_args:NV \tl_if_head_is_group:nTF \g__lc_in_tl
+      {
+        \__lc_head:
+        \tl_set:Nx \l__lc_tmp_tl { \tl_head:N \l__lc_head_tl }
+        \str_if_eq:eeT { \exp_after:wN \token_to_str:N \l__lc_tmp_tl } { \c_backslash_str \c_backslash_str }
+          {
+            \tl_if_in:NnF \l__lc_head_tl { . }
+              { \tl_if_in:NnF \l__lc_head_tl { \. } { \__lc_pop: \tl_gput_left:NV \g__lc_in_tl \l__lc_head_tl } }
+          }
+      }
+      { \__lc_error:nn { lc-visualizer } { empty } }
+  }
+
+\cs_new_protected:Npn \__lc_primes: % primes belong to the name in front of them
+  { \__lc_if_head_str:nT { ' } { \__lc_pop: \str_put_right:Nn \l__lc_name_str { ' } \__lc_primes: } }
+
+\cs_new_protected:Npn \__lc_take_var: % the name in front is a variable of the term
+  {
+    \__lc_pop:
+    \__lc_primes:
+    \__lc_skip_optional:
+    \__lc_push_var:
+  }
+\cs_new_protected:Npn \__lc_parse_named_var: % a variable given by its name
+  {
+    \__lc_trim:
+    \__lc_head:
+    \__lc_pop:
+    \str_set:Ne \l__lc_name_str { \tl_trim_spaces:V \l__lc_head_tl }
+    \__lc_primes:
+    \__lc_skip_optional:
+    \__lc_check_name:
+    \__lc_push_var:
+  }
+\cs_new_protected:Npn \__lc_add_binder: % record one checked binder of an abstraction
+  { \__lc_check_name: \seq_put_left:NV \l__lc_binders_seq \l__lc_name_str }
+\cs_new_protected:Npn \__lc_check_name: % complain about a name that is no name
+  { \__lc_if_var_name:VF \l__lc_name_str { \__lc_error:nnV { lc-visualizer } { bad-name } \l__lc_name_str } }
+\cs_new_protected:Npn \__lc_push_var: % the parsed name becomes a variable node
+  { \tl_gset:Nx \g__lc_ret_tl { {v} { \l__lc_name_str } {} } \__lc_push: }
+
+\cs_new_protected:Npn \__lc_parse_const:N #1 % a macro: a constant, with its rule body if known
+  {
+    \tl_set:Nn \l__lc_tmp_tl {#1}
+    \tl_clear:N \l__lc_arg_tl
+    \__lc_trim:
+    \__lc_if_head_str:nT { * } { \__lc_pop: \tl_put_right:Nn \l__lc_tmp_tl { * } }
+    \cs_if_exist:cT { lc@argrule@ \cs_to_str:N #1 }
+      {
+        \__lc_trim:
+        \tl_set:Nx \l__lc_arg_tl { \tl_head:N \g__lc_in_tl }
+        \__lc_pop:
+        \tl_put_right:Nx \l__lc_tmp_tl { { \exp_not:V \l__lc_arg_tl } }
+        \str_if_eq:eeT { \cs_to_str:N #1 } { num }
+          {
+            \regex_match:NVF \c__lc_number_regex \l__lc_arg_tl
+              {
+                \__lc_error:nnV { lc-visualizer } { bad-number } \l__lc_arg_tl
+                \tl_set:Nn \l__lc_arg_tl { 0 }
+              }
+          }
+        \cs_if_exist:cF { lc@rawargrule@ \cs_to_str:N #1 }
+          {
+            \tl_if_blank:VT \l__lc_arg_tl
+              { \__lc_error:nne { lc-visualizer } { missing-argument } { \cs_to_str:N #1 } }
+          }
+      }
+    \cs_if_exist:cTF { lc@rule@body@ \cs_to_str:N #1 }
+      { \use:e { \__lc_unfold:nn { \cs_to_str:N #1 } { \exp_not:V \l__lc_arg_tl } } }
+      {
+        \__lc_take_groups:
+        \tl_gclear:N \g__lc_ret_tl
+      }
+    \tl_gset:Nx \g__lc_ret_tl { {c} { \exp_not:V \l__lc_tmp_tl } { \exp_not:V \g__lc_ret_tl } }
+    \__lc_push:
+  }
+
+\cs_new_protected:Npn \__lc_take_groups: % a constant swallows the groups that follow it
+  {
+    \__lc_trim:
+    \exp_args:NV \tl_if_head_is_group:nT \g__lc_in_tl
+      {
+        \tl_put_right:Nx \l__lc_tmp_tl { { \tl_head:N \g__lc_in_tl } }
+        \__lc_pop:
+        \__lc_take_groups:
+      }
+  }
+\cs_new_protected:Npn \__lc_unfold:nn #1#2 % the term a rewriting rule stands for
+  {
+    \seq_if_in:NnTF \l__lc_unfolding_seq {#1}
+      {
+        \__lc_error:nnn { lc-visualizer } { recursive-rule } {#1}
+        \tl_gclear:N \g__lc_ret_tl
+      }
+      { \__lc_unfold_aux:nn {#1} {#2} }
+  }
+\cs_new_protected:Npn \__lc_unfold_aux:nn #1#2 % parse a rule body with the variables neutralised
+  {
+    \group_begin:
+      \bool_set_false:N \l__lc_term_arg_bool
+      \cs_if_exist:cF { lc@rawargrule@ #1 }
+        {
+          \tl_if_empty:nF {#2}
+            { \regex_match:NnF \c__lc_number_regex {#2} { \bool_set_true:N \l__lc_term_arg_bool } }
+        }
+      \bool_if:NT \l__lc_term_arg_bool { \__lc_parse:nN {#2} \l__lc_arg_tl }
+      % only a body can use itself, the argument of a raw rule is text and ends
+      \cs_if_exist:cF { lc@rawargrule@ #1 } { \seq_put_right:Nn \l__lc_unfolding_seq {#1} }
+      \str_map_inline:nn { abcdefghijklmnopqrstuvwxyz } { \cs_set_eq:cN {##1} \scan_stop: }
+      \tl_map_inline:Nn \lc@rule@names { \cs_set_eq:cN {##1} \scan_stop: }
+      \clist_map_inline:nn { \\ , \. , \( , \) , \lcVar , \mark , \lc@argument , \Y , \equiv , \RLC , \LC }
+        { \cs_set_eq:NN ##1 \scan_stop: }
+      \cs_set_eq:NN \protect \exp_not:N
+      \bool_if:NTF \l__lc_term_arg_bool
+        { \cs_set:Npn \@arg { \lc@argument } }
+        { \cs_set:Npn \@arg {#2} }
+      \cs_set_eq:NN \lcArg \@arg
+      \tl_set:Ne \l__lc_tmp_tl { \use:c { lc@rule@body@ #1 } }
+      \__lc_parse:VN \l__lc_tmp_tl \l__lc_tmp_tl
+      \bool_if:NT \l__lc_term_arg_bool
+        {
+          \__lc_substitute:nVV { @ } \l__lc_arg_tl \l__lc_tmp_tl
+          \tl_set_eq:NN \l__lc_tmp_tl \g__lc_ret_tl
+        }
+      \tl_gset_eq:NN \g__lc_ret_tl \l__lc_tmp_tl
+    \group_end:
+  }
+
+\cs_new:Npn \__lc_subst:nnn #1#2#3 { \__lc_subst_aux:nnnnn {#1} {#2} #3 } % capture-free substitution in a term
+\cs_new:Npn \__lc_subst_aux:nnnnn #1#2#3#4#5 { \use:c { __lc_subst_#3:nnnn } {#1} {#2} {#4} {#5} } % dispatch substitution on the kind of the term
+% SNIP:subst
+\cs_new:Npn \__lc_subst_v:nnnn #1#2#3#4 % a variable is replaced if the names match
+  { \str_if_eq:nnTF {#1} {#3} { \exp_not:n {#2} } { \exp_not:n { {v} {#3} {} } } }
+\cs_new:Npn \__lc_subst_c:nnnn #1#2#3#4 % substitute into the unfolding of a constant
+  {
+    \tl_if_empty:nTF {#4} { \use_ii:nn } { \__lc_if_free:nnTF {#1} {#4} }
+      { \__lc_subst:nnn {#1} {#2} {#4} } { \exp_not:n { {c} {#3} {#4} } }
+  }
+\cs_new:Npn \__lc_subst_a:nnnn #1#2#3#4 % substitute in both parts of an application
+  { {a} { \__lc_subst:nnn {#1} {#2} {#3} } { \__lc_subst:nnn {#1} {#2} {#4} } }
+\cs_new:Npn \__lc_subst_l:nnnn #1#2#3#4 % a binder of the same name stops the substitution
+  {
+    \str_if_eq:nnTF {#1} {#3}
+      { \exp_not:n { {l} {#3} {#4} } }
+      { {l} { \exp_not:n {#3} } { \__lc_subst:nnn {#1} {#2} {#4} } }
+  }
+% /SNIP:subst
+\cs_generate_variant:Nn \__lc_subst:nnn { nV , nnV } % substitute a term held in a variable
+
+\cs_new:Npn \__lc_if_free:nnTF #1#2 { \__lc_if_free_aux:nnnn {#1} #2 } % does this name occur free in the term
+\cs_new:Npn \__lc_if_free_aux:nnnn #1#2#3#4 { \use:c { __lc_if_free_#2:nnn } {#1} {#3} {#4} } % dispatch the free test on the kind
+\cs_new:Npn \__lc_if_free_v:nnn #1#2#3 { \str_if_eq:nnTF {#1} {#2} } % a variable is free if it is that name
+\cs_new:Npn \__lc_if_free_c:nnn #1#2#3 % a constant is free through its unfolding
+  { \tl_if_empty:nTF {#3} { \use_ii:nn } { \__lc_if_free:nnTF {#1} {#3} } }
+\cs_new:Npn \__lc_if_free_a:nnn #1#2#3 #4#5 % free in an application if free in either part
+  { \__lc_if_free:nnTF {#1} {#2} {#4} { \__lc_if_free:nnTF {#1} {#3} {#4} {#5} } }
+\cs_new:Npn \__lc_if_free_l:nnn #1#2#3 #4#5 % its own binder makes the name bound
+  { \str_if_eq:nnTF {#1} {#2} {#5} { \__lc_if_free:nnTF {#1} {#3} {#4} {#5} } }
+
+\cs_new_protected:Npn \__lc_fv:n #1 { \__lc_fv_aux:nnn #1 } % collect the free names of a term
+\cs_new_protected:Npn \__lc_fv_aux:nnn #1#2#3 % walk the term, keeping the binders in scope
+  {
+    \str_case:nn {#1}
+      {
+        {v} { \seq_if_in:NnF \l__lc_bound_seq {#2} { \seq_gput_right:Nn \g__lc_names_seq {#2} } }
+        {a} { \__lc_fv:n {#2} \__lc_fv:n {#3} }
+        {c} { \tl_if_empty:nF {#3} { \__lc_fv:n {#3} } }
+        {l}
+          {
+            \group_begin:
+              \seq_put_right:Nn \l__lc_bound_seq {#2}
+              \__lc_fv:n {#3}
+            \group_end:
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__lc_names:n #1 { \__lc_names_aux:nnn #1 } % collect every name in a term, bound or not
+\cs_new_protected:Npn \__lc_names_aux:nnn #1#2#3 % walk the term collecting names
+  {
+    \str_case:nn {#1}
+      {
+        {v} { \seq_gput_right:Nn \g__lc_names_seq {#2} }
+        {l} { \seq_gput_right:Nn \g__lc_names_seq {#2} \__lc_names:n {#3} }
+        {a} { \__lc_names:n {#2} \__lc_names:n {#3} }
+        {c} { \tl_if_empty:nF {#3} { \__lc_names:n {#3} } }
+      }
+  }
+\cs_generate_variant:Nn \__lc_names:n { V } % collect from a term held in a variable
+
+\cs_new_protected:Npn \__lc_fresh:n #1 % a name like the given one that is still unused
+  {
+    \bool_if:NF \g__lc_avoid_bool
+      {
+        \seq_gclear:N \g__lc_names_seq
+        \__lc_names:V \l__lc_term_tl
+        \seq_gset_eq:NN \g__lc_avoid_seq \g__lc_names_seq
+        \bool_gset_true:N \g__lc_avoid_bool
+      }
+    \str_gset:Nn \g__lc_fresh_str { #1 ' }
+    \__lc_fresh_loop:
+    \seq_gput_right:NV \g__lc_avoid_seq \g__lc_fresh_str
+  }
+\cs_new_protected:Npn \__lc_fresh_loop: % add primes until the name is free
+  {
+    \seq_if_in:NVT \g__lc_avoid_seq \g__lc_fresh_str
+      { \str_gput_right:Nn \g__lc_fresh_str { ' } \__lc_fresh_loop: }
+  }
+
+\cs_new_protected:Npn \__lc_prepare_rename:n #1 % note the free names the argument brings in
+  {
+    \seq_gclear:N \g__lc_names_seq
+    \group_begin:
+      \seq_clear:N \l__lc_bound_seq
+      \__lc_fv:n {#1}
+    \group_end:
+    \seq_set_eq:NN \l__lc_fvN_seq \g__lc_names_seq
+    \bool_gset_false:N \g__lc_renamed_bool
+  }
+
+\cs_new_protected:Npn \__lc_substitute:nnn #1#2#3 % rename away captures, then substitute
+  {
+    \group_begin:
+      \seq_gclear:N \g__lc_names_seq
+      \__lc_names:n {#2}
+      \__lc_names:n {#3}
+      \seq_gset_eq:NN \g__lc_avoid_seq \g__lc_names_seq
+      \bool_gset_true:N \g__lc_avoid_bool
+      \__lc_prepare_rename:n {#2}
+      \__lc_rename:nn {#1} {#3}
+      \tl_gset:Nx \g__lc_ret_tl { \__lc_subst:nnV {#1} {#2} \g__lc_ret_tl }
+    \group_end:
+  }
+\cs_generate_variant:Nn \__lc_substitute:nnn { nVV } % substitute terms held in variables
+
+\cs_new_protected:Npn \__lc_map_a:nnn #1#2#3 % map a term operation over both parts of an application
+  {
+    #1 {#2}
+    \group_begin:
+      \tl_set_eq:NN \l__lc_tmp_tl \g__lc_ret_tl
+      #1 {#3}
+      \tl_gset:Nx \g__lc_ret_tl { {a} { \exp_not:V \l__lc_tmp_tl } { \exp_not:V \g__lc_ret_tl } }
+    \group_end:
+  }
+\cs_new_protected:Npn \__lc_map_l:nnn #1#2#3 % map a term operation under a binder
+  { #1 {#3} \tl_gset:Nx \g__lc_ret_tl { {l} { \exp_not:n {#2} } { \exp_not:V \g__lc_ret_tl } } }
+\cs_generate_variant:Nn \__lc_map_l:nnn { nVV } % map with binder and body in variables
+
+\cs_new_protected:Npn \__lc_rename:nn #1#2 { \__lc_rename_aux:nnnn {#1} #2 } % alpha-rename binders that would capture the name
+\cs_new_protected:Npn \__lc_rename_aux:nnnn #1#2#3#4 % walk the term looking for capturing binders
+  {
+    \str_case:nnF {#2}
+      {
+        {a} { \__lc_map_a:nnn { \__lc_rename:nn {#1} } {#3} {#4} }
+        {l}
+          {
+            \bool_lazy_or:nnTF
+              { \str_if_eq_p:nn {#1} {#3} }
+              { \__lc_if_free:nnTF {#1} {#4} { \c_false_bool } { \c_true_bool } }
+              { \tl_gset:Nn \g__lc_ret_tl { {l} {#3} {#4} } }
+              {
+                \seq_if_in:NnTF \l__lc_fvN_seq {#3}
+                  {
+                    \bool_gset_true:N \g__lc_renamed_bool
+                    \__lc_fresh:n {#3}
+                    \group_begin:
+                      \str_set_eq:NN \l__lc_new_str \g__lc_fresh_str
+                      \tl_set:Nx \l__lc_tmp_tl { {v} { \l__lc_new_str } {} }
+                      \tl_set:Nx \l__lc_tmp_tl { \__lc_subst:nVn {#3} \l__lc_tmp_tl {#4} }
+                      \__lc_map_l:nVV { \__lc_rename:nn {#1} } \l__lc_new_str \l__lc_tmp_tl
+                    \group_end:
+                  }
+                  { \__lc_map_l:nnn { \__lc_rename:nn {#1} } {#3} {#4} }
+              }
+          }
+      }
+      {
+        \tl_if_empty:nTF {#4} { \use_ii:nn } { \__lc_if_free:nnTF {#1} {#4} }
+          { \__lc_rename:nn {#1} {#4} } { \tl_gset:Nn \g__lc_ret_tl { {#2} {#3} {#4} } }
+      }
+  }
+
+\cs_new_protected:Npn \__lc_step:n #1 { \__lc_step_aux:nnn #1 } % find the leftmost outermost step of a term
+\cs_generate_variant:Nn \__lc_step:n { V } % step on a term held in a variable
+\cs_new_protected:Npn \__lc_step_aux:nnn #1#2#3 % dispatch the search for a step on the kind
+  {
+    \str_gclear:N \g__lc_kind_str
+% SNIP:step
+    \str_case:nn {#1}
+      {
+        {l} { \__lc_step_l:nn {#2} {#3} }
+        {a} { \__lc_step_a:nn {#2} {#3} }
+        {c} { \bool_if:NT \l__lc_delta_bool { \__lc_try_unfold:nn {#2} {#3} } }
+      }
+% /SNIP:step
+  }
+\cs_new_protected:Npn \__lc_try_unfold:nn #1#2 % a rule with an argument may still reduce inside
+  {
+    \tl_if_empty:nF {#2}
+      {
+        \tl_set:Ne \l__lc_tmp_tl { \tl_head:n {#1} }
+        \str_set:Ne \l__lc_name_str { \exp_after:wN \cs_to_str:N \l__lc_tmp_tl }
+        \cs_if_exist:cT { lc@argrule@ \l__lc_name_str }
+          {
+            \__lc_step:n {#2}
+            \str_if_empty:NF \g__lc_kind_str
+              {
+                \str_gset:Nn \g__lc_kind_str { delta }
+                \tl_gset:Nn \g__lc_new_tl {#2}
+                \tl_gset:Nn \g__lc_marked_tl { {D} {#1} {#2} }
+              }
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__lc_step_l:nn #1#2 % eta first, then a step inside the body
+  {
+% SNIP:lambda
+    \bool_if:NT \l__lc_eta_bool { \__lc_try_eta:nnnn {#1} #2 }
+    \str_if_empty:NT \g__lc_kind_str { \__lc_step_in:nnn {#2} { {l} {#1} } { } }
+% /SNIP:lambda
+  }
+\cs_new_protected:Npn \__lc_step_in:nnn #1#2#3 % lift a step found in a subterm back up
+  {
+    \__lc_step:n {#1}
+    \str_if_empty:NF \g__lc_kind_str
+      {
+        \tl_gset:Nx \g__lc_new_tl { \exp_not:n {#2} { \exp_not:V \g__lc_new_tl } \exp_not:n {#3} }
+        \bool_if:NT \l__lc_store_bool
+          { \tl_gset:Nx \g__lc_marked_tl { \exp_not:n {#2} { \exp_not:V \g__lc_marked_tl } \exp_not:n {#3} } }
+      }
+  }
+
+\cs_new:Npn \__lc_if_var:nnT #1#2 { \__lc_if_var_aux:nnnnn {#1} #2 } % is this term just that variable, up to constants
+\cs_new:Npn \__lc_if_var_aux:nnnnn #1#2#3#4#5 % dispatch the variable test on the kind
+  {
+    \str_case:nnF {#2}
+      {
+        {v} { \str_if_eq:nnT {#1} {#3} {#5} }
+        {c} { \tl_if_empty:nF {#4} { \__lc_if_var:nnT {#1} {#4} {#5} } }
+      }
+      { }
+  }
+
+\cs_new_protected:Npn \__lc_try_eta:nnnn #1#2#3#4 % the eta step: an argument passed straight through
+  {
+% SNIP:eta
+    \str_if_eq:nnT {#2} {a}
+      {
+        \__lc_if_var:nnT {#1} {#4}
+          {
+            \__lc_if_free:nnTF {#1} {#3} { }
+              {
+                \str_gset:Nn \g__lc_kind_str { eta }
+                \tl_gset:Nn \g__lc_new_tl {#3}
+                \tl_gset:Nn \g__lc_marked_tl { {l} {#1} { {a} {#3} {#4} } }
+              }
+          }
+      }
+% /SNIP:eta
+  }
+
+\cs_new_protected:Npn \__lc_step_a:nn #1#2 % beta or delta here, else a step in a part
+  {
+% SNIP:application
+    \str_case:en { \__lc_kind:n {#1} }
+      {
+        {l} { \__lc_beta:nnnn #1 {#2} }
+        {c} { \bool_if:NT \l__lc_delta_bool { \__lc_delta:nnnn #1 {#2} } }
+      }
+    \str_if_empty:NT \g__lc_kind_str { \__lc_step_in:nnn {#1} { {a} } { {#2} } }
+    \str_if_empty:NT \g__lc_kind_str { \__lc_step_in:nnn {#2} { {a} {#1} } { } }
+% /SNIP:application
+  }
+
+\cs_new_protected:Npn \__lc_beta:nnnn #1#2#3#4 % the beta step, or the alpha step it needs first
+  {
+% SNIP:beta
+    \__lc_prepare_rename:n {#4}
+    \__lc_rename:nn {#2} {#3}
+    \bool_if:NTF \g__lc_renamed_bool
+      {
+        \str_gset:Nn \g__lc_kind_str { alpha }
+        \tl_gset:Nx \g__lc_new_tl
+          { {a} { {l} { \exp_not:n {#2} } { \exp_not:V \g__lc_ret_tl } } { \exp_not:n {#4} } }
+        \tl_gset:Nn \g__lc_marked_tl { {a} { {l} {#2} {#3} } {#4} }
+      }
+      {
+        \str_gset:Nn \g__lc_kind_str { beta }
+        \tl_gset:Nx \g__lc_new_tl { \__lc_subst:nnn {#2} {#4} {#3} }
+        \tl_gset:Nn \g__lc_marked_tl { {B} { {l} {#2} {#3} } {#4} }
+      }
+% /SNIP:beta
+  }
+
+\cs_new_protected:Npn \__lc_delta:nnnn #1#2#3#4 % unfold a constant in function position
+  {
+% SNIP:delta
+    \tl_if_empty:nF {#3}
+      {
+        \str_gset:Nn \g__lc_kind_str { delta }
+        \tl_gset:Nn \g__lc_new_tl { {a} {#3} {#4} }
+        \tl_gset:Nn \g__lc_marked_tl { {a} { {D} {#2} {#3} } {#4} }
+      }
+% /SNIP:delta
+  }
+
+\prop_new:N \g__lc_folddb_prop % de Bruijn form of every rule we already folded with
+\cs_gset_protected:Npn \lc@clearfoldcache { \prop_gclear:N \g__lc_folddb_prop } % a new rule may change them all
+\cs_new_protected:Npn \__lc_fold_rule:n #1 % the de Bruijn form of one rule, kept between runs
+  {
+    \prop_get:NnNF \g__lc_folddb_prop {#1} \l__lc_tmp_tl
+      {
+        \__lc_parse:eN { \exp_not:c {#1} } \l__lc_tmp_tl
+        \tl_set:Ne \l__lc_tmp_tl { \__lc_db:nV { } \l__lc_tmp_tl }
+        \prop_gput:NnV \g__lc_folddb_prop {#1} \l__lc_tmp_tl
+      }
+    \prop_put:NnV \l__lc_fold_prop {#1} \l__lc_tmp_tl
+  }
+\cs_new_protected:Npn \__lc_fold_setup: % the normal forms of the rules we fold back to
+  {
+    \prop_clear:N \l__lc_fold_prop
+    \clist_map_inline:Nn \l__lc_fold_clist
+      {
+        \str_case:nnF {##1}
+          {
+            { num } { }
+            { list } { \__lc_fold_rule:n { nil } }
+          }
+          {
+            \bool_lazy_and:nnF
+              { \cs_if_exist_p:c { lc@rule@body@ ##1 } }
+              { ! \cs_if_exist_p:c { lc@argrule@ ##1 } }
+              { \__lc_error:nnn { lc-visualizer } { unknown-fold } {##1} }
+            \__lc_fold_rule:n {##1}
+          }
+      }
+  }
+\seq_new:N \l__lc_items_seq % the elements of a term that reads as a list
+\bool_new:N \l__lc_islist_bool % whether it still reads as one
+\cs_new_protected:Npn \__lc_fold_list:n #1 % write a list as [a, b, c]
+  {
+    \seq_clear:N \l__lc_items_seq
+    \bool_set_true:N \l__lc_islist_bool
+    \__lc_list_walk:n {#1}
+    \bool_if:NT \l__lc_islist_bool
+      { \tl_set:Nx \l__lc_fold_tl { [ \seq_use:Nn \l__lc_items_seq { ,~ } \exp_not:N \unskip ] } }
+  }
+\cs_new_protected:Npn \__lc_list_walk:n #1 % peel one cons off, or stop at nil
+  {
+    \str_if_eq:eeTF { \__lc_db:nn { } {#1} } { \prop_item:Nn \l__lc_fold_prop { nil } }
+      { }
+      { \__lc_list_cons:nnn #1 }
+  }
+\cs_new_protected:Npn \__lc_list_cons:nnn #1#2#3 % a list is \\c.\c <head> <tail>
+  {
+    \bool_lazy_and:nnTF
+      { \str_if_eq_p:nn {#1} { l } } { \str_if_eq_p:ee { \__lc_list_head:n {#3} } { a } }
+      { \__lc_list_parts:nnn {#2} #3 }
+      { \bool_set_false:N \l__lc_islist_bool }
+  }
+\cs_new:Npn \__lc_list_head:n #1 { \__lc_list_head_aux:nnn #1 }
+\cs_new:Npn \__lc_list_head_aux:nnn #1#2#3 {#1}
+\cs_new_protected:Npn \__lc_list_parts:nnn #1#2#3#4 % #1 binder, #2#3#4 the application
+  {
+    \bool_lazy_and:nnTF
+      { \str_if_eq_p:ee { \__lc_list_head:n {#3} } { a } }
+      { \str_if_eq_p:ee { \__lc_list_binder:n {#3} } { \tl_to_str:n {#1} } }
+      { \__lc_list_item:nn {#3} {#4} }
+      { \bool_set_false:N \l__lc_islist_bool }
+  }
+\cs_new:Npn \__lc_list_binder:n #1 { \__lc_list_binder_aux:nnn #1 }
+\cs_new:Npn \__lc_list_binder_aux:nnn #1#2#3 { \__lc_list_var:n {#2} }
+\cs_new:Npn \__lc_list_var:n #1 { \__lc_list_var_aux:nnn #1 }
+\cs_new:Npn \__lc_list_var_aux:nnn #1#2#3 { \tl_to_str:n {#2} } % a name a constant may not expand
+\cs_new_protected:Npn \__lc_list_item:nn #1#2 % the head of the cons, then its tail
+  {
+    \__lc_list_second:nnn #1
+    \__lc_list_walk:n {#2}
+  }
+\cs_new_protected:Npn \__lc_list_second:nnn #1#2#3 % the head of a cons, folded on its own
+  {
+    \group_begin: \__lc_fold:n {#3} \group_end:
+    \seq_put_right:Nx \l__lc_items_seq { \__lc_tp:nV { t } \g__lc_ret_tl }
+  }
+\cs_new_protected:Npn \__lc_fold:n #1 % show a subterm as the rule name it matches
+  {
+    \str_set:Ne \l__lc_db_str { \__lc_db:nn { } {#1} }
+    \tl_clear:N \l__lc_fold_tl
+    \clist_if_in:NeT \l__lc_fold_clist { \tl_to_str:n { list } } { \__lc_fold_list:n {#1} }
+    \clist_map_inline:Nn \l__lc_fold_clist
+      {
+        \str_if_eq:nnTF {##1} { num }
+          {
+            \regex_match:NVT \c__lc_numeral_regex \l__lc_db_str
+              {
+                \regex_count:nVN { \[2\] } \l__lc_db_str \l__lc_n_int
+                \tl_set:Ne \l__lc_fold_tl { \exp_not:N \num { \int_use:N \l__lc_n_int } }
+              }
+            \bool_lazy_and:nnT { \l__lc_eta_bool } { \str_if_eq_p:ee { \l__lc_db_str } { \c_backslash_str . [1] } }
+              { \tl_set:Nn \l__lc_fold_tl { \num { 1 } } }
+          }
+          { \str_if_eq:eeT { \prop_item:Nn \l__lc_fold_prop {##1} } { \l__lc_db_str } { \tl_set:Ne \l__lc_fold_tl { \exp_not:c {##1} } } }
+        \tl_if_empty:NF \l__lc_fold_tl { \clist_map_break: }
+      }
+    \tl_if_empty:NTF \l__lc_fold_tl
+      { \__lc_fold_aux:nnn #1 }
+      { \tl_gset:Nx \g__lc_ret_tl { {c} { \exp_not:V \l__lc_fold_tl } { \exp_not:n {#1} } } }
+  }
+\cs_generate_variant:Nn \__lc_fold:n { V } % fold a term held in a variable
+\cs_new_protected:Npn \__lc_fold_aux:nnn #1#2#3 % try to fold the parts of a term too
+  {
+    \str_case:nnF {#1}
+      {
+        {l} { \__lc_map_l:nnn { \__lc_fold:n } {#2} {#3} }
+        {a} { \__lc_map_a:nnn { \__lc_fold:n } {#2} {#3} }
+      }
+      { \tl_gset:Nn \g__lc_ret_tl { {#1} {#2} {#3} } }
+  }
+
+\cs_new_protected:Npn \__lc_reduce:n #1 % parse and reduce to a normal form, storing steps
+  {
+% SNIP:loop
+    \__lc_parse:nN {#1} \l__lc_term_tl
+    \tl_gset_eq:NN \g__lc_start_tl \l__lc_term_tl
+    \bool_gset_false:N \g__lc_nf_bool
+    \int_zero:N \l__lc_count_int
+    \bool_set_true:N \l__lc_loop_bool
+    \bool_while_do:Nn \l__lc_loop_bool
+      {
+        \bool_gset_false:N \g__lc_avoid_bool
+        \__lc_step:V \l__lc_term_tl
+% /SNIP:loop
+        \str_if_empty:NTF \g__lc_kind_str
+          {
+            \bool_set_false:N \l__lc_loop_bool
+            \bool_gset_true:N \g__lc_nf_bool
+          }
+          {
+            \int_compare:nNnTF \l__lc_count_int < \l__lc_max_int
+              {
+                \int_incr:N \l__lc_count_int
+                \str_gset_eq:cN { g__lc_kind_ \int_use:N \l__lc_count_int _str } \g__lc_kind_str
+                \bool_if:NT \l__lc_store_bool
+                  { \tl_gset_eq:cN { g__lc_step_ \int_use:N \l__lc_count_int _tl } \g__lc_marked_tl }
+                \tl_set_eq:NN \l__lc_term_tl \g__lc_new_tl
+              }
+              {
+                \bool_set_false:N \l__lc_loop_bool
+                \msg_warning:nne { lc-visualizer } { max-steps } { \int_use:N \l__lc_max_int }
+              }
+          }
+      }
+    \clist_if_empty:NF \l__lc_fold_clist
+      {
+        \__lc_fold_setup:
+        \__lc_fold:V \l__lc_term_tl
+        \tl_set_eq:NN \l__lc_term_tl \g__lc_ret_tl
+      }
+    \tl_gset_eq:NN \g__lc_result_tl \l__lc_term_tl
+    \cs_gset:Npx \lcLastNormalForm { \__lc_str:nV { t } \l__lc_term_tl }
+    \int_gset_eq:NN \g__lc_steps_int \l__lc_count_int
+    \cs_gset:Npx \lcLastReductionSequence { \int_step_function:nN \l__lc_count_int \__lc_kind_item:n }
+    \cs_gset:Npx \lcLastStepCount { \int_use:N \l__lc_count_int }
+    \cs_gset:Npn \lcLastShownSteps { }
+    \bool_if:NTF \g__lc_nf_bool { \global\lcNormalFormReachedtrue } { \global\lcNormalFormReachedfalse }
+  }
+
+\cs_new_protected:Npn \__lc_new_walk:n #1 % one recursive walk over a term, named by its prefix
+  {
+    \cs_new:cpn { __lc_ #1 :nn } ##1##2 { \use:c { __lc_ #1 _aux:nnnn } {##1} ##2 }
+    \cs_new:cpn { __lc_ #1 _aux:nnnn } ##1##2##3##4 { \use:c { __lc_ #1 _ ##2 :nnn } {##1} {##3} {##4} }
+    \cs_generate_variant:cn { __lc_ #1 :nn } { nV , ne }
+  }
+\cs_new_protected:Npn \__lc_new_text_walk:nn #1#2 % a walk that writes text, with #2 as its lambda
+  {
+    \__lc_new_walk:n {#1}
+    \cs_new:cpn { __lc_ #1 _v:nnn } ##1##2##3 {##2}
+    \cs_new:cpn { __lc_ #1 _l:nnn } ##1##2##3
+      {
+        \str_if_eq:nnF {##1} {t} { ( }
+        #2 ##2 . \use:c { __lc_ #1 :nn } {t} {##3}
+        \str_if_eq:nnF {##1} {t} { ) }
+      }
+    \cs_new:cpn { __lc_ #1 _a:nnn } ##1##2##3
+      {
+        \str_if_eq:nnT {##1} {g} { ( }
+        \use:c { __lc_ #1 :nn } {f} {##2} \c_space_tl \use:c { __lc_ #1 :nn } {g} {##3}
+        \str_if_eq:nnT {##1} {g} { ) }
+      }
+  }
+\__lc_new_text_walk:nn { str } { \c_backslash_str } % the plain-text form of a term, for comparison
+\cs_new:Npn \__lc_str_c:nnn #1#2#3 { \tl_to_str:n {#2} } % a constant prints as its tokens
+
+\__lc_new_walk:n { db } % the de Bruijn form, ignoring binder names
+\cs_new:Npn \__lc_db_v:nnn #1#2#3 % a variable prints as its distance to the binder
+  { \__lc_db_idx:nnw {#2} {1} #1 \q_recursion_tail \q_recursion_stop }
+\cs_new:Npn \__lc_db_idx:nnw #1#2#3 % count the binders out to the one that binds
+  {
+    \quark_if_recursion_tail_stop_do:nn {#3} {#1}
+    \str_if_eq:nnTF {#1} {#3}
+      { \use_i_delimit_by_q_recursion_stop:nw { [ \int_eval:n {#2} ] } }
+      { \__lc_db_idx:nnw {#1} { #2 + 1 } }
+  }
+\cs_new:Npn \__lc_db_c:nnn #1#2#3 { \tl_if_empty:nTF {#3} { \tl_to_str:n {#2} } { \__lc_db:nn {#1} {#3} } } % a constant shows its unfolding if it has one
+\cs_new:Npn \__lc_db_l:nnn #1#2#3 { \c_backslash_str . \__lc_db:nn { {#2} #1 } {#3} } % a binder drops its name and enters the scope
+\cs_new:Npn \__lc_db_a:nnn #1#2#3 { ( \__lc_db:nn {#1} {#2} \c_space_tl \__lc_db:nn {#1} {#3} ) } % an application is always bracketed here
+
+\__lc_new_walk:n { dbt } % the de Bruijn form as boxes, without the names and dots
+\cs_new:Npn \__lc_dbt_v:nnn #1#2#3
+  { \__lc_dbt_idx:nnw {#2} {1} #1 \q_recursion_tail \q_recursion_stop }
+\cs_new:Npn \__lc_dbt_idx:nnw #1#2#3
+  {
+    \quark_if_recursion_tail_stop_do:nn {#3} { \exp_not:N \lcVar {#1} }
+    \str_if_eq:nnTF {#1} {#3}
+      { \use_i_delimit_by_q_recursion_stop:nw { \exp_not:N \lc@dbvar { \int_eval:n {#2} } } }
+      { \__lc_dbt_idx:nnw {#1} { #2 + 1 } }
+  }
+\cs_new:Npn \__lc_dbt_c:nnn #1#2#3
+  { \tl_if_empty:nTF {#3} { \exp_not:n {#2} } { \__lc_dbt:nn {#1} {#3} } }
+\cs_new:Npn \__lc_dbt_l:nnn #1#2#3
+  { \exp_not:N \lc@dblambda \__lc_dbt:nn { {#2} #1 } {#3} }
+\cs_new:Npn \__lc_dbt_a:nnn #1#2#3
+  {
+    \exp_not:N \lc@open \__lc_dbt:nn {#1} {#2} \exp_not:N \lc@sep \__lc_dbt:nn {#1} {#3}
+    \exp_not:N \lc@close
+  }
+\cs_new_protected:Npn \lc@dblambda { \ensuremath { \lc@lambdasymbol } } % a binder, which needs no name here
+\cs_new_protected:Npn \lc@dbvar #1 % an index in the box of the binder it points at
+  { \exp_args:Ne \lc@varbox { \use:c { lc@color@ \int_mod:nn { #1 - 1 } { \lc@colors@exclusivemax } } } {#1} }
+
+\__lc_new_walk:n { tp } % turn a term back into the typesetting macros
+\cs_new:Npn \__lc_tp_var:n #1 { \exp_not:N \lcVar {#1} } % a variable is typeset through its name
+\cs_new:Npn \__lc_if_short:nTF #1 % a single lowercase letter, which is its own macro
+  {
+    \bool_lazy_all:nTF
+      {
+        { \int_compare_p:nNn { \str_count:n {#1} } = { 1 } }
+        { \int_compare_p:nNn { `#1 } > { `a - 1 } }
+        { \int_compare_p:nNn { `#1 } < { `z + 1 } }
+      }
+  }
+\cs_new:Npn \__lc_tp_v:nnn #1#2#3 { \__lc_tp_var:n {#2} } % a variable node
+\cs_new:Npn \__lc_tp_c:nnn #1#2#3 { \exp_not:n {#2} } % a constant keeps the tokens it was written as
+\cs_new:Npn \__lc_tp_D:nnn #1#2#3 % a marked delta redex, unfolded one level deeper
+  { \__lc_show_redex:n { \__lc_deeper:n { \exp_not:n {#2} } } }
+\cs_new:Npn \__lc_deeper:n #1 % show this constant one level further unfolded
+  {
+    \exp_not:N \begingroup
+    \exp_not:N \lc@ruledepth { \int_eval:n { \l__lc_rule_depth_tl + 1 } }
+    #1 \exp_not:N \endgroup
+  }
+\cs_new:Npn \__lc_tp_l:nnn #1#2#3 % an abstraction, bracketed unless it is the top
+  {
+    \str_if_eq:nnF {#1} {t} { \__lc_open: }
+    \exp_not:N \\ \__lc_binder:n {#2} \__lc_dot: \__lc_tp:nn {t} {#3}
+    \str_if_eq:nnF {#1} {t} { \__lc_close: }
+  }
+\cs_new:Npn \__lc_tp_a:nnn #1#2#3 % an application, bracketed as an argument
+  {
+    \str_if_eq:nnT {#1} {g} { \__lc_open: }
+    \__lc_tp:nn {f} {#2} \__lc_gap: \__lc_tp:nn {g} {#3}
+    \str_if_eq:nnT {#1} {g} { \__lc_close: }
+  }
+\cs_new:Npn \__lc_tp_B:nnn #1#2#3 % a marked beta redex
+  {
+    \__lc_show_redex:n
+      {
+        \str_if_eq:nnT {#1} {g} { \__lc_open: }
+        \__lc_tp_redex:nnnn #2 {#3}
+        \str_if_eq:nnT {#1} {g} { \__lc_close: }
+      }
+  }
+\cs_new:Npn \__lc_show_redex:n #1 {#1} % what is about to be reduced, plain by default
+\cs_new:Npn \__lc_binder_mark: { [ \__lc_mark_name:n { v } ] } % only an arrow needs it
+\cs_new:Npn \__lc_tp_redex:nnnn #1#2#3#4 % the redex itself, with the marks the arrow uses
+  {
+    \__lc_open:
+    \exp_not:N \\ \__lc_binder:n {#2} \__lc_binder_mark: \__lc_dot: \__lc_tp:nn {t} {#3}
+    \__lc_close: \__lc_gap:
+    \bool_if:NTF \l__lc_arrows_bool
+      { \__lc_public:NN \lc@mark \mark { \__lc_mark_name:n { a } } { \__lc_tp:nn {g} {#4} } }
+      { \__lc_tp:nn {g} {#4} }
+  }
+\cs_new:Npn \__lc_binder:n #1 { {#1} } % the name of a binder
+\cs_new:Npn \__lc_gap: { \exp_not:N \lc@sep } % space between the parts of an application
+\cs_new:Npn \__lc_open: { \exp_not:N \( }
+\cs_new:Npn \__lc_close: { \exp_not:N \) }
+\cs_new:Npn \__lc_dot: { \exp_not:N \. }
+\cs_new:Npn \__lc_term_cmd: { \exp_not:N \RLC }
+\cs_new:Npn \__lc_public:NN #1#2 { \exp_not:N #1 } % the internal macro, which the export replaces
+\cs_new:Npn \__lc_row_start: { [ \exp_not:V \l__lc_color_tl ] } % where a row picks up the color cycle
+\cs_new:Npn \__lc_math: { \exp_not:N \ensuremath } % relations are math, wherever the row ends up
+\cs_new:Npn \__lc_mark_name:n #1 % a mark name unique per reduction and row
+  { lc@ \str_range:Nnn \l__lc_hash_str { 1 } { 8 } @ \int_use:N \l__lc_mark_int @ #1 }
+\cs_new_protected:Npn \__lc_export_dialect: % the same printer, but writing only public macros
+  {
+    \cs_set:Npn \__lc_tp_var:n ##1 { \__lc_if_short:nTF {##1} { \exp_not:c {##1} } { \exp_not:N \lcVar {##1} } }
+    \cs_set:Npn \__lc_binder:n ##1 { \__lc_if_short:nTF {##1} { \exp_not:n {##1} } { {##1} } }
+    \cs_set:Npn \__lc_gap: { \c_space_tl }
+    \cs_set:Npn \__lc_public:NN ##1##2 { \exp_not:N ##2 }
+    \cs_set:Npn \__lc_mark_name:n ##1 { m \int_use:N \l__lc_mark_int ##1 }
+    \cs_set:Npn \__lc_row_start: { }
+    \cs_set:Npn \__lc_math: { }
+    \cs_set:Npn \__lc_open: { ( }
+    \cs_set:Npn \__lc_close: { ) }
+    \cs_set:Npn \__lc_dot: { . }
+    \cs_set:Npn \__lc_term_cmd: { \exp_not:N \LC }
+    \cs_set:Npn \__lc_deeper:n ##1 {##1}
+    \cs_set:Npn \__lc_binder_mark: { }
+    \bool_set_false:N \l__lc_arrows_bool % an arrow is a picture, which the math array cannot hold
+    \cs_set_eq:NN \__lc_put_row: \__lc_put_row_export:
+    \cs_set_eq:NN \__lc_rows_begin: \prg_do_nothing:
+    \cs_set_eq:NN \__lc_rows_end: \prg_do_nothing:
+  }
+\prop_new:N \g__lc_colors_prop % which color index a name has been given
+\int_new:N \g__lc_colors_int % the next free color index
+\tl_new:N \l__lc_color_index_tl % the color index of the name at hand
+\cs_new_protected:Npn \lc@assigncolor #1 % give a name its own color, stable across steps
+  {
+    \prop_get:NnNF \g__lc_colors_prop {#1} \l__lc_color_index_tl
+      {
+        \tl_set:Ne \l__lc_color_index_tl { \int_use:N \g__lc_colors_int }
+        \prop_gput:NnV \g__lc_colors_prop {#1} \l__lc_color_index_tl
+        \int_gincr:N \g__lc_colors_int
+      }
+    \tl_set:Ne \@col
+      { \use:c { lc@color@ \int_mod:nn { \l__lc_color_index_tl + \l__lc_color_tl } { \lc@colors@exclusivemax } } }
+  }
+
+\cs_new_protected:Npn \__lc_typeset_normal_form: % one row: the result, optionally with the start
+  {
+    \int_set_eq:NN \l__lc_n_int \g__lc_steps_int
+    \__lc_set_mark:n { \int_use:N \l__lc_n_int }
+    \tl_set:Nx \l__lc_row_tl
+      {
+        \bool_lazy_and:nnT { \l__lc_show_term_bool } { \int_compare_p:nNn \l__lc_n_int > { 0 } }
+          {
+            \__lc_term_cmd: \__lc_row_start: { \__lc_tp:nV {t} \g__lc_start_tl }
+            \exp_not:N \lc@sep
+            \exp_not:N \ensuremath
+              {
+                \exp_not:N \lcStepState { \int_use:N \l__lc_n_int } { \exp_not:V \l__lc_mark_tl }
+                \exp_not:N \lcMultiSymbol { \lcLastReductionSequence }
+              }
+            \exp_not:N \lc@sep
+          }
+        \__lc_term_cmd: \__lc_row_start: { \__lc_tp:nV {t} \g__lc_result_tl }
+        \bool_if:NF \g__lc_nf_bool { \exp_not:N \enspace \exp_not:N \ensuremath { \exp_not:N \cdots } }
+      }
+    \int_compare:nNnT \l__lc_n_int > { 0 }
+      { \__lc_tooltip:Nnn \l__lc_row_tl { 0 } { \l__lc_n_int + 1 } }
+    \seq_put_right:NV \l__lc_out_seq \l__lc_row_tl
+  }
+
+\cs_if_exist:NTF \pdfextension
+  { \cs_new_protected:Npn \lc@annot #1#2#3#4 { \tex_pdfextension:D annot~width~#1~height~#2~depth~#3 {#4} } }
+  {
+    \cs_if_exist:NT \pdfannot
+      { \cs_new_protected:Npn \lc@annot #1#2#3#4 { \pdfannot~width~#1~height~#2~depth~#3 {#4} } }
+  }
+\cs_new:Npn \lcUnichar #1 { \codepoint_str_generate:n {#1} } % a unicode character for the tooltip text
+\cs_new_protected:Npn \lc@tooltip #1#2 % attach the text to a box as a pdf annotation
+  {
+    \hbox_set:Nn \l__lc_box {#1}
+    \str_set:Ne \l__lc_txt_str {#2}
+    \str_set_convert:Nenn \l__lc_hex_str { \l__lc_txt_str } { utf8 } { utf16be/hex }
+    \lc@annot { \box_wd:N \l__lc_box } { \box_ht:N \l__lc_box } { \box_dp:N \l__lc_box }
+      {
+        /Subtype /Square /Contents <FEFF \l__lc_hex_str >
+        /T ( \l__lc_author_str ) /BS << /W~0 >> /C [ ] /F~4
+      }
+    \box_use_drop:N \l__lc_box
+  }
+\box_new:N \l__lc_box % the box a tooltip annotation is measured from
+\str_new:N \l__lc_author_str % who the tooltip annotations belong to
+\str_set:Nn \l__lc_author_str { lc-visualizer }
+\str_new:N \l__lc_txt_str % the tooltip text before encoding
+\str_new:N \l__lc_hex_str % the tooltip text as utf-16 for the pdf
+\cs_new_protected:Npn \__lc_tooltip:Nnn #1#2#3 % wrap a row in a tooltip of the steps it hides
+  {
+    \bool_if:NT \l__lc_tooltips_bool
+      {
+        \cs_if_exist:NTF \lc@annot
+          {
+            \int_set:Nn \l__lc_next_int {#2}
+            \tl_set:Nx #1
+              {
+                \exp_not:N \lc@tooltip { \exp_not:V #1 }
+                  {
+                    \int_step_function:nnN {#2} { #3 - 1 } \__lc_txt_step:n
+                  }
+              }
+          }
+          { \msg_warning:nn { lc-visualizer } { tooltips } }
+      }
+  }
+\cs_new:Npn \__lc_txt_step:n #1 % one line of a tooltip: the symbol and the term
+  {
+    \int_compare:nNnF {#1} = \l__lc_next_int { \lcUnichar { 10 } }
+    \int_compare:nNnF {#1} = { 0 } { \__lc_txt_kind:e { \__lc_step_kind:n {#1} } \c_space_tl }
+    \int_compare:nNnTF {#1} < \l__lc_n_int
+      { \__lc_txt:ne { t } { \__lc_step_term:n { #1 + 1 } } }
+      { \__lc_txt:nV { t } \g__lc_result_tl }
+  }
+\cs_new:Npn \__lc_txt_kind:n #1 { \exp_not:v { l__lc_text_ #1 _tl } } % the plain-text symbol of a step kind
+\cs_generate_variant:Nn \__lc_txt_kind:n { e } % kind name coming from an expansion
+\__lc_new_text_walk:nn { txt } { \exp_not:V \l__lc_text_lambda_tl } % the text of a term for tooltips
+\cs_new:Npn \__lc_txt_c:nnn #1#2#3 % a constant, stripped of its macro syntax
+  {
+    \__lc_txt_const:e
+      {
+        \str_map_function:eN
+          { \str_if_eq:eeTF { \str_head:n {#2} } { \c_backslash_str } { \str_tail:n {#2} } { \tl_to_str:n {#2} } }
+          \__lc_txt_nospace:n
+      }
+  }
+\cs_new:Npn \__lc_txt_nospace:n #1 { \tl_if_blank:nF {#1} { \str_if_eq:nnF {#1} { $ } {#1} } } % drop the tokens that carry no text
+\cs_new:Npn \__lc_txt_const:n #1 % show a numeral as just its number
+  {
+    \str_if_eq:eeTF { \str_range:nnn {#1} { 1 } { 4 } } { num \c_left_brace_str }
+      { \str_range:nnn {#1} { 5 } { -2 } } {#1}
+  }
+\cs_generate_variant:Nn \__lc_txt_const:n { e } % constant coming from an expansion
+\cs_generate_variant:Nn \str_map_function:nN { e } % map over an expanded string
+\cs_new_eq:NN \__lc_txt_D:nnn \__lc_txt_c:nnn
+\cs_new_eq:NN \__lc_txt_B:nnn \__lc_txt_a:nnn
+
+\cs_new_protected:Npn \__lc_rows_begin: % open the row list, if the layout has one
+  {
+    \str_if_eq:VnT \l__lc_layout_str { lines }
+      { \seq_put_right:Nx \l__lc_out_seq { \exp_not:N \lc@rowsbegin { \skip_eval:n { \l__lc_row_sep_tl } } } }
+  }
+\cs_new_protected:Npn \__lc_rows_end: % close it again
+  { \str_if_eq:VnT \l__lc_layout_str { lines } { \seq_put_right:Nn \l__lc_out_seq { \lc@rowsend } } }
+\cs_new_protected:Npn \__lc_typeset_reduction: % build every row of the reduction in order
+  {
+    \int_set_eq:NN \l__lc_n_int \g__lc_steps_int
+    \int_zero:N \l__lc_prev_int
+    \int_zero:N \l__lc_row_int
+    \int_zero:N \l__lc_mark_int
+    \__lc_rows_begin:
+    \seq_gclear:N \g__lc_shown_seq
+    \seq_gput_right:Nn \g__lc_shown_seq { 0 }
+    \tl_clear:N \l__lc_sym_tl
+    \__lc_typeset_row:n { 0 }
+    \int_step_inline:nn { \l__lc_n_int }
+      {
+        \__lc_if_visible:nT {##1}
+          {
+            \__lc_typeset_symbol:n {##1}
+            \__lc_typeset_row:n {##1}
+            \int_set:Nn \l__lc_prev_int {##1}
+          }
+      }
+    \bool_if:NF \g__lc_nf_bool
+      {
+        \tl_set:Nx \l__lc_sym_tl { \__lc_math: { \exp_not:N \cdots } }
+        \tl_clear:N \l__lc_row_tl
+        \__lc_put_row:
+      }
+    \__lc_rows_end:
+    \cs_gset:Npx \lcLastShownSteps { \seq_use:Nn \g__lc_shown_seq { , } }
+  }
+\prg_generate_conditional_variant:Nnn \clist_if_in:Nn { Ne } { T , TF } % test an expanded item against a list
+\cs_generate_variant:Nn \str_replace_all:Nnn { Ne , Nen , Nee } % replace an expanded pattern
+\cs_new:Npn \__lc_step_kind:n #1 { \use:c { g__lc_kind_ \int_eval:n {#1} _str } } % the kind of the n-th step
+\cs_new:Npn \__lc_step_term:n #1 { \exp_not:v { g__lc_step_ \int_eval:n {#1} _tl } } % the stored term of the n-th step
+\cs_new:Npn \__lc_kind_item:n #1 { \int_compare:nNnF {#1} = { 1 } { , } \__lc_step_kind:n {#1} } % one entry of the comma list of step kinds
+
+\prg_generate_conditional_variant:Nnn \clist_if_in:Nn { NV } { T , TF } % test a string variable against a list
+\str_new:N \l__lc_step_str % the kind of the step being looked at
+\prg_new_protected_conditional:Npnn \__lc_if_visible:n #1 { T } % does this step get a row of its own
+  {
+    \bool_set_false:N \l__lc_skip_bool
+    \int_compare:nNnT {#1} < \l__lc_n_int
+      {
+        \str_set:Ne \l__lc_step_str { \__lc_step_kind:n {#1} }
+        \bool_if:nTF
+          {
+            \int_compare_p:nNn {#1} < \l__lc_from_int || \int_compare_p:nNn {#1} > \l__lc_to_int
+          }
+          { \bool_set_true:N \l__lc_skip_bool }
+          {
+            \clist_if_in:NVTF \l__lc_hide_clist \l__lc_step_str
+              { \bool_set_true:N \l__lc_skip_bool }
+              {
+                \clist_if_in:NeTF \l__lc_skip_clist { \int_eval:n {#1} }
+                  { \bool_set_true:N \l__lc_skip_bool }
+                  {
+                    \bool_if:NT \l__lc_compact_bool
+                      {
+                        \int_set:Nn \l__lc_next_int { #1 + 1 }
+                        \__lc_skip_hidden:
+                        \str_if_eq:eeT { \__lc_step_kind:n { \l__lc_next_int } } { \l__lc_step_str }
+                          { \bool_set_true:N \l__lc_skip_bool }
+                      }
+                  }
+              }
+          }
+      }
+    \bool_if:NTF \l__lc_skip_bool { \prg_return_false: } { \prg_return_true: }
+  }
+
+\prg_new_protected_conditional:Npnn \__lc_if_hidden:n #1 { T , F } % is this kind of step hidden by the user
+  {
+    \clist_if_in:NeTF \l__lc_hide_clist { \__lc_step_kind:n {#1} }
+      { \prg_return_true: } { \prg_return_false: }
+  }
+\cs_new_protected:Npn \__lc_skip_hidden: % skip forward over the hidden steps
+  {
+    \int_compare:nNnT \l__lc_next_int < \l__lc_n_int
+      { \__lc_if_hidden:nT { \l__lc_next_int } { \int_incr:N \l__lc_next_int \__lc_skip_hidden: } }
+  }
+\cs_new_protected:Npn \__lc_count_step:n #1 % count a step and note whether the kinds agree
+  {
+    \int_incr:N \l__lc_count_int
+    \clist_put_right:Ne \l__lc_kinds_clist { \__lc_step_kind:n {#1} }
+    \str_if_eq:eeF { \__lc_step_kind:n {#1} } { \l__lc_kind_str } { \bool_set_false:N \l__lc_same_bool }
+  }
+\clist_new:N \l__lc_kinds_clist % the kinds one merged arrow stands for
+\cs_new_protected:Npn \__lc_set_mark:n #1 % the mark of a row, made while its keys still hold
+  {
+    \bool_if:NTF \l__lc_step_count_bool
+      { \protected@edef \l__lc_mark_tl { \lc@stepmark {#1} } }
+      { \tl_set:Nn \l__lc_mark_tl { * } }
+  }
+\cs_new_protected:Npn \__lc_typeset_symbol:n #1 % the arrow between two rows, with its kind
+  {
+    \str_set:Nx \l__lc_kind_str { \__lc_step_kind:n {#1} }
+    \bool_set_true:N \l__lc_same_bool
+    \int_zero:N \l__lc_count_int
+    \clist_clear:N \l__lc_kinds_clist
+    \int_step_inline:nnn { \l__lc_prev_int + 1 } {#1}
+      { \__lc_if_hidden:nF {##1} { \__lc_count_step:n {##1} } }
+    \int_compare:nNnT \l__lc_count_int = { 0 }
+      { \int_step_inline:nnn { \l__lc_prev_int + 1 } {#1} { \__lc_count_step:n {##1} } }
+    \seq_gput_right:Nx \g__lc_shown_seq
+      {
+        \bool_if:NTF \l__lc_same_bool
+          { \l__lc_kind_str \int_compare:nNnT \l__lc_count_int > { 1 } { * } }
+          { * }
+        \c_space_tl #1
+      }
+    \cs_gset:Npx \lcSteps { \int_use:N \l__lc_count_int }
+    \__lc_set_mark:n { \int_use:N \l__lc_count_int }
+    \tl_set:Nx \l__lc_sym_tl
+      {
+        \__lc_math:
+          {
+            % count and mark belong to this row, so they are fixed while it is built
+            \exp_not:N \lcStepState { \int_use:N \l__lc_count_int } { \exp_not:V \l__lc_mark_tl }
+            \bool_if:NTF \l__lc_same_bool
+              {
+                \exp_not:N \lcStepSymbol
+                  { \exp_not:v { l__lc_sym_ \l__lc_kind_str _tl } }
+                  { \exp_not:v { l__lc_idx_ \l__lc_kind_str _tl } }
+                  { \int_compare:nNnT \l__lc_count_int > { 1 } { \exp_not:N \lcStepMark } }
+              }
+              { \exp_not:N \lcMultiSymbol { \clist_use:Nn \l__lc_kinds_clist { , } } }
+          }
+      }
+    \int_compare:nNnT { #1 - \l__lc_prev_int } > { 1 }
+      { \__lc_tooltip:Nnn \l__lc_sym_tl { \l__lc_prev_int + 1 } {#1} }
+  }
+
+\cs_new_protected:Npn \__lc_typeset_row:n #1 % the term of one row, plus the redex arrow
+  {
+    \int_incr:N \l__lc_mark_int
+    \tl_set:Nx \l__lc_row_tl
+      {
+        \__lc_term_cmd: \__lc_row_start:
+          {
+            \int_compare:nNnTF {#1} < \l__lc_n_int
+              { \__lc_tp:ne {t} { \__lc_step_term:n { #1 + 1 } } }
+              { \__lc_tp:nV {t} \g__lc_result_tl }
+          }
+        \bool_lazy_and:nnT
+          { \l__lc_arrows_bool }
+          { \int_compare_p:nNn {#1} < \l__lc_n_int && \str_if_eq_p:ee { \__lc_step_kind:n { #1 + 1 } } { beta } }
+          {
+            \__lc_public:NN \lc@reducemarks \reducemarks
+              { \__lc_mark_name:n { a } } { \__lc_mark_name:n { v } } [ \exp_not:V \l__lc_arrow_tl ]
+          }
+      }
+    \__lc_put_row:
+  }
+
+\cs_new_protected:Npn \__lc_put_row_export: % one row of the export file, as a tabular line
+  {
+    \int_incr:N \l__lc_row_int
+    \seq_put_right:Nx \l__lc_out_seq
+      {
+        \c_space_tl \c_space_tl \exp_not:V \l__lc_sym_tl
+        \c_space_tl & \c_space_tl \exp_not:V \l__lc_row_tl \exp_not:N \\
+      }
+  }
+\cs_new_protected:Npn \__lc_put_row: % hand the finished row to the chosen layout
+  {
+    \int_incr:N \l__lc_row_int
+    \seq_put_right:Nx \l__lc_out_seq
+      {
+        \str_if_eq:VnTF \l__lc_layout_str { lines }
+          {
+            \exp_not:N \lc@rowstart
+            \exp_not:N \hbox ~ to ~ \dim_eval:n { \l__lc_symbol_width_tl }
+              {
+                \exp_not:V \l__lc_fill_a_tl
+                \exp_not:N \lc@rowhook { \int_use:N \l__lc_row_int } { \exp_not:V \l__lc_sym_tl }
+                \exp_not:V \l__lc_fill_b_tl
+              }
+            \exp_not:N \enspace
+            \exp_not:N \lc@rowhook { \int_use:N \l__lc_row_int } { \exp_not:V \l__lc_row_tl }
+          }
+          {
+            \int_compare:nNnTF \l__lc_row_int > { 1 }
+              { \bool_if:NF \l__lc_only_bool { \exp_not:N \enspace \exp_not:N \allowbreak } }
+              { \exp_not:N \leavevmode }
+            \exp_not:N \lc@rowhook { \int_use:N \l__lc_row_int }
+              {
+                \bool_if:NTF \l__lc_only_bool
+                  {
+                    \exp_not:N \hbox ~ to ~ \dim_eval:n { \l__lc_symbol_width_tl }
+                      { \exp_not:V \l__lc_fill_a_tl \exp_not:V \l__lc_sym_tl \exp_not:V \l__lc_fill_b_tl }
+                    \exp_not:N \enspace
+                  }
+                  { \tl_if_empty:NF \l__lc_sym_tl { \exp_not:V \l__lc_sym_tl \exp_not:N \enspace } }
+                \exp_not:V \l__lc_row_tl
+              }
+          }
+      }
+  }
+\cs_new:Npn \lc@rowhook #1#2 {#2} % hook around every row, e.g. for beamer overlays
+\cs_new_protected:Npn \__lc_overlay:Nnn #1#2#3 % an overlay specification shifted by beamer-start
+  { \use:e { \exp_not:N #1 < \int_eval:n { #2 + \l__lc_first_slide_int - 1 } #3 > } }
+
+\cs_new_protected:Npn \__lc_use_style:n #1 % apply a named style at once, so styles can build on each other
+  {
+    \tl_set:Nn \l__lc_style_tl {#1}
+    \cs_if_exist:cTF { lc@style@ #1 }
+      { \use:c { lc@style@ #1 } }
+      { \msg_error:nnn { lc-visualizer } { unknown-style } {#1} }
+  }
+\msg_new:nnn { lc-visualizer } { unknown-style } { Unknown~style~`#1'. } % a style name nobody defined
+\cs_new_protected:Npn \__lc_set_style: % the styling one reduction runs under
+  {
+    \lc@colorbynametrue
+    \tl_use:N \l__lc_format_tl
+    \lc@ruledepth { \l__lc_rule_depth_tl }
+  }
+
+\tl_new:N \l__lc_color_tl % the color index the rows start from
+\tl_new:N \l__lc_fill_a_tl % glue before the arrow symbol, for its alignment
+\tl_new:N \l__lc_fill_b_tl % glue after the arrow symbol, for its alignment
+\tl_new:N \l__lc_arrow_tl % tikz style of the redex arrow
+\tl_new:N \l__lc_rule_depth_tl % how deep rewriting rules are unfolded when shown
+\tl_new:N \l__lc_format_tl % extra code the user runs before typesetting
+\tl_new:N \l__lc_sym_tl % the arrow symbol of the row being built
+\clist_new:N \l__lc_fold_clist % the rules the result may be folded back into
+\tl_new:N \l__lc_fold_tl % the rule name a subterm folded into
+\prop_new:N \l__lc_fold_prop % normal form of every foldable rule
+\str_new:N \l__lc_db_str % de Bruijn form used to compare terms
+\tl_new:N \l__lc_row_tl % the row being built
+\int_new:N \l__lc_row_int % how many rows were put so far
+\int_new:N \l__lc_next_int % lookahead index while skipping steps
+\str_new:N \l__lc_kind_str % the kind the current arrow stands for
+\int_new:N \l__lc_first_slide_int % the beamer slide the first row appears on
+\cs_new:Npn \lcMultiSymbol #1 % the arrow shown when a row merges several kinds
+  { \lcStepSymbol { \to } { } { \int_compare:nNnT { \lcSteps } > { 1 } { \lcStepMark } } }
+\cs_new:Npn \__lc_mark: { \exp_not:N \lcStepMark } % what stands over a merged relation
+\cs_new:Npn \lcStepMark { \lc@stepmark { \lcSteps } } % how many steps a merged relation stands for
+\cs_new:Npn \lcSteps { 1 } % how many steps a merged relation stands for
+\clist_new:N \l__lc_hide_clist % kinds of steps that get no row
+\clist_new:N \l__lc_skip_clist % step numbers that get no row
+\str_new:N \l__lc_cache_str % name of the cache file for this reduction
+\str_new:N \l__lc_export_str % name of the file for the readable export
+\str_new:N \l__lc_hash_str % hash of term and settings, the cache key
+\bool_new:N \l__lc_foreign_bool % the cache file was written by someone else
+\str_new:N \l__lc_header_str % first line identifying our own cache files
+\prop_new:N \g__lc_cache_names_prop % which reduction owns which cache file
+\seq_new:N \l__lc_code_seq % the lines to write into the cache file
+\ior_new:N \g__lc_cache_ior
+\iow_new:N \g__lc_cache_iow
+\int_new:N \l__lc_n_int % the number of steps of the reduction shown
+\int_new:N \l__lc_prev_int % the step the previous row showed
+\int_new:N \l__lc_from_int % first step to show
+\int_new:N \l__lc_to_int % last step to show
+\bool_new:N \l__lc_skip_bool % scratch: this step gets no row
+\bool_new:N \l__lc_term_arg_bool % the rule argument is a term, not a number
+\tl_new:N \l__lc_mark_tl % the mark that stands for the steps of one row
+\bool_new:N \l__lc_step_count_bool % the mark names the number of steps, not just a star
+\bool_set_true:N \l__lc_step_count_bool
+\int_new:N \g__lc_reduction_int % counts the reductions, to keep their boxes apart
+\bool_new:N \l__lc_same_bool % all merged steps share one kind
+\bool_new:N \l__lc_compact_bool % merge neighbouring steps of the same kind
+\tl_new:N \l__lc_style_tl % the name of the style in use
+\bool_new:N \l__lc_show_term_bool % also show the term we started from
+\bool_new:N \l__lc_tooltips_bool % attach the hidden steps as pdf tooltips
+\bool_new:N \l__lc_only_bool % beamer: rows replace each other, not stack
+\keys_define:nn { lc-visualizer }
+  {
+    eta .bool_set:N = \l__lc_eta_bool ,
+    eta .initial:n = true ,
+    delta .bool_set:N = \l__lc_delta_bool ,
+    delta .initial:n = true ,
+    arrows .code:n = \str_if_eq:nnTF {#1} { false }
+      { \bool_set_false:N \l__lc_arrows_bool }
+      { \bool_set_true:N \l__lc_arrows_bool \lc@markstrue } , % arrows need the marker nodes
+    arrows .default:n = true ,
+    arrows .initial:n = false ,
+    arrow-style .tl_set:N = \l__lc_arrow_tl ,
+    arrow-style .initial:n = { } ,
+    max-steps .code:n =
+      {
+        \int_set:Nn \l__lc_max_int {#1}
+        \int_compare:nNnT \l__lc_max_int < { 0 }
+          { \__lc_error:nnn { lc-visualizer } { negative-steps } {#1} \int_zero:N \l__lc_max_int }
+      } ,
+    max-steps .initial:n = 50 ,
+    from .int_set:N = \l__lc_from_int ,
+    from .initial:n = 0 ,
+    to .int_set:N = \l__lc_to_int ,
+    to .initial:n = \c_max_int ,
+    hide .code:n = \clist_set:Ne \l__lc_hide_clist { \tl_to_str:n {#1} } ,
+    skip .code:n =
+      {
+        \clist_clear:N \l__lc_skip_clist
+        \clist_map_inline:nn {#1} { \__lc_skip_item:w ##1 - - \q_stop }
+      } ,
+    cache .code:n = \str_set:Ne \l__lc_cache_str {#1} ,
+    export .code:n = \str_set:Ne \l__lc_export_str {#1} ,
+    cache .default:n = * ,
+    compact .bool_set:N = \l__lc_compact_bool ,
+    style .code:n = \__lc_use_style:n {#1} ,
+    plain .meta:n = { style = plain } ,
+    show-term .bool_set:N = \l__lc_show_term_bool ,
+    tooltips .bool_set:N = \l__lc_tooltips_bool ,
+    tooltip-author .str_set:N = \l__lc_author_str ,
+    format .tl_set:N = \l__lc_format_tl ,
+    fold .code:n = \clist_set:Ne \l__lc_fold_clist { \clist_map_function:nN {#1} \__lc_fold_name:n } ,
+    row-hook .code:n =
+      \cs_set:Npn \lc@rowhook ##1##2 {#1} \bool_set_false:N \l__lc_only_bool ,
+    beamer .choice: ,
+    beamer / uncover .code:n =
+      \cs_if_exist:NTF \alt
+        {
+          \cs_set:Npn \lc@rowhook ##1##2 { \__lc_overlay:Nnn \alt {##1} { - } {##2} { \invisible<1-> { \cs_set_eq:NN \lc@tooltip \use_i:nn ##2 } } }
+          \bool_set_false:N \l__lc_only_bool
+        }
+        { \msg_warning:nn { lc-visualizer } { no-beamer } } ,
+    beamer / only .code:n =
+      \cs_if_exist:NTF \alt
+        {
+          \cs_set:Npn \lc@rowhook ##1##2
+            {
+              \str_if_eq:VnTF \l__lc_layout_str { inline }
+                { \__lc_overlay:Nnn \only {##1} { } {##2} }
+                { \__lc_overlay:Nnn \alt {##1} { } {##2} { \invisible<1-> { \cs_set_eq:NN \lc@tooltip \use_i:nn ##2 } } }
+            }
+          \bool_set_true:N \l__lc_only_bool
+        }
+        { \msg_warning:nn { lc-visualizer } { no-beamer } } ,
+    beamer-start .int_set:N = \l__lc_first_slide_int ,
+    beamer-start .initial:n = 1 ,
+    rule-depth .code:n = \tl_set:Nn \l__lc_rule_depth_tl {#1} \lc@ruledepth {#1} ,
+    rule-depth .initial:n = 0 , % reductions expand only the rule of the next step
+
+    layout .choices:nn = { lines , inline } { \str_set_eq:NN \l__lc_layout_str \l_keys_choice_str } ,
+    layout .initial:n = lines ,
+    color-start .tl_set:N = \l__lc_color_tl ,
+    color-start .initial:n = 0 ,
+    lambda-text .tl_set:N = \l__lc_text_lambda_tl ,
+    lambda-text .initial:n = \lcUnichar { 955 } ,
+    symbol-width .tl_set:N = \l__lc_symbol_width_tl ,
+    symbol-width .initial:n = 2.5em ,
+    row-sep .tl_set:N = \l__lc_row_sep_tl ,
+    row-sep .initial:n = .15\baselineskip ,
+    multi-symbol .code:n = \cs_set:Npn \lcMultiSymbol ##1 {#1} ,
+    symbol-align .choice: ,
+    symbol-align / right .code:n = \tl_set:Nn \l__lc_fill_a_tl { \hss } \tl_clear:N \l__lc_fill_b_tl ,
+    symbol-align / left .code:n = \tl_clear:N \l__lc_fill_a_tl \tl_set:Nn \l__lc_fill_b_tl { \hss } ,
+    symbol-align / center .code:n = \tl_set:Nn \l__lc_fill_a_tl { \hss } \tl_set:Nn \l__lc_fill_b_tl { \hss } ,
+    symbol-align .initial:n = right ,
+    multi-symbol .initial:n =
+      { \lcStepSymbol { \to } { } { \int_compare:nNnT { \lcSteps } > { 1 } { \lcStepMark } } } ,
+  }
+
+\cs_new_protected:Npn \__lc_define_kind:nnnn #1#2#3#4 % relation, its index and its text, per kind
+  {
+    \keys_define:nn { lc-visualizer }
+      {
+        #1-symbol .tl_set:c = { l__lc_sym_ #1 _tl } ,
+        #1-symbol .initial:n = {#2} ,
+        #1-index .tl_set:c = { l__lc_idx_ #1 _tl } ,
+        #1-index .initial:n = {#3} ,
+        #1-text .tl_set:c = { l__lc_text_ #1 _tl } ,
+        #1-text .initial:n = {#4} ,
+      }
+  }
+\__lc_define_kind:nnnn { alpha } { = } { \alpha } { = \lcUnichar { 945 } }
+\__lc_define_kind:nnnn { beta } { \to } { \beta } { \lcUnichar { 8594 } \lcUnichar { 946 } }
+\__lc_define_kind:nnnn { eta } { \to } { \eta } { \lcUnichar { 8594 } \lcUnichar { 951 } }
+\__lc_define_kind:nnnn { delta } { \equiv } { \delta } { \lcUnichar { 8801 } \lcUnichar { 948 } }
+
+\newif\iflcNormalFormReached
+\def\lcLastNormalForm{}
+\def\lcLastReductionSequence{}
+\def\lcLastStepCount{0}
+\def\lcLastShownSteps{}
+
+\NewDocumentCommand \lcSetup { m } { \keys_set:nn { lc-visualizer } {#1} } % set options for the rest of the group
+\cs_new_eq:NN \lcReduceSetup \lcSetup % the reduction keys live in the same set
+\cs_new_protected:Npn \__lc_style_key:nn #1#2 % a key forwarding to an existing macro
+  { \keys_define:nn { lc-visualizer } { #1 .code:n = #2 } }
+\cs_new_protected:Npn \__lc_style_switch:nnn #1#2#3 % a key that is just on or off
+  {
+    \keys_define:nn { lc-visualizer }
+      { #1 .choice: , #1 / true .code:n = #2 , #1 / false .code:n = #3 , #1 .default:n = true }
+  }
+\__lc_style_key:nn { colors } { \lc@init@colorcycle {#1} }
+\__lc_style_key:nn { color-mixin } { \cs_set:Npn \lc@colormix ##1 {#1} \lc@vdirty { color-mixin = #1 } }
+\__lc_style_key:nn { duplicate-mixin } { \cs_set:Npn \lc@colormix@doublevar ##1 {#1} \lc@vdirty { duplicate-mixin = #1 } }
+\__lc_style_key:nn { lambda } { \tl_set:Nn \lc@lambdasymbol {#1} }
+\__lc_style_key:nn { font } { \tl_set:Nn \lc@font {#1} \lc@vdirty { font = #1 } }
+\__lc_style_key:nn { paren-depth } { \tl_set:Nn \lc@max@bracket@drawdepth {#1} }
+\__lc_style_key:nn { name-strut } { \tl_set:Nn \lc@rewrite@name@strut {#1} }
+\keys_define:nn { lc-visualizer } { name-strut .default:n = \strut }
+\__lc_style_key:nn { inner-strut } { \tl_set:Nn \lc@rewrite@inner@strut@upper {#1} \tl_set:Nn \lc@rewrite@inner@strut@lower {#1} }
+\__lc_style_key:nn { node-style } { \tikzset { lc@node/.append~style = {#1} } \lc@vdirty { node-style = #1 } }
+\__lc_style_key:nn { text-mixin } { \cs_set:Npn \lc@textmix ##1 {#1} \lc@vdirty { text-mixin = #1 } }
+\__lc_style_switch:nnn { node-background } { \lc@varbgtrue } { \lc@varbgfalse }
+\__lc_style_switch:nnn { textcolor } { \lc@varbgfalse } { \lc@varbgtrue } % the other name of it
+\__lc_style_key:nn { bracket-color } { \colorlet { lc@bracketcolor } {#1} }
+\__lc_style_switch:nnn { color-by-name } { \lc@colorbynametrue } { \lc@colorbynamefalse }
+\__lc_style_switch:nnn { shade-same } { \lcshadeSameVaiablestrue } { \lcshadeSameVaiablesfalse }
+\__lc_style_switch:nnn { lambda-ranges } { \lcdrawlambdarangestrue } { \lcdrawlambdarangesfalse }
+\__lc_style_switch:nnn { glow } { \lc@glow@on \lc@vdirty { glow } } { \lc@glow@off \lc@vdirty { no~glow } }
+\__lc_style_switch:nnn { single-lambdas } { \lcSingleLambdasForMultipletrue } { \lcSingleLambdasForMultiplefalse }
+\keys_define:nn { lc-visualizer }
+  {
+    strut-line .choice: ,
+    strut-line / true .code:n = \cs_set_eq:NN \lc@LineStrut \lc@@LineStrut ,
+    strut-line / false .code:n = \cs_set:Npn \lc@LineStrut { } ,
+    strut-line / auto .code:n = \cs_set_eq:NN \lc@LineStrut \lc@auto@LineStrut ,
+    strut-line .default:n = true ,
+  }
+\__lc_style_switch:nnn { box } { \cs_set_eq:NN \lc@mbox \mbox } { \cs_set:Npn \lc@mbox { } }
+\__lc_style_key:nn { arrow-from } { \tl_set:Nn \lc@arrow@pos {#1} }
+\__lc_style_key:nn { step-mark } { \lcSetStepMark {#1} }
+\__lc_style_key:nn { binder-gap } { \lcSetBinderGap {#1} }
+\__lc_style_switch:nnn { marks } { \lc@markstrue } { \lc@marksfalse }
+\__lc_style_key:nn { step-mark-place } % above the relation, or behind it to keep the row low
+  {
+    \str_case:nnF {#1}
+      {
+        { above } { \cs_set_eq:NN \lcStepSymbol \lc@stepabove }
+        { behind } { \cs_set_eq:NN \lcStepSymbol \lc@stepbehind }
+      }
+      { \__lc_error:nnn { lc-visualizer } { step-mark-place } {#1} }
+  }
+\__lc_style_switch:nnn { step-count }
+  { \bool_set_true:N \l__lc_step_count_bool } { \bool_set_false:N \l__lc_step_count_bool }
+\__lc_style_switch:nnn { underline }
+  { \cs_set:Npn \__lc_show_redex:n ##1 { \exp_not:N \lcRedexLine { ##1 } } }
+  { \cs_set:Npn \__lc_show_redex:n ##1 {##1} }
+\lc@ruledepth{1}% \LC and \RLC expand one level, the reductions only the next rule
+\cs_new_protected:Npn \__lc_run:nnn #1#2#3 % the common driver of all the user commands
+  {
+    \group_begin:
+      \keys_set:nn { lc-visualizer } {#1}
+      \bool_if:nT { ( \mode_if_horizontal_p: && \mode_if_inner_p: ) || \mode_if_math_p: }
+        { \str_set:Nn \l__lc_layout_str { inline } }
+      \__lc_set_style:
+      \bool_set:Nn \l__lc_store_bool
+        { \str_if_eq_p:nn {#3} { \__lc_typeset_reduction: } || \l__lc_tooltips_bool || ! \str_if_empty_p:N \l__lc_export_str }
+      \__lc_digests:
+      \str_set:Ne \l__lc_hash_str
+        {
+          \str_mdfive_hash:e
+            {
+              \use:c { ver@lc-visualizer.sty } | \tl_to_str:n { #2 | #3 } | \__lc_state: | \g__lc_rules_str
+            }
+        }
+      % the rule boxes of one reduction look alike, those of two do not have to
+      \int_gincr:N \g__lc_reduction_int
+      \cs_set:Npx \lc@rulebox@salt { \int_use:N \g__lc_reduction_int }
+      \seq_clear:N \l__lc_out_seq
+      \prop_gclear:N \g__lc_colors_prop
+      \int_gzero:N \g__lc_colors_int
+      \bool_lazy_and:nnTF { \tl_if_empty_p:n {#3} } { \str_if_empty_p:N \l__lc_export_str }
+        { \__lc_reduce:n {#2} }
+        {
+          \bool_lazy_and:nnTF
+            { \cs_if_exist_p:c { g__lc_memo_ \l__lc_hash_str _tl } }
+            { \str_if_empty_p:N \l__lc_export_str }
+            { \tl_use:c { g__lc_memo_ \l__lc_hash_str _tl } }
+            {
+              \bool_lazy_or:nnTF
+                { \str_if_empty_p:N \l__lc_cache_str } { ! \str_if_empty_p:N \l__lc_export_str }
+                { \__lc_compute:nn {#2} {#3} }
+                { \__lc_cached:nn {#2} {#3} }
+              \str_if_empty:NF \l__lc_export_str { \__lc_export: }
+            }
+        }
+    \group_end:
+  }
+\cs_new:Npn \__lc_rule_str:n #1 { #1 = \tl_to_str:v { lc@rule@body@ #1 } ; } % one rule in the hash, so changes invalidate it
+\str_new:N \g__lc_rules_str % digest of every rewriting rule, rebuilt only when one changes
+\str_new:N \l__lc_colors_str % digest of the color cycle, rebuilt only when it changes
+\cs_new_protected:Npn \__lc_digests: % keep the two digests of the hash up to date
+  {
+    \iflc@rulesdirty
+      \str_gset:Ne \g__lc_rules_str
+        { \str_mdfive_hash:e { \tl_map_function:NN \lc@rule@names \__lc_rule_str:n } }
+      \global\lc@rulesdirtyfalse
+    \fi
+    \iflc@colorsdirty
+      \str_set:Ne \l__lc_colors_str
+        { \str_mdfive_hash:e { \int_step_function:nnN { 0 } { \lc@colors@exclusivemax - 1 } \__lc_color_str:n } }
+      \lc@colorsdirtyfalse
+    \fi
+  }
+\cs_new:Npn \__lc_state: % everything the output depends on, for the hash
+  {
+    \bool_to_str:N \l__lc_eta_bool \bool_to_str:N \l__lc_delta_bool \bool_to_str:N \l__lc_arrows_bool
+    \bool_to_str:N \l__lc_compact_bool \bool_to_str:N \l__lc_tooltips_bool
+    \cs_meaning:c { lc@style@ \l__lc_style_tl }
+    \bool_to_str:N \l__lc_only_bool \bool_to_str:N \l__lc_show_term_bool
+    \cs_if_exist:NTF \lc@annot { 1 } { 0 } |
+    \int_use:N \l__lc_max_int | \int_use:N \l__lc_from_int | \int_use:N \l__lc_to_int |
+    \int_use:N \l__lc_first_slide_int | \l__lc_cache_str | \l__lc_hide_clist | \l__lc_skip_clist | \l__lc_fold_clist |
+    \l__lc_layout_str | \tl_to_str:V \l__lc_rule_depth_tl | \tl_to_str:V \l__lc_color_tl |
+    \tl_to_str:V \l__lc_arrow_tl | \tl_to_str:V \l__lc_format_tl | \cs_meaning:N \lcMultiSymbol |
+    \tl_to_str:V \l__lc_fill_a_tl \tl_to_str:V \l__lc_fill_b_tl |
+    \tl_to_str:V \l__lc_text_lambda_tl | \dim_eval:n { \l__lc_symbol_width_tl } | \skip_eval:n { \l__lc_row_sep_tl } |
+    \clist_map_function:nN { alpha , beta , eta , delta } \__lc_kind_str:n
+    \cs_meaning:N \lc@rowhook | \cs_meaning:N \__lc_show_redex:n | \cs_meaning:N \iflc@marks |
+    \tl_to_str:e { \cs_meaning:N \lc@stepmark \cs_meaning:N \lcStepSymbol } |
+    \bool_to_str:N \l__lc_step_count_bool |
+    \l__lc_colors_str
+  }
+\cs_new:Npn \__lc_color_str:n #1 { \use:c { lc@color@ #1 } , } % one color of the cycle, for the hash
+\cs_new:Npn \__lc_kind_str:n #1
+  { \tl_to_str:v { l__lc_sym_ #1 _tl } \tl_to_str:v { l__lc_idx_ #1 _tl } \tl_to_str:v { l__lc_text_ #1 _tl } | } % symbol and text of one kind, for the hash
+\cs_new:Npn \__lc_fold_name:n #1 % a fold entry given as macro or as name
+  {
+    \str_if_eq:eeTF { \str_head:n {#1} } { \c_backslash_str }
+      { \str_tail:n {#1} } { \tl_to_str:n {#1} } ,
+  }
+\cs_new_protected:Npn \__lc_skip_item:w #1 - #2 - #3 \q_stop % expand a skip range like 3-5 into single steps
+  {
+    \int_step_inline:nnn
+      { \int_min:nn {#1} { \tl_if_blank:nTF {#2} {#1} {#2} } }
+      { \int_max:nn {#1} { \tl_if_blank:nTF {#2} {#1} {#2} } }
+      { \clist_put_right:Nn \l__lc_skip_clist {##1} }
+  }
+
+\cs_new_protected:Npn \__lc_compute:nn #1#2 % reduce and typeset, then remember the result
+  {
+    \bool_gset_false:N \g__lc_error_bool
+    \__lc_reduce:n {#1}
+    #2
+    \seq_use:Nn \l__lc_out_seq { }
+    \bool_if:NF \g__lc_error_bool { \str_if_empty:NF \l__lc_cache_str { \__lc_code: } \__lc_memo: }
+  }
+\cs_new:Npn \__lc_restore:n #1 % the call that brings a stored reduction back
+  {
+    #1 \lc@restore { \l__lc_db_str } { \lcLastReductionSequence } { \lcLastStepCount }
+      { \lcLastShownSteps } { \iflcNormalFormReached true \else false \fi }
+  }
+\cs_new_protected:Npn \__lc_hex_nf: % the normal form as hex, so it survives any encoding
+  { \str_set_convert:Nenn \l__lc_db_str { \lcLastNormalForm } { } { utf8/hex } }
+\cs_new_protected:Npn \__lc_code: % the finished output as code for the cache file
+  {
+    \__lc_hex_nf:
+    \seq_clear:N \l__lc_code_seq
+    \seq_put_right:Nx \l__lc_code_seq { \__lc_restore:n { \token_to_str:N } }
+    \seq_map_inline:Nn \l__lc_out_seq { \seq_put_right:Nx \l__lc_code_seq { \tl_to_str:n {##1} } }
+  }
+\cs_new_protected:Npn \lc@setnf #1 % restore the normal form from its cached encoding
+  {
+    \str_set_convert:Nnnn \l__lc_db_str {#1} { utf8/hex } { }
+    \cs_gset:Npx \lcLastNormalForm { \l__lc_db_str }
+  }
+\cs_generate_variant:Nn \str_set_convert:Nnnn { Ne } % convert an expanded string
+\tikzset
+  {
+    lc@flat/.style =
+      { to~path = { .. ~ controls ~ +(0,\lc@flat@dy) ~ and ~ +(0,\lc@flat@dy) ~ .. ~ (\tikztotarget) \tikztonodes } } ,
+    lcbend/.style = { to~path = { -- ~ (\tikztotarget) \tikztonodes } }
+  }
+\cs_new_protected:Npn \lc@warnsteps #1 { \msg_warning:nnn { lc-visualizer } { max-steps } {#1} } % repeat the max-steps warning for a cached run
+\seq_new:N \g__lc_memos_seq % the terms this run already typeset
+\cs_new_protected:Npn \__lc_memo: % remember the output for the same term in this run
+  {
+    \__lc_hex_nf:
+    \seq_gput_right:NV \g__lc_memos_seq \l__lc_hash_str
+    \tl_gset:cx { g__lc_memo_ \l__lc_hash_str _tl }
+      { \__lc_restore:n { \exp_not:N } \seq_use:Nn \l__lc_out_seq { } }
+  }
+\NewDocumentCommand \lcForgetMemo { } % reduce the next identical term again, for benchmarks
+  {
+    \seq_map_inline:Nn \g__lc_memos_seq { \cs_undefine:c { g__lc_memo_ ##1 _tl } }
+    \seq_gclear:N \g__lc_memos_seq
+  }
+\cs_new_protected:Npn \__lc_cached:nn #1#2 % use the cache file, or compute and write it
+  {
+    \str_if_eq:VnT \l__lc_cache_str { * }
+      { \str_set:Ne \l__lc_cache_str { \c_sys_jobname_str -lc- \str_range:Nnn \l__lc_hash_str { 1 } { 8 } } }
+    \prop_get:NVNT \g__lc_cache_names_prop \l__lc_cache_str \l__lc_tmp_tl
+      {
+        \str_if_eq:VVF \l__lc_tmp_tl \l__lc_hash_str
+          { \msg_warning:nnV { lc-visualizer } { cache-shared } \l__lc_cache_str }
+      }
+    \prop_gput:NVV \g__lc_cache_names_prop \l__lc_cache_str \l__lc_hash_str
+    \str_set:Ne \l__lc_header_str { \c_percent_str \c_space_tl lc-visualizer~ \l__lc_hash_str }
+    \str_clear:N \l__lc_db_str
+    \bool_set_false:N \l__lc_foreign_bool
+    \ior_open:NnT \g__lc_cache_ior { \l__lc_cache_str .tex }
+      {
+        \ior_str_get:NN \g__lc_cache_ior \l__lc_db_str
+        \ior_close:N \g__lc_cache_ior
+        \quark_if_no_value:NT \l__lc_db_str { \str_clear:N \l__lc_db_str }
+        \str_if_empty:NF \l__lc_db_str
+          {
+            \str_if_eq:eeF { \str_range:Nnn \l__lc_db_str { 1 } { 15 } } { \c_percent_str \c_space_tl lc-visualizer }
+              { \bool_set_true:N \l__lc_foreign_bool }
+          }
+      }
+    \str_if_eq:NNTF \l__lc_db_str \l__lc_header_str
+      { \file_input:n { \l__lc_cache_str .tex } }
+      {
+        \__lc_compute:nn {#1} {#2}
+        \bool_if:NTF \l__lc_foreign_bool
+          { \__lc_error:nnV { lc-visualizer } { cache-foreign } \l__lc_cache_str }
+          { \bool_if:NF \g__lc_error_bool { \__lc_write_cache: } }
+      }
+  }
+\cs_new_protected:Npn \__lc_unspace:n #1 % drop the space a detokenized macro name left before #1
+  { \str_replace_all:Nen \l__lc_txt_str { \c_space_tl #1 } {#1} }
+\cs_generate_variant:Nn \__lc_unspace:n { e }
+\cs_generate_variant:Nn \__lc_export_line:n { e }
+\cs_new_protected:Npn \__lc_export_line:n #1 % one line, without the spaces detokenizing leaves behind
+  {
+    \str_set:Ne \l__lc_txt_str { \tl_to_str:n {#1} }
+    \str_replace_all:Nee \l__lc_txt_str { \c_space_tl \c_space_tl } { \c_space_tl }
+    \__lc_unspace:n { ) } \__lc_unspace:n { . } \__lc_unspace:n { ] }
+    \__lc_unspace:e { \c_left_brace_str } \__lc_unspace:e { \c_right_brace_str }
+    \iow_now:NV \g__lc_cache_iow \l__lc_txt_str
+  }
+\cs_new_protected:Npn \__lc_export: % write the reduction as code one can edit
+  {
+    \group_begin:
+      \__lc_export_dialect:
+      \seq_clear:N \l__lc_out_seq
+      \__lc_typeset_reduction:
+      \iow_open:Nn \g__lc_cache_iow { \l__lc_export_str .tex }
+      \iow_now:Ne \g__lc_cache_iow
+        { \c_percent_str \c_space_tl lc-visualizer~ \tl_to_str:N \lcLastStepCount \c_space_tl steps }
+      \__lc_export_line:e { \exp_not:N \lcSetup { color-by-name } }
+      \__lc_export_line:e
+        {
+          \exp_not:N \[ \exp_not:N \begin { array }
+          { @{}r@ \c_left_brace_str \c_tilde_str \c_right_brace_str l@{} }
+        }
+      \seq_map_inline:Nn \l__lc_out_seq { \__lc_export_line:n {##1} }
+      \__lc_export_line:n { \end { array } \] }
+      \iow_close:N \g__lc_cache_iow
+    \group_end:
+  }
+\cs_new_protected:Npn \__lc_write_cache: % write the result out for the next run
+  {
+    \iow_open:Nn \g__lc_cache_iow { \l__lc_cache_str .tex }
+    \iow_now:NV \g__lc_cache_iow \l__lc_header_str
+    \iow_now:Nn \g__lc_cache_iow { \makeatletter }
+    \seq_map_inline:Nn \l__lc_code_seq
+      { \iow_now:Ne \g__lc_cache_iow { \exp_not:n {##1} \c_percent_str } }
+    \iow_now:Nn \g__lc_cache_iow { \makeatother }
+    \iow_close:N \g__lc_cache_iow
+  }
+\NewDocumentCommand \lcReduce { O{} m } { \__lc_run:nnn {#1} {#2} { \__lc_typeset_reduction: } } % show the whole reduction, step by step
+\NewDocumentCommand \lcNormalForm { O{} m } { \__lc_run:nnn {#1} {#2} { \__lc_typeset_normal_form: } } % show only the result of the reduction
+\NewDocumentCommand \lcComputeReduction { O{} m } { \__lc_run:nnn {#1} {#2} { } } % reduce without printing, for the last-run macros
+\NewDocumentCommand \lcCanonicalForm { m m } % store the plain-text form of a term in a macro
+  {
+    \__lc_parse:nN {#2} \l__lc_tmp_tl
+    \cs_set:Npx #1 { \__lc_str:nV {t} \l__lc_tmp_tl }
+  }
+\cs_new_protected:Npn \__lc_db_char:n #1 % one character of a de Bruijn form, the binder as the lambda
+  { \str_if_eq:nVTF {#1} \c_backslash_str { \lc@lambdasymbol } { \exp_not:n {#1} } }
+\NewDocumentCommand \lcDeBruijnForm { m m } % store the de Bruijn form of a term in a macro
+  {
+    \__lc_parse:nN {#2} \l__lc_tmp_tl
+    \cs_set:Npx #1 { \__lc_db:nV { } \l__lc_tmp_tl }
+  }
+\NewDocumentCommand \lcDeBruijn { O{} m } % typeset a term with de Bruijn indices
+  {
+    \group_begin:
+      \keys_set:nn { lc-visualizer } {#1}
+      \tl_use:N \l__lc_format_tl
+      \lc@font
+      \__lc_parse:nN {#2} \l__lc_tmp_tl
+      \tl_set:Nx \l__lc_tmp_tl { \__lc_dbt:nV { t } \l__lc_tmp_tl }
+      \lc@enable@base { \l__lc_color_tl } \tl_use:N \l__lc_tmp_tl
+    \group_end:
+  }
+\NewDocumentCommand \lcIfAlphaEquivalent { m m m m } % compare two terms up to renaming of binders
+  {
+    \__lc_parse:nN {#1} \l__lc_tmp_tl
+    \str_set:Nx \l__lc_name_str { \__lc_db:nV { } \l__lc_tmp_tl }
+    \__lc_parse:nN {#2} \l__lc_tmp_tl
+    \str_if_eq:eeTF { \l__lc_name_str } { \__lc_db:nV { } \l__lc_tmp_tl } {#3} {#4}
+  }
+
+\ExplSyntaxOff
+
+\DeclareRobustCommand*\lcVar[1]{\edef\lc@name{\lc@trim{#1}}\lc@checkvarname}
+\def\lc@restore#1#2#3#4#5{%
+   \lc@setnf{#1}\gdef\lcLastReductionSequence{#2}\gdef\lcLastStepCount{#3}%
+   \gdef\lcLastShownSteps{#4}\global\csname lcNormalFormReached#5\endcsname
+   \iflcNormalFormReached\else\lc@warnsteps{#3}\fi}
+\newif\iflc@centered
+\newcount\lc@rowcount
+\def\lc@rowsbegin#1{\par\global\lc@rowcount\z@\def\lc@rowsep{#1}%
+   \ifnum\gluestretchorder\leftskip>\z@\lc@centeredtrue\else\lc@centeredfalse\fi
+   \iflc@centered\begin{tabular}{@{}l@{}}\else
+   \begingroup\parskip=#1\relax\leftskip\z@\rightskip\z@\parfillskip\z@\@plus1fil\relax\nopagebreak[3]\fi}
+\def\lc@rowstart{\global\advance\lc@rowcount\@ne
+   \iflc@centered\ifnum\lc@rowcount>\@ne\\[\lc@rowsep]\fi
+   \else\ifnum\lc@rowcount=\tw@\nopagebreak\fi\par\noindent\fi}
+\def\lc@rowsend{\iflc@centered\end{tabular}\par\else\par\endgroup\par\addvspace{\lc@rowsep}\fi}
+\def\lc@sep{\ifdim\lastskip>\z@\else\space\fi}
+
+\ExplSyntaxOn
+\cs_new_protected:Npn \lcLoadModule #1 % load a bundle of rewriting rules, once
+  {
+    \clist_map_inline:nn {#1}
+      {
+        \cs_if_exist:cTF { lc@module@##1 }
+          {
+            \cs_set_eq:Nc \lc@module { lc@module@##1 }
+            \cs_gset_eq:cN { lc@module@##1 } \prg_do_nothing:
+            \lc@module
+          }
+          { \msg_error:nnn { lc-visualizer } { unknown-module } {##1} }
+      }
+  }
+\msg_new:nnn { lc-visualizer } { unknown-module } { Unknown~module~`#1'. } % a module name that nobody defined
+\ExplSyntaxOff
+\def\lc@module@bool{%
+   \lcCreateNewRewritingRule\true{true}{\\{x,y}\.\x}%
+   \lcCreateNewRewritingRule\false{false}{\\{x,y}\.\y}%
+   \lcCreateNewRewritingRule\ifelse{ifelse}{\\{p,a,b}\.\p \a \b}%
+   \lcCreateNewRewritingRule\and{and}{\\{p,q}\.\p \q \p}%
+   \lcCreateNewRewritingRule\lor{or}{\\{p,q}\.\p \p \q}%
+   \lcCreateNewRewritingRule\not{not}{\\{p,a,b}\.\p \b \a}%
+}
+\def\lc@module@pair{%
+   \lcLoadModule{bool}%
+   \lcCreateNewRewritingRule\pair{pair}{\\{a,b,f}\.\f \a \b}%
+   \lcCreateNewRewritingRule\fst{fst}{\\p\.\p \true}%
+   \lcCreateNewRewritingRule\snd{snd}{\\p\.\p \false}%
+}
+\def\lc@module@list{%
+   \lcLoadModule{bool}%
+   \lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}%
+   \lcCreateNewRewritingRule\head{head}{\\{d}\.\d \true}%
+   \lcCreateNewRewritingRule\tail{tail}{\\{d}\.\d \false}%
+   \lcCreateNewRewritingRule\nil{nil}{\\x\.\true}%
+   \lcCreateNewRewritingRule\ListNull{null}{\\d\.\d \(\\{x,y}\.\false\)}%
+   \lcLoadModule{nat,comb}%
+   \lcCreateNewRewritingRule\length{length}{\Ycomb \(\\{r,l}\.\ifelse \(\ListNull \l\) \num{0} \(\succ \(\r \(\tail \l\)\)\)\)}%
+   \lcCreateNewRewritingRule\ListSum{sum}{\Ycomb \(\\{r,l}\.\ifelse \(\ListNull \l\) \num{0} \(\add \(\head \l\) \(\r \(\tail \l\)\)\)\)}%
+   \lcCreateNewRewritingRule\ListProd{prod}{\Ycomb \(\\{r,l}\.\ifelse \(\ListNull \l\) \num{1} \(\mult \(\head \l\) \(\r \(\tail \l\)\)\)\)}%
+   \lcCreateNewRewritingRule\ListContains{contains}{\Ycomb \(\\{r,n,l}\.\ifelse \(\ListNull \l\) \false \(\ifelse \(\eq \n \(\head \l\)\) \true \(\r \n \(\tail \l\)\)\)\)}%
+   \lcCreateNewArgumentRewritingRule\list{[\@arg\unskip]}{\lcListOf{\@arg}}%
+   \lcRawArgumentRule\list% the argument is a list, not a single term
+
+   \lcCreateNewRewritingRule\append{append}{\Ycomb \(\\{r,l,m}\.\ifelse \(\ListNull \l\) \m \(\cons \(\head \l\) \(\r \(\tail \l\) \m\)\)\)}%
+}
+\def\lc@construct@number#1{\ifnum#1<1 \x\else\f \ifnum#1>1 \(\fi\expandafter\lc@construct@number\expandafter{\the\numexpr#1-1}\ifnum#1>1 \)\fi\fi}
+\def\lc@module@nat{%
+   \lcLoadModule{bool}%
+   \lcCreateNewArgumentRewritingRule\num{\@arg}{\\{f,x}\.\lc@construct@number{\@arg}}%
+   \lcCreateNewRewritingRule\succ{succ}{\\{n,f,x}\.\f \(\n \f \x\)}%
+   \lcCreateNewRewritingRule\add{add}{\\{m,n,f,x}\.\m \f \(\n \f \x\)}%
+   \lcCreateNewRewritingRule\mult{mult}{\\{n,m,f}\.\m \(\n \f\)}%
+   \lcCreateNewRewritingRule\isZero{isZero}{\\n\.\n \(\\y\.\false\) \true}%
+   \lcCreateNewRewritingRule\pred{pred}{\\{n,f,x}\.\n \(\\{g,h}\.\h \(\g \f\)\) \(\\u\.\x\) \(\\u\.\u\)}%
+   \lcCreateNewRewritingRule\sub{sub}{\\{m,n}\.\n \pred \m}%
+   \lcCreateNewRewritingRule\eq{eq}{\\{m,n}\.\and \(\isZero \(\sub \m \n\)\) \(\isZero \(\sub \n \m\)\)}%
+}
+\def\lc@module@comb{%
+   \lcCreateNewRewritingRule\Ycomb{\textup{\textbf{Y}}}{\\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}%
+   \lcCreateNewRewritingRule\Tcomb{\textup{\textbf{\ensuremath{\Theta}}}}{\(\\{x,y}\.\y \(\x \x \y\)\) \(\\{x,y}\.\y \(\x \x \y\)\)}%
+}
+\iflc@load@default@rewrites\lcLoadModule{bool,pair,list,nat,comb}\fi
+
 % TODO: maybe use simpler-wick to mark connected stuff?
 \endinput

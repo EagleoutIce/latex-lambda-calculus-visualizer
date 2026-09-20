@@ -1,0 +1,16 @@
+\documentclass{beamer}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\input{lc-test}
+\lcReduceSetup{row-hook=\visible<#1->{#2}}
+\begin{document}
+\START
+\begin{frame}
+\TestShown{(\\x.\x) \y}{0,beta 1}
+\TestShown[beamer=uncover]{(\\f.\\x.\f \x) \x}{0,alpha 1,beta 2,eta 3}
+\TestShown[beamer=only,beamer-start=2,layout=inline]{(\\x.\\y.\x) \a \b}{0,beta 1,beta 2}
+\TestShown[beamer=only,layout=inline]{(\\x.\x) \y}{0,beta 1}
+\TestShown[layout=inline,row-hook={[#1:#2]}]{(\\x.\x) \y}{0,beta 1}
+\TestShown[beamer=only,beamer-start=2,layout=inline,max-steps=10]{(\\x.\x \x) (\\x.\x \x)}{0,beta 1,beta 2,beta 3,beta 4,beta 5,beta 6,beta 7,beta 8,beta 9,beta 10}
+\end{frame}
+\END

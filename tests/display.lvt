@@ -1,0 +1,71 @@
+\documentclass{article}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\input{lc-test}
+\def\rows{}\newcommand\row[2]{\xdef\rows{\rows#1}#2}
+\begin{document}
+\START
+\TestShown{(\\x.\\y.\x) \y \a}{0,alpha 1,beta 2,beta 3}
+\TestShown[hide=alpha,arrow-style=red,color-start=3]{(\\x.\\y.\x) \y \a}{0,beta 2,beta 3}
+\TestShown[compact,beta-symbol=\longrightarrow]{(\\x.\\y.\x) \y \a}{0,alpha 1,beta* 3}
+\TestShown[to=1,layout=inline]{(\\x.\\y.\x) \y \a}{0,alpha 1,beta* 3}
+\TestShown[from=3,plain,multi-symbol=\Rightarrow]{(\\x.\\y.\x) \y \a}{0,* 3}
+\TestShown[compact,max-steps=3,format=\small]{(\\x.\x \x) (\\x.\x \x)}{0,beta* 3}
+\TestShown[row-hook=\row{#1}{#2},layout=inline,fold=num]{\succ \num{0}}{0,delta 1,beta 2,delta 3,beta 4,beta 5,eta 6}
+\TestString{row-hook}{\rows}{1234567}
+\TestShown[skip={1,2}]{(\\x.\\y.\x) \y \a}{0,* 3}
+\TestShown[skip=2]{(\\x.\\y.\x) \y \a}{0,alpha 1,beta* 3}
+\lcNormalForm[tooltips]{(\\x.\x) \y}
+\lcNormalForm[max-steps=1,plain]{\Ycomb \f}
+\LC{\\{foo, y'}.\lcVar{foo} \lcVar{y'} \lcVar{S}}
+\lcEnableChar{foo}\LC{\\{foo}.\foo \x' \\x'.\x'}
+\begin{itemize}\item \lcReduce{(\\x.\x) \y}\end{itemize}
+\lcCreateNewRewritingRule\eqq{eqq}{\x \equiv \y}
+\LC{\eqq \a \equiv \RLC{\\y\.\y}}
+\newif\iffoo \iffoo \LC{\\x.\x}\fi
+\begin{center}\lcReduce{(\\x.\\y.\x) \y \a}\end{center}
+$\lcReduce{(\\x.\x) \y}$ \fbox{\lcReduce{(\\x.\x) \y}}
+\lcComputeReduction[max-steps=3]{(\\x.\x \x) (\\x.\x \x)}
+\TestString{no~normal~form}{\iflcNormalFormReached yes\else no\fi}{no}
+\setbox0\hbox{\lcNormalForm[show-term,max-steps=3]{(\\x.\x \x) (\\x.\x \x)}}
+\TestString{steps~without~normal~form}{\lcLastReductionSequence}{beta,beta,beta}
+\setbox0\hbox{\lcNormalForm[show-term]{(\\x.\\y.\x) \y \a}}
+\TestString{show-term~steps}{\lcLastReductionSequence}{alpha,beta,beta}
+\setbox0\hbox{\LC[plain]{(\\x.\x) \y}\RLC[plain]{\(\\x\.\x\) \y}}\LC{(\\x.\x) \y}
+\lcDeBruijnForm\dbA{(\\x.\\y.\x \y) \z}
+\TestString{de~Bruijn~form}{\dbA}{(\string\.\string\.([2] [1]) z)}
+\lcDeBruijnForm\dbB{\\{foo}.\lcVar{foo}}
+\TestString{de~Bruijn~multi~letter}{\dbB}{\string\.[1]}
+\setbox0\hbox{\lcDeBruijn{(\\x.\x) \y}}
+\lcReduce[export=lc-export,hide=beta]{(\\x.\\y.\x) \y \a}
+\TestString{export~steps}{\lcLastShownSteps}{0,alpha 1,beta* 3}
+\setbox0\hbox{\lcReduce[underline, layout=inline]{(\\x.\\y.\x) \y \a}}
+\TestString{underline~steps}{\lcLastShownSteps}{0,alpha 1,beta 2,beta 3}
+\setbox0\hbox{\lcReduce[underline, style=plain, layout=inline]{\true \a \b}}
+\TestString{underline~plain~steps}{\lcLastShownSteps}{0,delta 1,beta 2,beta 3}
+\setbox0\hbox{\lcReduce[arrows, layout=inline]{(\\x.\x) \y}}
+\TestString{arrow~steps}{\lcLastShownSteps}{0,beta 1}
+\setbox0\hbox{\LC{(\\a[a].\a[a2] \b) \mark{m}{(\\b.\b)}}\reducemarks{m}{a}}
+% every merged row carries its own number of steps, and the strut belongs to the box
+\setbox0\hbox{\lcReduce[hide=delta,compact,layout=inline]{\add \num{2} \num{1}}}
+\TestString{merged~steps~add}{\lcLastShownSteps}{0,beta* 9}
+\setbox0\hbox{\lcReduce[hide={delta,alpha},compact,layout=inline]{\true \a \b}}
+\TestString{merged~steps~true}{\lcLastShownSteps}{0,beta* 3}
+\setbox0\hbox{\LC{\num{3}}\LC[name-strut]{\num{3}}\LC{\num{3}}}
+\setbox0\hbox{\LC{(\\x.\x) \y}\LC[node-background]{(\\x.\x) \y}\LC[node-background,glow]{(\\x.\x) \y}}
+% the keys of a term are read before its font is selected, so font= has an effect
+\setbox0\hbox{\LC{(\\x.\x) \y}}
+\setbox2\hbox{\LC[font=\sffamily]{(\\x.\x) \y}}
+\ifdim\wd0=\wd2 \TYPE{font~key:~no~effect}\else\TYPE{font~key:~changes~the~term}\fi
+\setbox2\hbox{\LC[textcolor]{(\\x.\x) \y}}
+\ifdim\wd0=\wd2 \TYPE{textcolor~key:~no~effect}\else\TYPE{textcolor~key:~changes~the~term}\fi
+\lcNewStyle{lc@test@style}{colors=red,font=\itshape}
+\setbox2\hbox{\LC[style=lc@test@style]{(\\x.\x) \y}}
+\ifdim\wd0=\wd2 \TYPE{style~font:~no~effect}\else\TYPE{style~font:~changes~the~term}\fi
+% the single arrow of a normal form counts the steps of that reduction, not of the last one
+\setbox0\hbox{\lcReduce[hide=delta,compact,layout=inline]{\add \num{2} \num{1}}}
+\lcNormalForm[show-term, layout=inline]{\head [\a, \b]}
+\TestString{normal~form~steps}{\lcLastStepCount}{9}
+\setbox0\hbox{\lcReduce[hide=delta,compact,step-mark-place=behind,layout=inline]{\add \num{2} \num{1}}}
+\TestString{step~mark~behind}{\lcLastShownSteps}{0,beta* 9}
+\END

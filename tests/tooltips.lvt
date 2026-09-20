@@ -1,0 +1,15 @@
+\documentclass{article}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\input{lc-test}
+\begin{document}
+\START
+\lcNormalForm[tooltips,fold=num]{\add \num{1} \num{1}}
+\TestShown[tooltips,compact,hide=delta]{\true \a \b}{0,beta* 3}
+\TestShown[tooltips,skip=1]{(\\x.\\y.\x) \y \a}{0,* 2,beta 3}
+\TestShown[tooltips]{(\\x.\x) \y}{0,beta 1}
+\lcSetup{style=plain-math,name-strut}
+\setbox0\hbox{\LC{(\\x.\x) \y}}
+\lcReduce[symbol-align=left,multi-symbol={\Rightarrow_{#1}},compact]{(\\x.\\y.\x) \y \a}
+\TestString{multi~symbol~steps}{\lcLastShownSteps}{0,alpha 1,beta* 3}
+\END

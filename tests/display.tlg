@@ -1,0 +1,14 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+Package lc-visualizer Warning: Stopped reducing after 3 steps without reaching a normal form (increase max-steps if there is one).
+LaTeX Font Info:    Font shape `OT1/cmss/m/it' in size <10> not available
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line ....
+Package lc-visualizer Warning: Stopped reducing after 1 steps without reaching a normal form (increase max-steps if there is one).
+Package lc-visualizer Warning: Stopped reducing after 3 steps without reaching a normal form (increase max-steps if there is one).
+Package lc-visualizer Warning: Stopped reducing after 3 steps without reaching a normal form (increase max-steps if there is one).
+[1
+]
+\g__lc_cache_iow=\write...
+font~key:~changes~the~term
+textcolor~key:~changes~the~term
+style~font:~changes~the~term

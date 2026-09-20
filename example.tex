@@ -4,9 +4,7 @@
 \usepackage[prefix=]{xcolor-material}
 \usepackage{lc-visualizer}
 \usepackage[active,tightpage]{preview}
-\lcRewriteRulesNameStrut{\vphantom{l}}
-% \lcDoSingleLambdasForMultiple
-\lcEnableGlow
+\lcSetup{name-strut=\vphantom{l},glow}
 
 \begin{document}
 \preview
@@ -18,8 +16,10 @@
 
 \LC{\mark{xx}{\\x}.\\x.\cons \x \nil}\\
 \LC{\lcBelowRewriteRule{XX}{\\[black,green]{x,y}.\x~\y}}
-\lcDoNotShadeSameVariables
-\lcMaximumRewritingRuleExpandDepth{2}
+\lcSetup{shade-same=false,rule-depth=2}
 \LC{\\x.\\x.(\cons \x) \nil}
+\bigskip
+
+\lcReduce{(\\f.\\x.\f \x) \x}
 \endpreview
 \end{document}

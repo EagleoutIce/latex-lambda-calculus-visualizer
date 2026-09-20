@@ -1,0 +1,265 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+(\\x.\x 
+! Package lc-visualizer Error: Missing `)' in lambda term.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{(\\x.\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\x )
+! Package lc-visualizer Error: Unbalanced parentheses in lambda term `\x )'.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\x)}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\\x.
+! Package lc-visualizer Error: Empty lambda term (or abstraction without body).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\\x.}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\\{1x}.\x 
+! Package lc-visualizer Error: `1x' is no variable name (letters and digits starting with a letter, optionally followed by primes).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\\{1x}.\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\\{}.\x 
+! Package lc-visualizer Error: `' is no variable name (letters and digits starting with a letter, optionally followed by primes).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\\{}.\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\\xy.\x 
+! Package lc-visualizer Error: Missing `.' after the binders of an abstraction.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\\xy.\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: Unexpected `.' in lambda term.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\\xy.\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\x . \y 
+! Package lc-visualizer Error: Unexpected `.' in lambda term.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\x . \y}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\lcVar {\x }
+! Package lc-visualizer Error: `\x ' is no variable name (letters and digits starting with a letter, optionally followed by primes).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\lcVar{\x}}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\loopy \x 
+! Package lc-visualizer Error: The rewriting rule `loopy' uses itself and cannot be unfolded.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\loopy \x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\twice {} \f 
+! Package lc-visualizer Error: The rewriting rule `twice' needs an argument.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\twice{} \f}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\\x..\x 
+! Package lc-visualizer Error: Unexpected `.' in lambda term.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\\x..\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+()
+! Package lc-visualizer Error: Empty lambda term (or abstraction without body).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{()}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\true **
+! Package lc-visualizer Error: Unexpected `*' in lambda term.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\true**}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\\{x y}.\x 
+! Package lc-visualizer Error: `x y' is no variable name (letters and digits starting with a letter, optionally followed by primes).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\\{x y}.\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\\.\x 
+! Package lc-visualizer Error: `.' is no variable name (letters and digits starting with a letter, optionally followed by primes).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\\.\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: Missing `.' after the binders of an abstraction.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\\.\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+(\\x.\x ))
+! Package lc-visualizer Error: Unbalanced parentheses in lambda term `(\\x.\x ))'.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{(\\x.\x))}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\ping \a 
+! Package lc-visualizer Error: The rewriting rule `ping' uses itself and cannot be unfolded.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\ping \a}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\selfA {\x }
+! Package lc-visualizer Error: The rewriting rule `selfA' uses itself and cannot be unfolded.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\selfA{\x}}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\lcVar {}
+! Package lc-visualizer Error: `' is no variable name (letters and digits starting with a letter, optionally followed by primes).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\lcVar{}}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\x (
+! Package lc-visualizer Error: Empty lambda term (or abstraction without body).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\x (}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: Missing `)' in lambda term.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\x (}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\x \mark {n}
+! Package lc-visualizer Error: Empty lambda term (or abstraction without body).
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\x \mark{n}}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\num {\x }
+! Package lc-visualizer Error: `\x ' is no integer.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\num{\x}}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\num {-1} \f 
+! Package lc-visualizer Error: `-1' is no integer.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{\num{-1} \f}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: Unknown rule `nope' for fold (give the name of its macro, without argument).
+Type <return> to continue.
+ ...                                              
+l. ...\lcComputeReduction[fold=nope]{\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: step-mark-place is `above' or `behind' (got `sideways').
+Type <return> to continue.
+ ...                                              
+l. ......uteReduction[step-mark-place=sideways]{\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: max-steps must not be negative (got `-1').
+Type <return> to continue.
+ ...                                              
+l. ...\lcComputeReduction[max-steps=-1]{\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: Unknown rule `twice' for fold (give the name of its macro, without argument).
+Type <return> to continue.
+ ...                                              
+l. ...\lcComputeReduction[fold=num,fold=twice]{\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: The rewriting rule `twice' needs an argument.
+Type <return> to continue.
+ ...                                              
+l. ...\lcComputeReduction[fold=num,fold=twice]{\x}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\lcCreateNewRewritingRule \k {K}{\\a.\lcVar {a}}
+\lcComputeReduction {\lcVar {}}
+\setbox 0\hbox {\LC {\lcVar {}}}
+\setbox 0\hbox {\LC {\lcVar {1a}}}
+[\a , \b 
+! Package lc-visualizer Error: Missing `]' in a list.
+Type <return> to continue.
+ ...                                              
+l. ...\ExpectError{[\a, \b}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+box with an open list
+! Package lc-visualizer Error: Missing `]' in a list.
+Type <return> to continue.
+ ...                                              
+l. ......h an open list}}\setbox0\hbox{\LC{[\a, \b}
+                                                  }
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+LaTeX Font Info:    Font shape `OT1/cmss/m/it' in size <10> not available
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line ....

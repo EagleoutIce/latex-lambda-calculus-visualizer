@@ -1,0 +1,16 @@
+\documentclass{article}
+\usepackage{siunitx}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\input{lc-test}
+\begin{document}
+\START
+\let\siunitxnum\num
+\let\mathsucc\succ
+\LC{\num{2} \succ \true}
+\Test[fold=num]{\add \num{1} \num{1}}{\num{2}}
+\TestString{num}{\ifx\num\siunitxnum ok\fi}{ok}
+\TestString{succ}{\ifx\succ\mathsucc ok\fi}{ok}
+\TestString{true}{\ifdefined\true defined\fi}{}
+\setbox0\hbox{\num{12345.6} $a \succ b$}
+\END

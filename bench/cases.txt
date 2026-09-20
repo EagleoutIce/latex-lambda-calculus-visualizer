@@ -1,0 +1,8 @@
+# rows|label|term|max-steps|extra keys
+1|no redex|\f \x|60|
+5|four steps|\true \a \b|60|
+60|factorial of 2|\Ycomb (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred \n)))) \num{2}|120|
+60|factorial of 2, arrows|\Ycomb (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred \n)))) \num{2}|120|arrows
+60|factorial of 2, compact|\Ycomb (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred \n)))) \num{2}|120|compact
+60|factorial of 2, no nodes|\Ycomb (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred \n)))) \num{2}|120|node-background=false
+100|factorial of 3, cut off|\Ycomb (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred \n)))) \num{3}|100|

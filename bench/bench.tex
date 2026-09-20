@@ -1,0 +1,9 @@
+% A tiny document that only shows the benchmark table, so the CI can compile
+% the result of bench/run.sh on its own.
+\documentclass{article}
+\usepackage[group-separator={\,},group-minimum-digits=4]{siunitx}
+\usepackage{booktabs}
+\begin{document}
+\section*{lc-visualizer benchmark}
+\input{bench-results.tex}
+\end{document}

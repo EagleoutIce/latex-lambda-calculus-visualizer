@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\input{lc-test}
+\begin{document}
+\START
+\lcReduce[cache=lc-cache]{(\\x.\x) \y}
+\TestString{computed}{\lcLastStepCount}{1}
+\def\lcLastStepCount{none}
+\lcReduce[cache=lc-cache]{(\\x.\x) \y}
+\TestString{reused}{\lcLastStepCount}{1}
+\TestString{reused normal form}{\lcLastNormalForm}{y}
+\lcReduce[cache=lc-cache,eta=false]{(\\x.\x) \y}
+\TestString{options change}{\lcLastStepCount}{1}
+\def\lcLastStepCount{none}
+\lcNormalForm[cache=lc-cache]{(\\x.\x) (\\y.\y) \z}
+\TestString{term change}{\lcLastStepCount}{2}
+\def\lcLastStepCount{none}
+\lcReduce[cache=lc-cache]{(\\x.\x) (\\y.\y) \z}
+\TestString{command change}{\lcLastStepCount}{2}
+\def\lcLastStepCount{none}
+\lcReduce[cache]{(\\x.\x) \y}
+\def\lcLastStepCount{none}
+\lcReduce[cache]{(\\x.\x) \y}
+\TestString{automatic name}{\lcLastStepCount}{1}
+\newcommand\steps{1}
+\lcReduce[cache=lc-cache,max-steps=\steps]{(\\x.\x) (\\y.\y) \z}
+\renewcommand\steps{5}
+\def\lcLastStepCount{none}
+\lcReduce[cache=lc-cache,max-steps=\steps]{(\\x.\x) (\\y.\y) \z}
+\TestString{option values}{\lcLastStepCount}{2}
+\def\lcLastStepCount{none}
+\lcReduce[cache=lc-cache]{(\\x.\x \y}
+\lcReduce[cache=lc-cache]{(\\x.\x \y}
+\TestString{errors are not cached}{\lcLastStepCount}{0}
+\immediate\openout15=lc-foreign.tex \immediate\write15{precious}\immediate\closeout15
+\lcReduce[cache=lc-foreign]{(\\x.\x) \y}
+\newread\foreign \openin\foreign=lc-foreign.tex \read\foreign to\line \closein\foreign
+\TestString{foreign file kept}{\line}{precious }
+\lcNormalForm[cache=lc-num]{\num{0}}
+\def\lcLastNormalForm{none}
+\lcNormalForm[cache=lc-num]{\num{0}}
+\TestString{argument rule in cached term}{\lcLastNormalForm}{\detokenize{\num {0}}}
+\lcReduce[cache=lc-multi]{(\\x.\\{foo}.\x) \lcVar{foo}}
+\def\lcLastNormalForm{none}
+\lcReduce[cache=lc-multi]{(\\x.\\{foo}.\x) \lcVar{foo}}
+\TestString{multi-letter normal form restored}{\lcLastNormalForm}{\string\foo'.foo}
+\TestString{multi-letter steps restored}{\lcLastReductionSequence}{alpha,beta}
+\newwrite\lctmpout \immediate\openout\lctmpout=lc-empty.tex \immediate\closeout\lctmpout
+\lcComputeReduction[cache=lc-empty]{(\\x.\x) \y}
+\TestString{empty cache file recomputed}{\lcLastNormalForm}{y}
+\setbox0\hbox{\lcNormalForm[cache=lc-space]{(\\x.\x) \y}}\setbox1\hbox{\lcNormalForm{(\\x.\x) \y}}
+\TYPE{cached~width~\ifdim\wd0=\wd1 equals\else differs~from\fi~fresh~width}
+\lcReduce[cache=lc-both, export=lc-exp, hide=alpha]{(\\x.\\y.\x) \y \a}
+\TestString{cache~and~export~together}{\lcLastReductionSequence}{alpha,beta,beta}
+\lcReduce{(\\x.\x) \y}
+\lcReduce[export=lc-exp2]{(\\x.\x) \y}
+\TestString{export~after~the~same~reduction}{\lcLastStepCount}{1}
+\END

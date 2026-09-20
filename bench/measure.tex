@@ -1,0 +1,95 @@
+% Times one case of bench/cases.txt from inside the document and writes its row.
+% bench/run.sh drives this file, once per case.
+\documentclass{article}
+\usepackage{lc-visualizer}
+
+\makeatletter
+\providecommand\lcbenchruns{5}
+\providecommand\lcbenchonly{1}
+
+% the timer counts in units of 1/65536 s, the table shows tenths of a ms
+\newcount\lc@bench@t
+\newcount\lc@bench@total
+\newcount\lc@bench@min
+\newcount\lc@bench@max
+\newcount\lc@bench@i
+\newcount\lc@bench@ms
+\def\lc@bench@tenths{\numexpr\pdfelapsedtime*625/4096\relax}
+% \divide truncates, while the division of \numexpr rounds and would break the decimal
+\def\lc@bench@store#1#2{\lc@bench@ms#2\relax \divide\lc@bench@ms10
+   \edef#1{\the\lc@bench@ms.\the\numexpr#2-10*\lc@bench@ms\relax}}
+
+\def\lc@bench@repeat#1#2{%
+   \lc@bench@total\z@ \lc@bench@min\maxdimen \lc@bench@max\z@ \lc@bench@i\z@
+   \@whilenum\lc@bench@i<#1\do{%
+      \lcForgetMemo % or the next run only reads what this one remembered
+      \pdfresettimer
+      #2%
+      \lc@bench@t\lc@bench@tenths
+      \advance\lc@bench@total\lc@bench@t
+      \ifnum\lc@bench@t<\lc@bench@min \lc@bench@min\lc@bench@t \fi
+      \ifnum\lc@bench@t>\lc@bench@max \lc@bench@max\lc@bench@t \fi
+      \advance\lc@bench@i\@ne
+   }%
+   \divide\lc@bench@total#1\relax}
+
+\newwrite\lc@bench@out
+\immediate\openout\lc@bench@out=bench-row.tex
+\def\lc@bench@row#1{\immediate\write\lc@bench@out{#1}}
+
+% rows | label | term | max-steps | extra keys
+\def\lc@bench@case#1|#2|#3|#4|#5\relax{%
+   \def\lc@bench@keys{max-steps=#4}%
+   \def\lc@bench@extra{#5}%
+   \ifx\lc@bench@extra\@empty\else\edef\lc@bench@keys{\lc@bench@keys,#5}\fi
+   \edef\lc@bench@cache{\lc@bench@keys,cache=lc-bench-\the\lc@bench@case@i}%
+   \typeout{lc-bench:~case~\the\lc@bench@case@i:~#2}%
+   \edef\lc@bench@compute{\noexpand\lcComputeReduction[\lc@bench@keys]}%
+   \edef\lc@bench@show{\noexpand\lcReduce[\lc@bench@keys]}%
+   \edef\lc@bench@showcached{\noexpand\lcReduce[\lc@bench@cache]}%
+   \lc@bench@repeat\lcbenchruns{\lc@bench@compute{#3}}%
+   \lc@bench@store\lc@bench@reduce\lc@bench@total
+   \lc@bench@repeat\lcbenchruns{\setbox\z@\vbox{\lc@bench@show{#3}}}%
+   \lc@bench@store\lc@bench@typeset\lc@bench@total
+   \lc@bench@store\lc@bench@fast\lc@bench@min
+   \lc@bench@store\lc@bench@slow\lc@bench@max
+   \setbox\z@\vbox{\lc@bench@showcached{#3}}% writes the cache file
+   \lc@bench@repeat\lcbenchruns{\setbox\z@\vbox{\lc@bench@showcached{#3}}}%
+   \lc@bench@store\lc@bench@cached\lc@bench@total
+   \lc@bench@row{\space\space\space#2 & #1 & \noexpand\qty{\lc@bench@reduce}{\noexpand\ms}
+      & \noexpand\qty{\lc@bench@typeset}{\noexpand\ms}
+      & \noexpand\qty{\lc@bench@fast}{\noexpand\ms}
+      & \noexpand\qty{\lc@bench@slow}{\noexpand\ms}
+      & \noexpand\qty{\lc@bench@cached}{\noexpand\ms} \noexpand\\}}
+
+\newcount\lc@bench@case@i
+\newread\lc@bench@in
+\def\lc@bench@all{%
+   \endlinechar\m@ne % no space at the end of a line, which would end up in a key
+   \openin\lc@bench@in=bench/cases.txt\relax
+   \lc@bench@next
+   \closein\lc@bench@in}
+\def\lc@bench@next{%
+   \ifeof\lc@bench@in \let\lc@bench@more\relax
+   \else
+      \read\lc@bench@in to \lc@bench@line
+      \ifx\lc@bench@line\@empty\else \expandafter\lc@bench@skip\lc@bench@line\relax \fi
+      \let\lc@bench@more\lc@bench@next
+   \fi
+   \lc@bench@more}
+\def\lc@bench@skip#1#2\relax{%
+   \def\lc@bench@first{#1}%
+   \ifx\lc@bench@first\lc@bench@hash\else
+      \advance\lc@bench@case@i\@ne
+      \ifnum\lc@bench@case@i=\lcbenchonly\relax \lc@bench@case#1#2\relax \fi
+   \fi}
+\begingroup\catcode`\#=12 \gdef\lc@bench@hash{#}\endgroup
+
+\begin{document}
+\begingroup
+   \catcode`\#=12 \catcode`\|=12
+   \lc@bench@all
+\endgroup
+\immediate\closeout\lc@bench@out
+The row is in \texttt{bench-row.tex}.
+\end{document}

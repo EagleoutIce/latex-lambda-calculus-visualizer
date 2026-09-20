@@ -1,0 +1,89 @@
+\documentclass{article}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\input{lc-test}
+\lcCreateNewRewritingRule\K{K}{\\a.\y}
+\lcCreateNewRewritingRule\C{C}{\\y.\x}
+\lcCreateNewRewritingRule\X{X}{\x}
+\lcCreateNewArgumentRewritingRule\twice{twice}{\\x.\lcArg (\lcArg \x)}
+\lcCreateNewRewritingRule\T{T}{\twice{\y}}
+\begin{document}
+\START
+\Test{\true* \a \b}{\a}[delta,beta,beta]
+\Test[delta=false]{\true \a \b}{\true \a \b}[]
+\Test{\f \true}{\f \true}[]
+\Test{(\\x.\y) (\Ycomb \f)}{\y}[beta]
+\TestEq{\true}{\\a.\\b.\a}{true}
+\Test{(\\x.\\y.\x \a) \K}{\\{y'}.\y}[alpha,beta,delta,beta]
+\Test{(\\y.\K) \z}{\\a.\z}[beta]
+\Test{\\y.\K \y}{\\y.\y}[delta,beta]
+\Test{\\x.\K \x}{\K}[eta]
+\Test{(\\x.\C) \y}{\\{y'}.\y}[alpha,beta]
+\Test{\\x.\f \X}{\f}[eta]
+\TestEq{\\y.\K}{\\z.\K}{false}
+\Test{(\\x.\twice{\x}) \y}{\\{x'}.\y (\y \lcVar{x'})}[beta]
+\Test{\twice{\T} \f}{\y (\y (\y (\y \f)))}
+\Test{\num{ +2 } \f \x}{\f (\f \x)}
+\Test[fold={true,false}]{\ifelse (\and \true (\lor \false \true)) \a \b}{\a}
+\Test[fold={true,false}]{\not \true}{\false}
+\Test{\fst (\pair \a \b)}{\a}
+\Test{\snd (\pair \a \b)}{\b}
+\Test{\head (\tail (\cons \a (\cons \b \nil)))}{\b}
+\Test[fold={true,false}]{\ListNull \nil}{\true}
+\Test[fold={true,false}]{\ListNull (\cons \a \nil)}{\false}
+\Test[fold=num]{\add \num{2} \num{3}}{\num{5}}
+\Test[fold=num]{\mult \num{2} \num{3}}{\num{6}}
+\Test[fold=num]{\pred \num{3}}{\num{2}}
+\Test[fold=num]{\sub \num{3} \num{1}}{\num{2}}
+\Test[fold={true,false}]{\isZero \num{0}}{\true}
+\Test[fold={true,false}]{\isZero \num{2}}{\false}
+\Test[fold=num,max-steps=500]{\length (\cons \a (\cons \b \nil))}{\num{2}}
+\Test[fold=num,max-steps=500]{\ListSum (\cons \num{2} (\cons \num{1} \nil))}{\num{3}}
+\Test[max-steps=500]{\head (\tail (\append (\cons \a \nil) (\cons \b \nil)))}{\b}
+\Test[fold=num,max-steps=3000]{\Ycomb (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred \n)))) \num{3}}{\num{6}}
+\Test[fold=num,max-steps=3000]{\Ycomb (\\{f,n}.\ifelse (\isZero \n) \num{0} (\add \n (\f (\pred \n)))) \num{4}}{\num{10}}
+\Test[max-steps=4]{\Ycomb \f}{\f (\f ((\\x.\f (\x \x)) (\\x.\f (\x \x))))}[delta,beta,beta,beta,...]
+\Test[fold={num,false}]{\num{0}}{\num{0}}
+\Test[fold=num]{\pred \num{2}}{\num{1}}
+\Test[fold=num]{\twice{\succ} \num{0}}{\num{2}}
+\Test{\twice{(\\z.\z)}}{\\z.\z}[delta,beta,eta]
+\Test[fold={false,num}]{\num{0}}{\false}
+\Test[fold={nil,num}]{\pair \nil (\add \num{1} \num{1})}{\\f.\f \nil \num{2}}
+\Test[fold=num,max-steps=500]{\ListProd (\cons \num{2} (\cons \num{3} \nil))}{\num{6}}
+\Test[fold={true,false},max-steps=500]{\ListContains \num{1} (\cons \num{1} \nil)}{\true}
+\Test[fold={true,false},max-steps=500]{\ListContains \num{3} (\cons \num{1} \nil)}{\false}
+\Test[fold={true,false},max-steps=200]{\eq \num{2} \num{2}}{\true}
+\Test[fold={true,false},max-steps=200]{\eq \num{2} \num{1}}{\false}
+\Test[fold=num,max-steps=3000]{\Tcomb (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred \n)))) \num{3}}{\num{6}}
+\Test[fold={true,false},max-steps=500]{\and \true (\lor \false (\not \false))}{\true}
+\lcComputeReduction[fold={list, num}, max-steps=300]{\cons \num{1} (\cons \num{2} \nil)}
+\TestString{list~sugar}{\lcLastNormalForm}{[\string\num\space{1},\space\string\num\space{2}\string\unskip\space]}
+\lcComputeReduction[fold=list, max-steps=300]{\nil}
+\TestString{empty~list~sugar}{\lcLastNormalForm}{[\string\unskip\space]}
+\lcComputeReduction[fold={list, num}, max-steps=600]{[\num{1}, \num{2}]}
+\TestString{list~input~sugar}{\lcLastNormalForm}{[\string\num\space{1},\space\string\num\space{2}\string\unskip\space]}
+\lcComputeReduction[fold=list, max-steps=600]{[[\a], \b]}
+\TestString{nested~list~input}{\lcLastNormalForm}%
+   {[[\string\lcVar\space{a}\string\unskip\space],\space\string\lcVar\space{b}\string\unskip\space]}
+\Test[max-steps=400]{[]}{\nil}
+\Test[fold={list, num}, max-steps=600]{\head [\num{1}, \num{2}]}{\num{1}}
+\lcComputeReduction[fold={list, num}, max-steps=600]{\tail [\num{1}, \num{2}, \num{3}]}
+\TestString{list~of~constants}{\lcLastNormalForm}%
+   {[\string\num\space{2},\space\string\num\space{3}\string\unskip\space]}
+\lcComputeReduction[fold=list, max-steps=600]{\list{\a, \b}}
+\TestString{list~rule~sugar}{\lcLastNormalForm}%
+   {[\string\lcVar\space{a},\space\string\lcVar\space{b}\string\unskip\space]}
+\Test[max-steps=600]{\head (\list{\a, \b})}{\a}
+\lcCreateNewArgumentRewritingRule\twoof{[\lcArg]}{\lcListOf{\lcArg}}
+\lcRawArgumentRule\twoof
+\Test[max-steps=600]{\head (\twoof{\a, \b})}{\a}
+\Test[max-steps=600]{\head (\tail (\twoof{\a, \b}))}{\b}
+\lcComputeReduction[fold=list, max-steps=600]{\list{}}
+\TestString{empty~list~rule}{\lcLastNormalForm}{[\string\unskip\space]}
+\lcComputeReduction[fold=list, max-steps=600]{\list{\list{\a}, \b}}
+\TestString{nested~list~rule}{\lcLastNormalForm}%
+   {[[\string\lcVar\space{a}\string\unskip\space],\space\string\lcVar\space{b}\string\unskip\space]}
+\lcDeBruijnForm\lcnumone{\num{1}}\lcDeBruijnForm\lcnumthree{\num{3}}
+\TestString{numeral~one}{\lcnumone}{\string\.\string\.([2]\space[1])}
+\TestString{numeral~three}{\lcnumthree}{\string\.\string\.([2]\space([2]\space([2]\space[1])))}
+\END

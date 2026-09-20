@@ -1,0 +1,29 @@
+\hfuzz=\maxdimen \hbadness=10000 \vfuzz=\maxdimen \vbadness=10000
+\ExplSyntaxOn
+\msg_new:nnn { lc-test } { fail } { #1:~expected~`#3',~got~`#2'. }
+\cs_new_protected:Npn \lctest:nnn #1#2#3
+  { \str_if_eq:eeF {#2} {#3} { \msg_error:nneee { lc-test } { fail } {#1} {#2} {#3} } }
+\NewDocumentCommand \Test { O{} m m o }
+  {
+    \lcComputeReduction[#1]{#2}
+    \lcCanonicalForm \l_tmpa_tl {#3}
+    \lctest:nnn { \tl_to_str:n {#2} } { \lcLastNormalForm } { \l_tmpa_tl }
+    \lctest:nnn { \tl_to_str:n {#2} }
+      { \IfValueT {#4} { \lcLastReductionSequence \iflcNormalFormReached \else \exp_args:No \tl_if_empty:nF { \lcLastReductionSequence } { , } \fi } \iflcNormalFormReached \else ... \fi }
+      { \IfValueT {#4} {#4} }
+  }
+\NewDocumentCommand \TestParse { m m }
+  {
+    \lcCanonicalForm \l_tmpa_tl {#1}
+    \lcCanonicalForm \l_tmpb_tl {#2}
+    \lctest:nnn { \tl_to_str:n {#1} } { \l_tmpa_tl } { \l_tmpb_tl }
+  }
+\NewDocumentCommand \TestEq { m m m }
+  {
+    \lcIfAlphaEquivalent {#1} {#2} { \tl_set:Nn \l_tmpa_tl { true } } { \tl_set:Nn \l_tmpa_tl { false } }
+    \lctest:nnn { \tl_to_str:n { #1~vs~#2 } } { \l_tmpa_tl } {#3}
+  }
+\NewDocumentCommand \TestString { m m m } { \lctest:nnn {#1} {#2} {#3} }
+\NewDocumentCommand \TestShown { O{} m m }
+  { \lcReduce[#1]{#2} \par \lctest:nnn { \tl_to_str:n { [#1]~#2 } } { \lcLastShownSteps } {#3} }
+\ExplSyntaxOff

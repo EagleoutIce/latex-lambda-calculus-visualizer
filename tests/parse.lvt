@@ -1,0 +1,36 @@
+\documentclass{article}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\input{lc-test}
+\begin{document}
+\START
+\TestParse{\\{x, y}.\x \y \z}{\\x.\\y.((\x \y) \z)}
+\TestParse{\(\\x\.\x\) \mark{m}{\y} \\[red]{z}[n].\z[o]}{((\\x.\x) \y) (\\z.\z)}
+\TestParse{{a b}~\c}{(\a \b) \c}
+\TestParse{\\{foo,X}.\lcVar{foo} X}{\\{foo}.\\{X}.\lcVar{foo} \lcVar{X}}
+\TestParse{\true* \num*{2} \twice}{\true* \num*{2} \twice}
+\TestParse{\f $\alpha \beta$ \g}{(\f $\alpha \beta$) \g}
+\Test{(\\x.\x \x) $\alpha$}{$\alpha$ $\alpha$}[beta]
+\TestParse{[\a, \b]}{\cons \a (\cons \b \nil)}
+\TestParse{\[\a, \b\]}{\cons \a (\cons \b \nil)}
+\TestParse{[[\a], \b]}{\cons (\cons \a \nil) (\cons \b \nil)}
+\TestParse{[]}{\nil}
+\TestParse{\head [\a, \b]}{\head (\cons \a (\cons \b \nil))}
+\TestParse{[\a ]}{\cons \a \nil}
+\TestParse{[\a , \b ]}{\cons \a (\cons \b \nil)}
+\TestParse{[\a \b, \c]}{\cons (\a \b) (\cons \c \nil)}
+\TestParse{[\a,,\b]}{\cons \a (\cons \b \nil)}
+\TestParse{[\\x.\x, \a]}{\cons (\\x.\x) (\cons \a \nil)}
+\TestParse{[\num{2}, \b]}{\cons \num{2} (\cons \b \nil)}
+\TestParse{[\a, \b] \c}{(\cons \a (\cons \b \nil)) \c}
+\setbox0\hbox{\LC{[\a, \b]} \LC{\x[m] \y} \LC[3]{[\a]} \RLC{\[\a\]}}
+\setbox0\hbox{\LC{[\a \b, \c]} \LC{[(\a \b), \c]} \LC{[\num{2}]} \LC{[\a, \b] \c}}
+\setbox0\hbox{\LC{\list{\a, \b}} \LC{\list*{\a}} \RLC{\lcListOf{\a, \b}}}
+% a mark follows its item directly, behind a space the brackets are a list
+\TestParse{\lcVar{foo}[m]}{\lcVar{foo}}
+% a name of \lcEnableChar is a variable in a term, not a constant
+\lcEnableChar{foo}
+\TestParse{\\{foo}.\foo \a}{\\{foo}.\lcVar{foo} \a}
+\Test[max-steps=20]{(\\{foo}.\foo) \a}{\a}
+\TestParse{\lcVar{foo} [\a, \b]}{\lcVar{foo} (\cons \a (\cons \b \nil))}
+\END

@@ -1,0 +1,45 @@
+\documentclass{article}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\lcCreateNewArgumentRewritingRule\twice{twice}{\\x.\lcArg (\lcArg \x)}
+\lcCreateNewRewritingRule\loopy{loopy}{\\x.\loopy \x}
+\lcCreateNewRewritingRule\ping{ping}{\\x.\pong}
+\lcCreateNewRewritingRule\pong{pong}{\\y.\ping}
+\lcCreateNewArgumentRewritingRule\selfA{selfA}{\selfA{\lcArg}}
+\newcommand\ExpectError[1]{\TYPE{\detokenize{#1}}\lcComputeReduction{#1}}
+\begin{document}
+\START
+\ExpectError{(\\x.\x}
+\ExpectError{\x)}
+\ExpectError{\\x.}
+\ExpectError{\\{1x}.\x}
+\ExpectError{\\{}.\x}
+\ExpectError{\\xy.\x}
+\ExpectError{\x . \y}
+\ExpectError{\lcVar{\x}}
+\ExpectError{\loopy \x}
+\ExpectError{\twice{} \f}
+\ExpectError{\\x..\x}
+\ExpectError{()}
+\ExpectError{\true**}
+\ExpectError{\\{x y}.\x}
+\ExpectError{\\.\x}
+\ExpectError{(\\x.\x))}
+\ExpectError{\ping \a}
+\ExpectError{\selfA{\x}}
+\ExpectError{\lcVar{}}
+\ExpectError{\x (}
+\ExpectError{\x \mark{n}}
+\ExpectError{\num{\x}}
+\ExpectError{\num{-1} \f}
+\lcComputeReduction[fold=nope]{\x}
+\lcComputeReduction[step-mark-place=sideways]{\x}
+\lcComputeReduction[max-steps=-1]{\x}
+\lcComputeReduction[fold=num,fold=twice]{\x}
+\ExpectError{\lcCreateNewRewritingRule\k{K}{\\a.\lcVar{a}}}
+\ExpectError{\lcComputeReduction{\lcVar{}}}
+\ExpectError{\setbox0\hbox{\LC{\lcVar{}}}}
+\ExpectError{\setbox0\hbox{\LC{\lcVar{1a}}}}
+\ExpectError{[\a, \b}
+\TYPE{\detokenize{box with an open list}}\setbox0\hbox{\LC{[\a, \b}}
+\END

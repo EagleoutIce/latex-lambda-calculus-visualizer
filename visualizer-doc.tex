@@ -2,173 +2,689 @@
 % Licensed under MIT License
 % https://opensource.org/licenses/MIT
 \documentclass[parskip=half,english,numbers=noenddot,footnotes=nomultiple,oneside]{scrartcl}
-\errorcontextlines99999
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{babel}
-
+\usepackage{newpxtext}
+\usepackage{newpxmath}
+\usepackage[varqu,varl,scaled=.96]{inconsolata}
+\usepackage[margin=2cm,includefoot]{geometry}
 \usepackage{microtype}
-\usepackage[hidelinks]{hyperref}
-
-\usepackage{lmodern}
-
+\raggedbottom
+\widowpenalty=10000 \clubpenalty=10000
 \usepackage[prefix=]{xcolor-material}
-\usepackage{listings}
-
-\usepackage{lc-visualizer}
-
-% working with texcsstyle did not work
-\lstdefinelanguage{ltx}{
-   literate={\\LC}{\textcolor{purple}{\bfseries\textbackslash LC}}3
-   {\\RLC}{\textcolor{purple}{\textbackslash RLC}}4
-   {\\lcDisableLambdaRanges}{\textcolor{purple}{\textbackslash lcDisableLambdaRanges}}{22}
-   {\\lcEnableLambdaRanges}{\textcolor{purple}{\textbackslash lcEnableLambdaRanges}}{21}
-   {\\tikzset}{\textcolor{purple}{\textbackslash tikzset}}8
-   {\\lcSetColorMixin}{\textcolor{purple}{\textbackslash lcSetColorMixin}}{16}
-   {\\lcSetColors}{\textcolor{purple}{\textbackslash lcSetColors}}{12}
-   {\\lcDoNotShadeSameVariables}{\textcolor{purple}{\textbackslash lcDoNotShadeSameVariables}}{26}
-   {\\lcDoShadeSameVariables}{\textcolor{purple}{\textbackslash lcDoShadeSameVariables}}{23}
-   {\\lcDoNotStrutLine}{\textcolor{purple}{\textbackslash lcDoNotStrutLine}}{17}
-   {\\lcDoStrutLine}{\textcolor{purple}{\textbackslash lcDoStrutLine}}{14}
-   {\\lcCreateNewRewritingRule}{\textcolor{purple}{\textbackslash lcCreateNewRewritingRule}}{25}
-   {\\lcMaximumParenthesisRangeDrawDepth}{\textcolor{purple}{\textbackslash lcMaximumParenthesisRangeDrawDepth}}{35}
-   {\\lcSetDuplicateVariableMixin}{\textcolor{purple}{\textbackslash lcSetDuplicateVariableMixin}}{28}
-   {\\reducemarks}{\textcolor{purple}{\textbackslash reducemarks}}{12}
-   {\\lcMaximumRewritingRuleExpandDepth}{\textcolor{purple}{\textbackslash lcMaximumRewritingRuleExpandDepth}}{34}
-   {\\lcEnableGlow}{\textcolor{purple}{\textbackslash lcEnableGlow}}{13}
-   {\\mark}{\textcolor{purple}{\textbackslash mark}}5
-   {\\a}{\textcolor{gray}{\textbackslash a}}2
-   {\\b}{\textcolor{gray}{\textbackslash b}}2
-   {\\c}{\textcolor{gray}{\textbackslash c}}2
-   {\\cons}{\textcolor{orange}{\textbackslash cons}}5
-   {\\f}{\textcolor{gray}{\textbackslash f}}2
-   {\\x}{\textcolor{gray}{\textbackslash x}}2
-   {\\n}{\textcolor{gray}{\textbackslash n}}2
-   {\\y}{\textcolor{gray}{\textbackslash y}}2
-   {\\.}{\textcolor{gray}{\textbackslash .}}2
-   {\\centerline}{\textcolor{purple}{\textbackslash centerline}}{11}
-   {\\Y}{\textcolor{purple}{\textbackslash Y}}2
-   {\\equiv}{\textcolor{purple}{\textbackslash equiv}}6
-   {\\Ycomb}{\textcolor{orange}{\textbackslash Ycomb}}6
-   {\\ifelse}{\textcolor{orange}{\textbackslash ifelse}}7
-   {\\num}{\textcolor{orange}{\textbackslash num}}4
-   {\\mult}{\textcolor{orange}{\textbackslash mult}}5
-   {\\pred}{\textcolor{orange}{\textbackslash pred}}5
-   {\\isZero}{\textcolor{orange}{\textbackslash isZero}}7
-   {\\\\}{\textcolor{teal}{\textbackslash \textbackslash}}2
-}
-\lstset{basicstyle=\ttfamily,keepspaces,breaklines,language=ltx}
-\lstMakeShortInline|
-\def\ltx#1{\lstinline/#1/}
-\interfootnotelinepenalty=10000
-\lcDoNotStrutLine
-
+\usepackage[hlnumbers=false]{xlistings}
+\LoadLanguages{latex}
+\usepackage{booktabs}
+\usepackage{tcolorbox}
+\tcbuselibrary{listings,skins,breakable}
 \usepackage{bm}
-\lcSetLambda{\bm\lambda}
+\usepackage{upgreek}
+\usepackage[group-separator={\,},group-minimum-digits=4]{siunitx}
+\AtBeginDocument{\let\emptyset\varnothing}
+\usepackage{lc-visualizer}
+\usepackage{hyperref}
+\usepackage{imakeidx}
+\makeindex[title={Index of commands and keys},name=\jobname,columns=2,columnsep=.75cm,noautomatic=true,intoc]
+\hypersetup{colorlinks=true,linkcolor=purple!65!black,urlcolor=purple!65!black,citecolor=purple!65!black}
+
+\colorlet{xlst@colors@lst@command}{purple}
+\definecolor{lccmd}{HTML}{34307B}
+\newif\iflcnextcs
+\newcommand\csidstyle{\iflcnextcs\global\lcnextcsfalse\color{purple}\fi}
+\newcommand\cstext[1]{\textcolor{purple}{\textbackslash#1}}
+\newcommand\csplain[1]{\textbackslash#1}
+\makeatletter\lst@AddToHook{Init}{\global\lcnextcsfalse}\lst@AddToHook{OutputOther}{\global\lcnextcsfalse}\makeatother
+% the macros of this package read differently from the rest of LaTeX
+\lstdefinestyle{lc}{language=lLatex,basicstyle=\ttfamily\small,columns=fullflexible,keepspaces,
+   breaklines=true,breakatwhitespace=true,breakindent=0pt,postbreak=\mbox{\tiny$\hookrightarrow$},
+   keywordstyle=[3]{},keywordstyle=[6]{\color{lccmd}},
+   morekeywords=[6]{\LC,\RLC,\lcReduce,\lcNormalForm,\lcComputeReduction,\lcSetup,\lcReduceSetup,
+      \lcNewStyle,\lcVar,\lcCreateNewRewritingRule,\lcCreateNewArgumentRewritingRule,\lcLoadModule,
+      \lcRawArgumentRule,\lcListOf,\lcForgetMemo,\lcStepState,\lcStepSymbol,\lcMultiSymbol,
+      \lcDeBruijn,\lcDeBruijnForm,\lcCanonicalForm,\lcIfAlphaEquivalent,\lcBelowRewriteRule,
+      \lcRedexLine,\lcSetRedexLine,\lcUnichar,\lcLastNormalForm,\lcLastReductionSequence,
+      \lcLastStepCount,\lcLastShownSteps,\reducemarks,\mark},
+   alsoother={\\},identifierstyle=\csidstyle,
+   add to literate={(}{{(}}1 {)}{{)}}1 {\\\\}{{\cstext{\textbackslash}}}2 {\\(}{{\cstext{(}}}2 {\\)}{{\cstext{)}}}2
+      {\\.}{{\cstext{.}}}2 {\\}{{\csplain{}\global\lcnextcstrue\nobreak}}1}
+\lstMakeShortInline[style=lc,breaklines=false]|
+\tcbset{lcbox/.style={colback=white,colframe=black!15,boxrule=.4pt,arc=2pt,left=4pt,right=4pt,top=2pt,bottom=2pt,
+   segmentation style={black!15},listing options={style=lc,basicstyle=\ttfamily\footnotesize}}}
+\newtcblisting{example}{lcbox,listing side text,righthand ratio=.5}
+\newtcblisting{code}{lcbox,listing only}
+\newtcblisting{wideexample}{lcbox,listing and text,breakable}
+\newcommand\cmd[1]{\texttt{\textcolor{lccmd}{\textbackslash #1}}\index{#1@\texttt{\textbackslash #1}\string|hyperpage}}
+\newcommand\meta[1]{\ensuremath{\langle}\textit{#1}\ensuremath{\rangle}}
+\newcommand\marg[1]{\texttt{\{}\meta{#1}\texttt{\}}}
+\newcommand\oarg[1]{\texttt{[}\meta{#1}\texttt{]}}
+\newcommand\opt[1]{\texttt{\textbf{#1}}\index{#1@\texttt{#1} (key)\string|hyperpage}}
+\newcommand\keyentry[1]{\needspace{5\baselineskip}\opt{#1}}
+% the listings come from the package itself, between its SNIP markers
+\newcommand\lcsource[1]{\needspace{6\baselineskip}%
+   \lstinputlisting[style=lc,numbers=left,numberstyle=\tiny\color{black!45},
+      xleftmargin=2.2em,frame=leftline,framerule=.4pt,rulecolor=\color{black!15},
+      rangeprefix=\%\ ,linerange={SNIP:#1-/SNIP:#1},includerangemarker=false]{lc-visualizer.sty}}
+\lcSetup{strut-line=false,lambda=\bm\uplambda,name-strut}
 
 \title{The \texttt{lc-visualizer} package}
 \author{%
 	\texorpdfstring{Florian Sihler\medskip\\[-2mm]
 		{\scriptsize\url{https://github.com/EagleoutIce/latex-lambda-calculus-visualizer}}%
 	}{Florian Sihler}}
-\date{Version v1.0 \textendash{} 2022/10/28}
-
+\makeatletter
+\long\def\lc@parsever#1 version #2 #3\relax{\def\lcdocdate{#1}\def\lcdocversion{#2}}
+\expandafter\expandafter\expandafter\lc@parsever\csname ver@lc-visualizer.sty\endcsname\relax
+\makeatother
+\date{Version \lcdocversion{} \textendash{} \lcdocdate}
 
 \begin{document}
-   \maketitle
+\maketitle
+\thispagestyle{empty}
 
-	\texttt{lc-visualizer} is a simple package to get highlighting for lambda-calculus expressions.
-   Issuing |\LC{(\\a.\\b.\a (\b \\b.\b \a)) a c}| yields the following:
+\noindent\texttt{lc-visualizer} typesets \(\lambda\)-terms with support for coloring variables (bind-sensitive) and dynamic abstraction ranges. We also support reducing terms and converting them to their normal form step by step (if a normal-form exists), and to convert them to de Bruijn indices.
+\begin{example}
+\LC{(\\a.\\b.\a (\b \\b.\b \a)) a c}
+\end{example}
+\begin{example}
+\lcReduce[textcolor]{(\\f.\\x.\f \x) \x}
+\end{example}
 
-   \LC{(\\a.\\b.\a (\b \\b.\b \a)) a c}
+\tableofcontents
 
-   There is also |\RLC|, a variant that does not do any catcode magic and that can be used inside other macros. So |\centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}}| yields:
+\section{Writing terms}
+|\LC{<term>}| typesets a term. It changes the category codes of |(|, |)|, |.| and |[|, so it only works in running text, not within the argument of another macro, a beamer frame without |[fragile]|, |align|, a footnote or a macro definition. Terms are not broken across lines. |\RLC{<term>}| works everywhere, but needs |\(|, |\)| and |\.| instead. In moving arguments like |\section| or |\caption|, give a short version for the table of contents (|\section[...]{...}|). The optional argument of both is the start of the color cycle (default~\(0\)) or |plain| for a black term without ranges.
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+   \toprule
+   \textbf{Input} & \textbf{Meaning} & \textbf{Example} \\
+   \midrule
+   |\\x.<body>| & abstraction \(\lambda x.\,\mathit{body}\) & \LC{\\x.\x} \\
+   |\\{x,y}.<body>| & several abstractions & \LC{\\{x,y}.\y \x} \\
+   |\x| (|\a| to |\z|) & variable, colored like its abstraction & \LC{\x \y} \\
+   |\\{foo}.<body>|, |\\{x'}.<body>| & abstraction over another name & \LC{\\{foo}.\lcVar{foo}} \\
+   |\lcVar{foo}|, |\x'| & variable with another name & \LC{\\{x'}.\x' \lcVar{foo}} \\
+   |\\[red]{x}[m]|, |\x[m]| & color of a binder, mark named |m| & \LC{\\[red]{x}[m].\x[m]} \\
+   |(<term>)|, |\(<term>\)| & grouping & \LC{(\\x.\x) \y} \\
+   |<term> <term>| & application (left-associative) & \LC{\f \x \y} \\
+   |\Y|, |\equiv| & a bold Y and \(\equiv\) & \LC{\Y \equiv \Y} \\
+   |yes|, |42| & plain words and numbers are single atoms & \LC{yes 42} \\
+   |[<term>, <term>]| & a list of the \texttt{list} module & \LC[rule-depth=0]{[\a, \b]} \\
+   \bottomrule
+\end{tabular}
+\end{center}
+The shortcuts |\a| to |\z| stand for the variables of those letters. A longer name is written |\\{name}.| as a binder and |\lcVar{name}| as a variable, and \cmd{lcEnableChar}\marg{name} adds a shortcut for it, so after |\lcEnableChar{foo}| the macro |\foo| is the variable |foo| as well.
+\begin{example}
+\LC{\\{fun,arg}.\lcVar{fun} \lcVar{arg}}
 
-   \centerline{\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}}
+\lcEnableChar{fun}\lcEnableChar{arg}
+\lcReduce{(\\{fun,arg}.\fun \arg) \lcVar{id} \lcVar{val}}
+\end{example}
+\begin{wideexample}
+\RLC{\Y \equiv \\f\.\(\\x\.\f \(\x \x\)\) \(\\x\.\f \(\x \x\)\)}
+\end{wideexample}
+\begin{example}
+\LC[3]{(\\a.\a) \\b.\b \a}
 
-   \section{Shortcut and customization options}
-      You can pass on multiple letters to a lambda-abstraction: |\LC{\\{a,b}.\b \a}| yields: \LC{\\{a,b}.\b \a}.
+\LC[plain]{(\\a.\a) \\b.\b \a}
+\end{example}
 
-      With |\lcDisableLambdaRanges| you can disable the brackets drawn around to signal the abstraction ranges of lambdas locally (or re-enable with |\lcEnableLambdaRanges|):
-      |{\lcDisableLambdaRanges\LC{((\\a.\a) \b \a)}}| yields: {\lcDisableLambdaRanges\LC{((\\a.\a) \b \a)}} (vs. \LC{((\\a.\a) \b \a)}).
+\section{Customization}
+All settings are local to the current group. Every one of them has a macro and a key. \cmd{lcSetup}\marg{keys} sets the keys as the defaults for everything that follows, and |\LC[<keys>]|, |\RLC[<keys>]| and the reduction commands take the same keys for one term. A bare number stays the start of the color cycle, so |\LC[3]| and |\LC[color-start=3]| are the same. There is one key set, so the keys of the reductions (Section~\ref{sec:options}) work in \cmd{lcSetup} as well and \cmd{lcReduceSetup} is another name for it.
+\begin{example}
+\lcSetup{colors={teal,orange},lambda-ranges=false}
+\LC{(\\x.\\y.\x) \y} \quad \LC[node-background=false]{(\\x.\\y.\x) \y}
+\end{example}
+A \emph{style} is a named group of settings. |style=<name>| applies it, \cmd{lcNewStyle}\marg{name}\marg{code} defines one, and the code is anything that could stand in \cmd{lcSetup}. The package brings |plain| (black, without ranges and shading) and |plain-math| (|plain| in the text font with a math~\(\lambda\)).
+\begin{example}
+\lcNewStyle{mine}{colors=red,font=\itshape}
+\LC[style=plain]{(\\x.\x) \y} \quad
+\LC[style=plain-math]{(\\x.\x) \y} \quad
+\LC[style=mine]{(\\x.\x) \y}
+\end{example}
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}lp{.58\linewidth}@{}}
+   \toprule
+   \textbf{Key} & \textbf{Meaning} \\
+   \midrule
+   \opt{style}, \opt{plain} & a named style, see \cmd{lcNewStyle} \\
+   \opt{colors}, \opt{color-start}, \opt{color-by-name} & the color cycle, where it starts, and a color per name instead of per position \\
+   \opt{node-background}, \opt{textcolor} & the TikZ node behind a variable, and the plain form without it \\
+   \opt{text-mixin} & the color of a name that has no node \\
+   \opt{color-mixin}, \opt{duplicate-mixin} & that node's fill and the shade of a repeated name \\
+   \opt{shade-same} & shade a name that is bound again \\
+   \opt{lambda}, \opt{font} & the \(\lambda\) symbol and the font of a term \\
+   \opt{lambda-ranges}, \opt{paren-depth} & ranges of abstractions and of parentheses, both off by default \\
+   \opt{glow}, \opt{single-lambdas} & glowing variables and one \(\lambda\) per binder \\
+   \opt{rule-depth}, \opt{name-strut} & how deep rules are expanded and the strut of their labels \\
+   \opt{inner-strut}, \opt{strut-line}, \opt{box} & space in rule boxes, line height, and the box around a term \\
+   \opt{node-style}, \opt{bracket-color} & TikZ options of that node and the color of the parentheses \\
+   \opt{arrow-from} & where an arrow leaves its term (|0| left, |.5| middle, |1| right) \\
+   \bottomrule
+\end{tabular}
+\end{center}
 
-      With |\lcMaximumParenthesisRangeDrawDepth| you can (similarly to the effects of the |\lcDisableLambdaRanges| macro) allow to draw brackets for parenthesis.
-      However, being disabled by default you can no configure the maximum nesting-level to draw this brackets for.
-      Writing |{\lcDisableLambdaRanges\lcMaximumParenthesisRangeDrawDepth{2}\LC{((\\a.\a) \b \a)}}| yields: {\lcDisableLambdaRanges\lcMaximumParenthesisRangeDrawDepth{2}\LC{((\\a.\a) \b \a)}} (vs. {\lcDisableLambdaRanges\LC{((\\a.\a) \b \a)}}).
+\keyentry{lambda-ranges}: draw the range of each abstraction (default |false|, as the ranges need room above and below a line).
+\begin{example}
+\lcSetup{lambda-ranges}
+\LC{((\\a.\a) \b \a)}
+\end{example}
+\keyentry{paren-depth}: draw the ranges of parentheses up to that depth (default |0|).
+\begin{example}
+\lcSetup{paren-depth=2}
+\LC{((\\a.\a) \b \a)}
+\end{example}
+\keyentry{colors}, \opt{color-start}, \opt{color-by-name}: the color cycle, where it starts, and whether every name keeps its own color. Reductions always color by name.
+\begin{example}
+\lcSetup{colors={orange,purple}}
+\LC{((\\a.\a) \\b.\b \a)}
+\end{example}
+\keyentry{text-mixin}: how the name of a variable is colored without \opt{node-background}, |#1| is the color of its binder (default |#1!80!black|).
+\begin{example}
+\lcSetup{node-background=false, text-mixin=#1!45!black}
+\LC{((\\a.\a) \\b.\b \a)}
+\end{example}
+\keyentry{node-background}: put every variable in a TikZ node with a colored background (default |true|), \opt{color-mixin} is the fill of that node, |#1| is the color. Without it a variable is only its name in its color, which \opt{text-mixin} sets. \opt{textcolor} is the other name of |node-background=false|, so |\LC[textcolor]| colors the names and draws no node.
+\begin{example}
+\lcSetup{color-mixin=#1!55!white}
+\LC{((\\a.\a) \\b.\b \a)}
 
-      If you do not like the colors you can change their cycle locally with |\lcSetColors|: |{\lcSetColors{teal,lime}\LC{((\\a.\a) \\b.\b \a)}}| yields: {\lcSetColors{teal,lime}\LC{((\\a.\a) \\b.\b \a)}} (vs. \LC{((\\a.\a) \\b.\b \a)}). Furthermore, both |\LC| and |\RLC| have an optional argument to set the start index in the color-cycle (defaults to \(0\)):
-      |\LC[3]{((\\a.\a) \\b.\b \a)}| yields: \LC[3]{((\\a.\a) \\b.\b \a)}. This can be used in combination with leftmost-outermost beta-reductions!
+\lcSetup{textcolor}
+\LC{((\\a.\a) \\b.\b \a)}
+\end{example}
+\keyentry{shade-same}: shade a variable whose name is bound again instead of giving it a new color (default |true|), \opt{duplicate-mixin} is that shade.
+\begin{example}
+\LC{(\\a.\a) (\\a.\a) (\\a.\a)}
 
-      With |\lcSetColorMixin| you can (locally) change the way colors are mixed in the background highlights (with |#1| being the actual color selected): |{\lcSetColorMixin{#1!70!white}\LC{((\\a.\a) \\b.\b \a)}}| yields the output: {\lcSetColorMixin{#1!70!white}\LC{((\\a.\a) \\b.\b \a)}} (vs. \LC{((\\a.\a) \\b.\b \a)}).
+\lcSetup{shade-same=false}
+\LC{(\\a.\a) (\\a.\a) (\\a.\a)}
 
-      The package will try its best to keep colors in sync and recognizable:
-      |\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}| yields: \LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}. But in general, do not re-use variables with different bindings that often within the same expression.
-      If you want to change the mixin for each step (local to current group), use |\lcSetDuplicateVariableMixin|. So |\lcSetDuplicateVariableMixin{#1!40!green}| yields: {\lcSetDuplicateVariableMixin{#1!87!green}\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}}
-      If you do not like like the mixin alltogether, you can disable it locally by |\lcDoNotShadeSameVariables| (vs. |\lcDoShadeSameVariables|). This yields:
-      {\lcDoNotShadeSameVariables\LC{(\\a.\a) (\\a.\a) (\\a.\a) (\\a.\a)}}
-      By changing the tikz-style of |lc@node| you can modify the behavior of highlighted nodes (|#1| is the color).
-      The following examples all use |\LC{(\\a.\a (\\b.\b \c)) \a \c}| and make the |\tikzset|-command local to the group:
-      \begin{itemize}
-         \item |\tikzset{lc@node/.append style={fill=none}}|:\\* {\tikzset{lc@node/.append style={fill=none}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
-         \item |\tikzset{lc@node/.append style={fill=none,text=#1}}|:\\* {\tikzset{lc@node/.append style={fill=none,text=#1}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
-         \item |\tikzset{lc@node/.append style={fill=#1!50!green,text=#1!25!green}}|:\\* {\tikzset{lc@node/.append style={fill=#1!50!green,text=#1!25!green}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
-         \item |\tikzset{lc@node/.append style={opacity=1,circle}}|:\\* {\tikzset{lc@node/.append style={opacity=1,circle}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
-      \end{itemize}
+\lcSetup{shade-same, duplicate-mixin=#1!40!green}
+\LC{(\\a.\a) (\\a.\a) (\\a.\a)}
+\end{example}
+\keyentry{glow}: color the text inside a variable node as well, so it glows. Pass a value to control how the text color mixes with the binding color (default |90|). It needs \opt{node-background}.
+\begin{example}
+\lcSetup{glow}
+\LC{(\\a.\a (\\b.\b \c)) \a \c}
+\end{example}
+\keyentry{single-lambdas}: write a \(\lambda\) in front of every name of |\\{x,y}| (default |false|, where the names are separated by \opt{binder-gap}, the macro \cmd{lcSetBinderGap}). \opt{lambda} is the symbol itself and \opt{font} the font of a term.
+\begin{example}
+\lcSetup{single-lambdas}
+\LC{\\{x,y}.\y \x}
 
-      Similarly, by changing the tikz-style of |lc@abstraction@bracket| you can modify the behavior of brackets for lambdas (|#1| is the color), given they are enabled with |\lcEnableLambdaRanges|.
-      The following examples all use |\LC{(\\a.\a (\\b.\b \c)) \a \c}| and make the |\tikzset|-command local to the group:
-      \begin{itemize}
-         \item |\tikzset{lc@abstraction@bracket/.append style={draw=green}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={draw=green}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
-         \item |\tikzset{lc@abstraction@bracket/.append style={rounded corners=6pt}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={rounded corners=6pt}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
-         \item |\tikzset{lc@abstraction@bracket/.append style={very thick}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={very thick}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
-         \item |\tikzset{lc@abstraction@bracket/.append style={draw=#1!50!pink}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={draw=#1!50!pink}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
-         \item |\tikzset{lc@abstraction@bracket/.append style={opacity=1}}|:\\* {\tikzset{lc@abstraction@bracket/.append style={opacity=1}}\LC{(\\a.\a (\\b.\b \c)) \a \c}}
-      \end{itemize}
+\lcSetup{single-lambdas=false, lambda=\Lambda, font=\sffamily}
+\LC{\\{x,y}.\y \x}
+\end{example}
+\keyentry{strut-line}: enlarge lines to fit the ranges, |true|, |false| or |auto| (the default), which enlarges them only while |lambda-ranges| is on. \opt{box}: whether |\LC| and |\RLC| typeset into an unbreakable box (default |true|).
+\begin{example}
+\lcSetup{box=false}
+\LC{(\\a.\a) \b}
+\end{example}
+\keyentry{name-strut} puts its value into every rule label, and |name-strut| without one means |\strut|, which gives all of them the same height. \opt{inner-strut} is the space around the term in a rule box.
 
-      Furthermore, you can give parts of your formula readable names:
-\begin{lstlisting}[columns=fullflexible]
+\cmd{lcBelowRewriteRule}\marg{name}\marg{term} puts a label below a term.
+\begin{example}
+\LC{\lcBelowRewriteRule{K}{\\{x,y}.\x} \\x.\x}
+
+\lcSetup{name-strut={}}
+\LC{\head \nil}
+
+\lcSetup{name-strut}
+\LC{\head \nil}
+\end{example}
+\keyentry{node-style}, \opt{bracket-color}: TikZ options of a variable node and the color of the parentheses.
+\begin{example}
+\lcSetup{node-style={draw=gray}, bracket-color=red}
+\LC{(\\a.\a) \b}
+\end{example}
+
+\section{Marks}
+|\mark{<name>}{<term>}| and |\\{x}[<name>]| name parts of a term. An arrow between two of them, also within TikZ pictures, is \cmd{reducemarks}\oarg{anchor}\marg{from}\marg{to}\oarg{TikZ options}. The arrow follows a flat curve over the terms. The style |lcbend| gives that path back to TikZ, so that |bend right| and friends work.
+\begin{example}
 \LC{(\\a[a].\a[a2] \b \c) \mark{b}{(\\b.\b)}}
-\reducemarks{b}{a}[bend right=10]
-\reducemarks[south]{a}{a2}[green,bend right=20,-latex]
-\end{lstlisting}
-      This yields:
-      \LC{(\\a[a].\a[a2] \b \c) \mark{b}{(\\b.\b)}}\reducemarks{b}{a}[bend right=10]\reducemarks[south]{a}{a2}[green,bend right=20,-latex]
+\reducemarks{b}{a}[lcbend, bend right=10]
+\reducemarks[south]{a}{a2}[green,-latex]
+\end{example}
 
-   By default, the package will automatically enlarge the line skip limit to ensure that your \(\lambda\)-Expressions have enough space (e.g., for presentations). You can disable this with |\lcDoNotStrutLine| (vs. |\lcDoStrutLine|). Here a strutted example: {\lcDoStrutLine\LC{(\\a.\a (\\b.\b \c)) \a \c}}.
+\section{Rewriting rules}
+A rewriting rule is a named term. Rules are defined globally. The name of a rule must not use the rule's own macro. \cmd{lcCreateNewRewritingRule}\meta{cs}\marg{name}\marg{body} makes \meta{cs} available within terms. Single lowercase letters are the variables, so \meta{cs} needs a longer name. It is shown as a box with the name and the body. The starred form shows only the name and fits better into running text.
+\begin{example}
+\lcCreateNewRewritingRule\swap{swap}
+      {\\{p,f}\.\p \false \true}
+\LC{\swap \x} \quad \LC{\swap* \x}
+\end{example}
+\needspace{5\baselineskip}\cmd{lcCreateNewArgumentRewritingRule}\meta{cs}\marg{name}\marg{body} creates a rule with an argument, which is |\lcArg| in name and body. |\num| is defined as |\lcCreateNewArgumentRewritingRule\num{\lcArg}{...}| with a body that builds the numeral. Rule bodies are written like the argument of |\RLC|.
+\cmd{lcRawArgumentRule}\meta{cs} then says that the argument of that rule is no single term but text the body reads itself; |\list| uses it, with |\lcListOf| as the body that turns |a, b, c| into the |\cons| chain.
+Use it only for encodings whose shape depends on the argument, such as |\num{<n>}|, where every \(n\) gives a different term and \(n\) is a number, not a \(\lambda\)-term. A term as argument is never needed, as \(\beta\)-reduction inserts it. Write |\twice \f| with an ordinary rule instead, whose reduction also shows that step:
+\begin{example}
+\lcCreateNewRewritingRule\twice{twice}
+      {\\{g,x}\.\g \(\g \x\)}
+\LC{\twice \f} \quad \LC{\num{2}}
+\end{example}
+\begin{example}
+\lcReduce{\twice \f}
+\end{example}
+\needspace{5\baselineskip}The key |rule-depth| sets how deeply nested rules are expanded (default~\(1\) in |\LC| and |\RLC|, |0| in reductions, where only the rule of the next \(\delta\)-step is expanded).
+\begin{example}
+\lcSetup{rule-depth=2}
+\LC{\head \nil}
+\end{example}
 
+\subsection{Predefined rules}
+The rules are grouped in modules. All of them are loaded unless you pass the package option |no-default-rewrites|. Then \cmd{lcLoadModule}\marg{modules} loads the given modules in the preamble, together with the modules they need. Rules exist only within |\LC|, |\RLC| and the reduction commands, so they do not clash with other packages, such as |\num| of \texttt{siunitx}.
+\begin{code}
+\usepackage[no-default-rewrites]{lc-visualizer}
+\lcLoadModule{bool,list}
+\end{code}
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}llp{.66\linewidth}@{}}
+   \toprule
+   \textbf{Module} & \textbf{Needs} & \textbf{Rules} \\
+   \midrule
+   \texttt{bool} & --- & |\true|, |\false|, |\ifelse|, |\and|, |\lor|, |\not| \\
+   \texttt{pair} & \texttt{bool} & |\pair|, |\fst|, |\snd| \\
+   \texttt{nat} & \texttt{bool} & |\num{<n>}|, |\succ|, |\pred|, |\add|, |\sub|, |\mult|, |\isZero|, |\eq| \\
+   \texttt{comb} & --- & |\Ycomb|, |\Tcomb| \\
+   \texttt{list} & \texttt{bool}, \texttt{nat}, \texttt{comb} & |\cons|, |\nil|, |\head|, |\tail|, |\ListNull|, |\length|, |\ListSum|, |\ListProd|, |\ListContains|, |\append|, |\list{<a, b>}| \\
+   \bottomrule
+\end{tabular}
+\end{center}
+\needspace{8\baselineskip}
+|\num{<n>}| is the Church numeral of \(n\), and |\Ycomb| and |\Tcomb| are fixed-point combinators for recursion. Lists are pairs ended by |\nil|. The recursive rules |\length|, |\ListSum|, |\ListProd|, |\ListContains| and |\append| use |\Ycomb|. The key |show-term| of the next section puts the term before its normal form, |fold=list| writes a list back as |[a, b]|. Every example below needs the \texttt{list} module, which pulls in \texttt{bool}, \texttt{nat} and \texttt{comb}.
+The second element of a list, and the sum of one:
+\begin{wideexample}
+\lcNormalForm[show-term]{\head (\tail [\a, \b])} \quad
+\lcNormalForm[show-term, fold=num, max-steps=500]{\ListSum [\num{2}, \num{1}]}
+\end{wideexample}
+The product of a list, and whether an element is in it:
+\begin{wideexample}
+\lcNormalForm[show-term, fold=num, max-steps=500]
+   {\ListProd [\num{2}, \num{3}]} \quad
+\lcNormalForm[show-term, fold={true, false}, max-steps=500]
+   {\ListContains \num{1} [\num{1}]}
+\end{wideexample}
+A list can also be \emph{written} as |[a, b, c]|, which reads as |\cons \a (\cons \b (\cons \c \nil))|. It works in every command, in |\RLC| as |\[a, b\]| like its other syntax, and nests. An element made of several terms keeps them together, so |[a b, c]| is |\cons (\a \b) (\cons \c \nil)|. Where the brackets are read before the package sees them, as in a \texttt{beamer} frame or a footnote, the |\[a, b\]| form is the one that works. A mark follows its item directly, so |\x[m]| is the variable |x| with the mark |m| while |\lcVar{x} [a, b]| is |x| applied to a list. The rule |\list{a, b, c}| is the same list written as a rule: it shows as \LC[rule-depth=0]{\list{\a, \b, \c}} and unfolds into the |\cons| chain like every other rule. |\list{}| is the empty list, and a |\list| may stand inside another one.
+\begin{wideexample}
+\LC{\list{\a, \b, \c}} \quad
+\lcNormalForm[fold=list, max-steps=500]{\tail (\list{\a, \b, \c})}
+\end{wideexample}
+With |fold=list| a list then goes in and comes out in that form:
+\begin{wideexample}
+\lcNormalForm[show-term, fold={list, num}, max-steps=500]
+   {\append [\a] [\b]} \quad
+\lcNormalForm[show-term, fold={list, num}, max-steps=500]
+   {\tail [\a, \b]}
+\end{wideexample}
+\begin{wideexample}
+\lcNormalForm[show-term, fold={list, num}, max-steps=800]
+   {\ListSum [\num{2}, \num{3}]} \quad
+\lcNormalForm[show-term, fold={list, num}, max-steps=800]
+   {\length [\a, \b]}
+\end{wideexample}
+The length of two lists joined, and the factorial of~\(3\) through |\Ycomb|:
+\begin{wideexample}
+\lcNormalForm[show-term, fold=num, max-steps=500]
+   {\length (\append [\a] [\b])}
 
-   Marks work even within tikzpictures:
-   \begin{center}
-      \begin{tikzpicture}
-         \node[fill=lightgray!80!orange!40!white,rounded corners=2pt, inner sep=5pt] at (0,0) {\RLC{\Y \equiv \\f\.\mark{A}{\(\\x\.\f \(\x \x\)\)} \mark{B}{\(\\x\.\f \(\x \x\)\)}}};
-         \reducemarks{B}{A}[bend right=10]
-      \end{tikzpicture}
-   \end{center}
+\lcNormalForm[show-term, fold=num, max-steps=3000]
+   {\Ycomb (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred \n)))) \num{3}}
+\end{wideexample}
+Both combinators of \texttt{comb} compute fixed points, Curry's \(\mathbf{Y}\) and Turing's \(\Theta\). \(\Theta\,f\) reduces to \(f\,(\Theta\,f)\) with \(\beta\)-steps alone, so the recursion reappears unchanged, while \(\mathbf{Y}\,f\) reaches only the unfolded copy of itself.
+\begin{example}
+\LC[style=plain]{\Ycomb}\\
+\LC[style=plain]{\Tcomb}
+\end{example}
+The same factorial through \(\Theta\):
+\begin{wideexample}
+\lcNormalForm[show-term, fold=num, max-steps=3000]
+   {\Tcomb (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred \n)))) \num{3}}
+\end{wideexample}
 
-   With |\lcCreateNewRewritingRule| you can create a new rewriting rule (this is work in progress).
-   So with |\lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}| you can now use |\cons| within your \(\lambda\)-calculus expressions. Therefore, \lcCreateNewRewritingRule\cons{cons}{\\{x,y,c}\.\c \x \y}|\LC{\\x.\cons \x}| yields:
+\section{Reductions}
+\subsection{Steps}
+A reduction rewrites a term step by step until no step applies. The result is its \emph{normal form}, in which rules that are never applied to anything stay folded. \(M[x:=N]\) denotes \(M\) with the free occurrences of \(x\) replaced by~\(N\).
+\begin{center}
+\begin{tabular}{@{}lp{.32\linewidth}p{.5\linewidth}@{}}
+   \toprule
+   \textbf{Step} & \textbf{Rule} & \textbf{Meaning} \\
+   \midrule
+   \(\beta\)-reduction & \LC[plain]{(\\x.M) N} \(\to_\beta\) \(M[x:=N]\) & applies a function to its argument. In the row before the step, an arrow points from the argument to the binder \\
+   \(\alpha\)-conversion & \LC[plain]{\\x.M} \(=_\alpha\) \LC[plain]{\\{x'}.M}, with \(x'\) for \(x\) in \(M\) & renames a bound variable, only when a \(\beta\)-reduction would otherwise capture a free variable of the argument \\
+   \(\eta\)-conversion & \LC[plain]{\\x.M \x} \(\to_\eta\) \LC[plain]{M}, \(x\) not free in \(M\) & a function that only passes its argument on is that function \\
+   \(\delta\)-step & \LC[plain]{c} \(\equiv_\delta\) \LC[plain]{body} & replaces a rewriting rule by its definition once it is applied to an argument. The row before shows the definition \\
+   \bottomrule
+\end{tabular}
+\end{center}
+The steps are taken in normal order (leftmost-outermost), which finds the normal form whenever there is one. A rule behaves exactly like its body, so free variables in a body are never captured either. In \((\lambda x.\lambda y.x)\,y\), the argument \(y\) would end up under \(\lambda y\), so \(\lambda y\) becomes \(\lambda y'\) first:
+\begin{example}
+\lcReduce{(\\x.\\y.\x) \y}
+\end{example}
+\begin{example}
+\lcReduce{\true \a \b}
+\end{example}
 
-   \LC{\\x.\cons \x}.
+\subsection{Semantics}\label{sec:semantics}
+Terms are
+\[ M, N \;::=\; x \;\mid\; \lambda x.M \;\mid\; M\,N \;\mid\; (M) \;\mid\; c \]
+with variables~\(x\), parentheses that only group, and constants~\(c\). A constant is a rewriting rule or any other macro. Its unfolding \(\rho(c)\) is the body of the rule, for |\num{<n>}| the Church numeral, for a rule with a term argument~\(A\) its body with \(A\) substituted, and \(\rho(c) = \bot\) for a macro that is no rule.
 
-   There is a starred version as well, that types just the name: |\LC{\\x.\cons* \x}| yields: \LC{\\x.\cons* \x}.
+The free variables \(\mathcal{F}(M)\) of a term are those that no binder of~\(M\) encloses. A constant stands for its unfolding, so it contributes the free variables of that:
+\begin{align*}
+   \mathcal{F}(x) &= \{x\} &
+   \mathcal{F}(\lambda x.M) &= \mathcal{F}(M) \setminus \{x\} \\
+   \mathcal{F}(M\,N) &= \mathcal{F}(M) \cup \mathcal{F}(N) &
+   \mathcal{F}(c) &= \begin{cases} \mathcal{F}(\rho(c)) & \rho(c) \neq \bot \\ \emptyset & \text{otherwise} \end{cases}
+\end{align*}
+Substitution \(M[x:=N]\) is the usual one, with two details: it stops at a binder \(\lambda x\), and it enters a constant only for \(x \in \mathcal{F}(c)\), where \(c[x:=N] = \rho(c)[x:=N]\). Before it starts, \(\mathrm{ren}_{x,N}(M)\) renames every binder \(\lambda y\) with \(y \in \mathcal{F}(N)\) that has a free~\(x\) in its body to the first of \(y'\), \(y''\),~\dots\ that does not occur in the term. That renaming is the \(\alpha\)-step, after which the substitution captures nothing.
 
-   With this, the faculty function defined like this: |\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}| becomes (scaled down):
+\small
+A single step \(\mathrm{step}(M) = (k, M')\) with \(k \in \{\alpha, \beta, \eta, \delta\}\) takes the first case that applies, which is normal order. It is undefined if no case applies:
+\begin{align*}
+   \mathrm{step}(\lambda x.M\,x) &= (\eta, M) && \text{if } x \notin \mathcal{F}(M) \\
+   \mathrm{step}(\lambda x.M) &= (k, \lambda x.M') && \text{if } \mathrm{step}(M) = (k, M') \\
+   \mathrm{step}((\lambda x.M)\,N) &= \begin{cases} (\alpha, (\lambda x.\mathrm{ren}_{x,N}(M))\,N) & \mathrm{ren}_{x,N}(M) \neq M \\ (\beta, M[x:=N]) & \text{otherwise} \end{cases} \\
+   \mathrm{step}(c\,N) &= (\delta, \rho(c)\,N) && \text{if } \rho(c) \neq \bot \\
+   \mathrm{step}(M\,N) &= (k, M'\,N) && \text{if } \mathrm{step}(M) = (k, M') \\
+   \mathrm{step}(M\,N) &= (k, M\,N') && \text{if } \mathrm{step}(N) = (k, N') \\
+   \mathrm{step}(c) &= (\delta, \rho(c)) && \text{if } c \text{ takes an argument, } \mathrm{step}(\rho(c)) \text{ defined}
+\end{align*}
+\normalsize
+The last case unfolds a rule with an argument when its body can still be reduced. Other rules stay folded until they are applied. A rule whose unfolding contains a substituted variable is replaced by its unfolding without a step of its own. With |eta=false| or |delta=false| the respective cases are left out.
 
-   {%
-      \tiny\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
-   }
+\paragraph{Concrete semantics.} A trace \(\tau = M_0 \xrightarrow{k_1} M_1 \cdots \xrightarrow{k_j} M_j\) records the steps, with \(\mathrm{last}(\tau) = M_j\) and \(\lvert\tau\rvert = j\). For \(n\) = |max-steps|, the trace semantics of a term is the least fixpoint
+\[
+   [\![M]\!] = \mathrm{lfp}\,F_M, \qquad
+   F_M(X) = \{M\} \cup \{\, \tau \xrightarrow{k} M' \mid \tau \in X,\ \lvert\tau\rvert < n,\ \mathrm{step}(\mathrm{last}(\tau)) = (k, M') \,\}
+\]
+on sets of traces ordered by inclusion. As \(\mathrm{step}\) is a function, \([\![M]\!]\) is the chain of prefixes of one trace. Its longest element \(\tau_M\) is what the package computes, step by step, as the Kleene iteration \(F_M^i(\emptyset)\).
 
-   With |\lcDisableLambdaRanges| we get:
+\paragraph{Abstractions.} Every view is an abstraction \([\![M]\!]^\sharp = \alpha_\sharp([\![M]\!])\) of that trace:
+\begin{itemize}
+   \item \([\![M]\!]^{\mathrm{nf}} = \alpha_{\mathrm{nf}}(\tau_M)\) with \(\alpha_{\mathrm{nf}}(\tau) = \mathrm{last}(\tau)\) if \(\mathrm{step}(\mathrm{last}(\tau))\) is undefined and \(\bot\) otherwise, typeset as \(\mathrm{last}(\tau)\) followed by \(\cdots\). |\lcNormalForm| shows it, |\iflcNormalFormReached| tells whether it is not~\(\bot\).
+   \item \([\![M]\!]^{\mathrm{rows}} = \alpha_{\mathrm{rows}}(\tau_M)\) keeps \(M_0\), \(M_j\) and every \(M_i\) that |hide|, |skip|, |compact|, |from| and |to| do not remove, and merges the steps in between. |\lcReduce| shows it.
+   \item The relation of a merged segment is the join of its step kinds in the lattice \(k \sqsubseteq k^* \sqsubseteq {*}\) for each kind~\(k\), with \(k \sqcup k = k^*\) and \(k \sqcup k' = {*}\) for \(k \neq k'\). Hidden kinds are left out, and the join of nothing but hidden kinds is taken over all of them. These are the symbols \(\to_\beta\), \(\to_\beta^*\) and \(\to^*\).
+   \item \([\![M]\!]^{\mathrm{fold}}\) abstracts the subterms of \([\![M]\!]^{\mathrm{nf}}\) by the rules of |fold|. A rule~\(c\) stands for \(\gamma(c) = \{ M \mid M =_\alpha \rho(c) \}\), and \(\alpha_{\mathrm{fold}}\) replaces a subterm \(M\) by the first listed \(c\) with \(M \in \gamma(c)\), for |num| by |\num{<n>}| if \(M\) is \(\alpha\)-equivalent to the Church numeral of~\(n\).
+   \item With |tooltips|, a merged segment also carries its concretization, the skipped terms \(M_{i+1}, \dots, M_{l-1}\), as hover text.
+\end{itemize}
 
-   {%
-      \lcDisableLambdaRanges
-      \tiny\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
-   }
+\subsection{Commands}
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+   \toprule
+   \textbf{Command} & \textbf{Typesets} \\
+   \midrule
+   \cmd{lcReduce}\oarg{keys}\marg{term} & every step \\
+   \cmd{lcNormalForm}\oarg{keys}\marg{term} & only the result \\
+   \cmd{lcComputeReduction}\oarg{keys}\marg{term} & nothing \\
+   \cmd{lcReduceSetup}\marg{keys} & nothing, changes the defaults \\
+   \bottomrule
+\end{tabular}
+\end{center}
+\LaTeX{} needs two runs to place the arrows and ranges (three with a table of contents). Within a run, identical reductions (e.g.\ on the slides of a beamer frame) are computed only once; \cmd{lcForgetMemo} throws that memory away, which only a benchmark needs. With |layout=lines|, a reduction starts a new paragraph and breaks across pages. Inside a box or table cell it falls back to |layout=inline|. For long reductions combine |compact| with |hide=delta|, for wide terms use |format=\small| or |from| and |to|. After each reduction:
+\begin{center}
+\begin{tabular}{@{}lp{.6\linewidth}@{}}
+   \toprule
+   \textbf{Macro} & \textbf{Content} \\
+   \midrule
+   |\lcLastNormalForm| & the result as a string (\(\lambda\) written as \texttt{\textbackslash}, e.g.\ \texttt{\textbackslash y'.y}) \\
+   |\lcLastReductionSequence| & the kinds of the steps, e.g.\ \texttt{alpha,beta,eta} \\
+   |\lcLastStepCount| & their number \\
+   |\lcLastShownSteps| & for |\lcReduce|: each shown term as its step number, after the kind of the relation leading to it (\texttt{beta}, \texttt{beta*} for several, \texttt{*} for mixed), e.g.\ \texttt{0,beta* 2} \\
+   |\iflcNormalFormReached| & whether a normal form was reached \\
+   \bottomrule
+\end{tabular}
+\end{center}
+\begin{example}
+\lcComputeReduction{(\\x.\\y.\x) \y}
+\texttt{\lcLastNormalForm}:
+   \lcLastReductionSequence{}
+   (\lcLastStepCount{} steps)
+\end{example}
+\needspace{5\baselineskip}\cmd{lcIfAlphaEquivalent}\marg{term}\marg{term}\marg{true}\marg{false} compares two terms up to \(\alpha\)-conversion, where rules count as their bodies.
+\cmd{lcCanonicalForm}\meta{cs}\marg{term} stores a term in the string form of |\lcLastNormalForm|.
+\begin{example}
+\lcIfAlphaEquivalent{\\x.\x}{\\y.\y} {equal}{different}
+\end{example}
+\needspace{5\baselineskip}\cmd{lcDeBruijn}\oarg{keys}\marg{term} typesets a term with de Bruijn indices, where a binder loses its name and a variable becomes the number of binders between it and its own, counted from~\(1\). A free name stays as it is, a constant is replaced by its unfolding, and \cmd{lcDeBruijnForm}\meta{cs}\marg{term} stores the same as text. Two terms are \(\alpha\)-equivalent exactly if these forms are equal, which is how \cmd{lcIfAlphaEquivalent} compares them.
+\begin{example}
+\lcDeBruijn{(\\x.\\y.\x \y) \z}
 
-   With |\lcMaximumRewritingRuleExpandDepth| you can control recursive expansion (the default is~\(1\)). So |\lcMaximumRewritingRuleExpandDepth{2}| results in (additionally, |\lcEnableGlow| is active):
+\lcDeBruijn[style=plain-math]{\true}
+\end{example}
 
-   {\lcMaximumRewritingRuleExpandDepth{2}\lcEnableGlow
-      \tiny\LC{\Ycomb* (\\{f,n}.\ifelse (\isZero \n) \num{1} (\mult \n (\f (\pred* \n))))}%
-   }
+\needspace{10\baselineskip}
+\subsection{Options}\label{sec:options}
+The examples below use |\true| and |\false| of the \texttt{bool} module and |\num|, |\add| and |\succ| of \texttt{nat}, both loaded by default.
+\keyentry{eta}, \opt{delta}: enable \(\eta\)-conversions and \(\delta\)-steps (default |true|).
+\begin{example}
+\lcNormalForm{\\x.\f \x}\\
+\lcNormalForm[eta=false]{\\x.\f \x}
+\end{example}
+\begin{example}
+\lcNormalForm{\true \a \b}\\
+\lcNormalForm[delta=false]{\true \a \b}
+\end{example}
+\keyentry{max-steps}: stop after this many steps (default |50|). An unfinished reduction ends with~\(\cdots\). Recursive functions like |\length| need several hundred steps.
+\begin{example}
+\lcReduce[max-steps=2]
+   {(\\x.\x \x) (\\x.\x \x)}
+\end{example}
+\keyentry{fold}: rules (by the name of their macro, with or without backslash, |num| for numerals, or |list| for the list notation of the \texttt{list} module, which also reads |[a, b]| as input) to write the result with. Every subterm that is \(\alpha\)-equivalent to one of them is replaced, and the first match wins, so |fold={false,num}| keeps \(\lambda x.\lambda y.y\) as |\false| instead of |0|.
+\begin{example}
+\lcNormalForm{\add \num{2} \num{3}} \quad
+\lcNormalForm[fold=num]{\add \num{2} \num{3}}
+\end{example}
+\begin{example}
+\lcNormalForm[fold={list, num}, max-steps=300]
+   {\cons \num{1} (\cons \num{2} \nil)} \quad
+\lcNormalForm[fold=list, max-steps=300]
+   {\append (\cons \a \nil) (\cons \b \nil)}
+\end{example}
+\keyentry{layout}: |lines| (a table, default) or |inline|.
+\begin{example}
+\lcReduce[layout=inline]{(\\x.\\y.\x) \a \b}
+\end{example}
+\keyentry{hide}: kinds of steps whose resulting terms are not shown.
+\begin{example}
+\lcReduce[hide=alpha]{(\\x.\\y.\x) \y \a}
+\end{example}
+\keyentry{skip}: numbers or ranges (e.g.\ |skip={1,4-6}|) of the steps whose resulting terms are not shown.
+\begin{example}
+\lcReduce[skip={1, 2}]{(\\x.\\y.\x) \y \a}
+\end{example}
+\keyentry{compact}: show only the last of consecutive steps of the same kind. Hidden steps do not interrupt such a run. The relation of a row only names the kinds of steps that are not hidden.
+\begin{example}
+\lcReduce[compact]{(\\x.\\y.\x) \y \a}
+\end{example}
+\keyentry{from}, \opt{to}: do not show the terms before/after that step. The start term and the result are always shown.
+\begin{example}
+\lcReduce[from=2]{(\\x.\\y.\x) \y \a}
+\end{example}
+\begin{example}
+\lcReduce[to=1]{(\\x.\\y.\x) \y \a}
+\end{example}
+\keyentry{alpha-symbol}, \opt{beta-symbol}, \opt{eta-symbol}, \opt{delta-symbol}: the arrow of each kind, as math. Several steps of one kind get a star.
+\begin{example}
+\lcReduce[beta-symbol=\rightarrow]
+   {(\\x.\x) \y}
+\end{example}
+\keyentry{step-count}: write the number of merged steps next to the arrow instead of a star (default |true|). It counts only steps of that arrow's kind, so a kind |hide| removes does not count. \opt{step-mark} (\cmd{lcSetStepMark}) sets how that number looks, with |#1| and \cmd{lcSteps} for the number, which \opt{multi-symbol} can use as well; \cmd{lcStepMark} is the mark itself, the star when \opt{step-count} is off.
+\begin{example}
+\lcReduce[compact]{\true \a \b}
+
+\lcReduce[compact, step-count=false]{\true \a \b}
+\end{example}
+\keyentry{step-mark-place}: |above| the arrow (default) or |behind| it, which keeps the row as low as a row without a mark.
+\begin{example}
+\lcReduce[compact,
+   step-mark={\textbf{#1}}]{\true \a \b}
+
+\lcReduce[compact,
+   step-mark-place=behind]{\true \a \b}
+\end{example}
+\keyentry{multi-symbol}: relation for several steps of different kinds (default~\(\to^*\)). The kinds of the merged steps are |#1|, so they can be named.
+\begin{example}
+\lcReduce[multi-symbol=\Rightarrow, skip=1]{(\\x.\\y.\x) \y \a}
+
+\lcReduce[multi-symbol={\overset{\text{#1}}{\to}}, skip=1]{(\\x.\\y.\x) \y \a}
+\end{example}
+\keyentry{arrows}, \opt{arrow-style}: draw the \(\beta\)-arrows (default |false|) and their TikZ options. An arrow points from the argument to the binder it is substituted for. Every variable needs a pair of marker nodes for that, which |arrows| switches on, so a reduction without them is the faster one.
+\begin{example}
+\lcReduce[arrows]{(\\x.\x) \y}
+\end{example}
+\begin{example}
+\lcReduce[arrows, arrow-style={red, -stealth}]
+   {(\\x.\x) \y}
+\end{example}
+\keyentry{marks}: give every variable those marker nodes without drawing arrows, so \cmd{reducemarks} can point at them.
+\keyentry{underline}: underline what the next step reduces. It needs no nodes and no colors, so it also works with |style=plain| and in an |export|. \cmd{lcSetRedexLine}\marg{code} sets how that line looks, \cmd{lcRedexLine}\marg{term} draws one by hand.
+\begin{example}
+\lcReduce[underline]{(\\x.\\y.\x) \y \a}
+\end{example}
+\begin{example}
+\lcReduce[underline, style=plain]{\true \a \b}
+\end{example}
+\keyentry{rule-depth}: how deeply rules are expanded when typeset (default |0|, only the rule of the next \(\delta\)-step is shown expanded).
+\begin{example}
+\lcNormalForm{\snd}\\
+\lcNormalForm[rule-depth=1]{\snd}
+\end{example}
+\keyentry{color-start}: start of the color cycle.
+\begin{example}
+\lcReduce[color-start=3]{(\\x.\x) \y}
+\end{example}
+\keyentry{plain}: typeset without colors
+\begin{example}
+\lcReduce[plain]{(\\x.\\y.\x) \y \a}
+\end{example}
+\keyentry{show-term}: |\lcNormalForm| puts the term and \(\to^*\) before the result.
+\begin{example}
+\lcNormalForm[show-term]{(\\x.\\y.\x) \y \a}
+\end{example}
+\keyentry{format}: code to run before typesetting.
+\begin{example}
+\lcReduce[format=\small, lambda-ranges=false]
+   {(\\x.\\y.\x) \a \b}
+\end{example}
+\keyentry{tooltips}: hover over a merged arrow to read the terms it skips, as a PDF annotation (pdf\TeX{} or Lua\TeX{}). |\lcNormalForm| puts all steps into one tooltip on the result.
+\begin{example}
+\lcNormalForm[tooltips, fold=num]
+   {\add \num{1} \num{1}}
+\end{example}
+\begin{example}
+\lcReduce[tooltips, compact, hide=delta]
+   {\true \a \b}
+\end{example}
+\keyentry{alpha-index}, \opt{beta-index}, \opt{eta-index}, \opt{delta-index}: the subscript of an arrow, by default the Greek letter of its kind, as in \(\to_\beta\).
+\begin{example}
+\lcReduce[beta-symbol=\Rightarrow, beta-index=b]{(\\x.\x) \y}
+\end{example}
+\keyentry{tooltip-author}: the author a tooltip annotation carries (default |lc-visualizer|).
+\keyentry{alpha-text}, \opt{beta-text}, \opt{eta-text}, \opt{delta-text}, \opt{lambda-text}: the relations and the \(\lambda\) in tooltips (PDF strings, e.g.\ |\lcUnichar{955}| for \(\lambda\)).
+\begin{example}
+\lcNormalForm[tooltips, beta-text=beta, lambda-text=\textbackslash]
+   {(\\x.\\y.\x \y) \f \a}
+\end{example}
+\keyentry{symbol-align}: where the relation sits in its column, |right| (default), |left| or |center|.
+\begin{example}
+\lcReduce[symbol-align=left, skip=1]
+   {(\\x.\\y.\x) \y \a}
+\end{example}
+\keyentry{symbol-width}, \opt{row-sep}: width of the relation column (default |2.5em|) and space between rows and around the reduction (default: 70\,\% of the line distance) with |layout=lines|.
+\begin{example}
+\lcReduce[symbol-width=1.5em, row-sep=5pt]
+   {(\\x.\\y.\x) \a \b}
+\end{example}
+\keyentry{beamer}, \opt{beamer-start}, \opt{row-hook}: see \autoref{sec:animations}. \opt{cache}: see \autoref{sec:cache}.
+
+\needspace{14\baselineskip}
+\subsection{Animations}\label{sec:animations}
+Every shown term is a row, numbered from~\(1\). In beamer, with |beamer=uncover|, row~\(n\) appears on slide~\(n\). With |beamer=only|, it is shown only on slide~\(n\) (with |layout=inline| the terms stay in place). |beamer-start=<k>| moves the first row to slide~\(k\).
+\begin{code}
+\begin{frame}
+  \lcReduce[beamer=uncover]{(\\f.\\x.\f \x) \x}
+\end{frame}
+\end{code}
+|row-hook| is code with the row number as |#1| and the row itself as |#2|. With |layout=lines| it is called for the relation and for the term. It replaces a |beamer| setting and vice versa. Set it with \cmd{lcReduceSetup} outside of a beamer frame, as frames do not allow |#| in their body.
+\begin{example}
+\lcReduceSetup{row-hook=\fbox{#1: #2}}
+\lcReduce[layout=inline]{(\\x.\x) \y}
+\end{example}
+
+\subsection{Caching and generated code}\label{sec:cache}
+With |cache=<name>|, |\lcReduce| and |\lcNormalForm| write the code they typeset to |<name>.tex| (|cache| alone names it after the document and the hash, |\jobname-lc-<hash>.tex|). Its first line holds a hash of the term, the options and the rules. While it matches, later compilations input the file instead of reducing again. |\lcReduceSetup{cache}| caches every reduction. The file also restores the |\lcLast...| macros. It is \LaTeX{} code built from |\RLC| and internal macros of the package. A file that does not start with the hash line is never overwritten (this raises an error), reductions with errors are not cached, and the directory of |<name>| must exist. The cache saves the time of the reduction, not of typesetting it.
+\begin{example}
+\lcReduce[cache=reduce-k]{(\\x.\\y.\x) \a \b}
+\end{example}
+\keyentry{export}\texttt{=\meta{name}} writes the same reduction to \meta{name}|.tex| as an |array| of |\RLC| rows, without the internals of the cache. That file is meant to be read and changed: copy it into the document and edit the terms, the relations or the arrows. It uses only macros of the package: \cmd{lcStepState}\marg{steps}\marg{mark} hands the next arrow its number and its mark, and the arrow itself is \cmd{lcStepSymbol}\marg{relation}\marg{kind}\marg{mark}, or \cmd{lcMultiSymbol}\marg{kinds} when it merges several kinds. It is written on every run and never read back, and it carries no arrows, as those are pictures that a math |array| cannot hold.
+\begin{example}
+\lcReduce[export=\jobname-export]
+   {(\\x.\\y.\x) \y \a}
+\end{example}
+That reduction wrote this file, which typesets the same rows:
+\lstinputlisting[style=lc,basicstyle=\ttfamily\tiny,breaklines=true,breakatwhitespace=false,
+   breakautoindent=false,columns=fixed,frame=leftline,framerule=.4pt,rulecolor=\color{black!15},
+   xleftmargin=.6em]{\jobname-export.tex}
+
+\appendix
+\section{The reduction in the source}
+Every listing in this appendix comes out of \texttt{lc-visualizer.sty} itself. The steps carry the names of Section~\ref{sec:semantics}.
+
+A parsed term is a triple: a letter for the kind and two groups whose meaning follows from it.
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+   \toprule
+   \textbf{Triple} & \textbf{Letter} & \textbf{Term} \\
+   \midrule
+   |{v}{<name>}{}| & \texttt{v}, variable & \(x\) \\
+   |{l}{<name>}{<body>}| & \texttt{l}, lambda & \(\lambda x.M\) \\
+   |{a}{<fun>}{<arg>}| & \texttt{a}, application & \(M\,N\) \\
+   |{c}{<tokens>}{<unfolding>}| & \texttt{c}, constant & \(c\), unfolding \(\rho(c)\) \\
+   \midrule
+   |{B}{<abstraction>}{<arg>}| & \texttt{B}, marked \(\beta\)-redex & \((\lambda x.M)\,N\), the next step \\
+   |{D}{<tokens>}{<unfolding>}| & \texttt{D}, marked \(\delta\)-redex & \(c\), the next step \\
+   \bottomrule
+\end{tabular}
+\end{center}
+The last two letters live only between a step and its row and carry the part that the arrow and |underline| mark. Every walk over a term branches on the letter, so a term printer is four macros, one per letter; |\__lc_tp_l:nnn| prints an abstraction.
+
+\paragraph{One step.} |\__lc_step_aux:nnn| is \(\mathrm{step}\). It clears |\g__lc_kind_str|, and a case that finds nothing leaves it empty, which is how the next case learns that it has to try.
+\lcsource{step}
+Under a binder, \(\eta\) comes before a step in the body.
+\lcsource{lambda}
+\(\eta\) needs the body to be an application of a variable that the body does not use otherwise, which is \(x \notin \mathcal{F}(M)\).
+\lcsource{eta}
+An application first tries itself, as a \(\beta\)- or a \(\delta\)-redex, then the function, then the argument. That order is what makes the whole thing normal order.
+\lcsource{application}
+\(\beta\) renames first. |\__lc_rename:nn| is \(\mathrm{ren}_{x,N}\) and reports through |\g__lc_renamed_bool| whether it had to touch anything: if it did, that renaming is the step, and the substitution waits for the next one.
+\lcsource{beta}
+The substitution itself is one macro per letter again. A binder of the same name ends it, a constant is entered only when the name occurs free in its unfolding.
+\lcsource{subst}
+\(\delta\) replaces a constant that stands in function position by its unfolding, and keeps the constant in the |{D}| triple so the row can still show it.
+\lcsource{delta}
+
+\paragraph{The whole reduction.} |\__lc_reduce:n| parses the term and applies \(\mathrm{step}\) until it is undefined or |max-steps| is reached. Every term it passes is stored, which is the trace \(\tau_M\).
+\lcsource{loop}
+The views read that trace: |\__lc_typeset_reduction:| keeps the rows that |hide|, |skip|, |compact|, |from| and |to| leave and merges the steps in between, |\__lc_typeset_symbol:n| turns the kinds of one merged segment into its relation, |\__lc_typeset_normal_form:| shows the last term alone.
+
+\section{Benchmarking}
+Reducing is cheap, typesetting is what costs, and every TikZ picture adds to it. \texttt{bench/run.sh} writes the table from the cases in \texttt{bench/cases.txt}. \texttt{bench/measure.tex} takes the times inside the document with the timer of pdf\TeX{}, so the start of \LaTeX{} and the shipout of the pages are no part of a number. Every case is measured five times, in a pdf\TeX{} run of its own, and \cmd{lcForgetMemo} drops what the last of those runs remembered, so that none of them is answered from the memory of the run before:
+\begin{itemize}
+   \item \textbf{Reduce} is |\lcComputeReduction[max-steps=<n>]|, which reduces the term and prints nothing.
+   \item \textbf{Typeset} is |\lcReduce| with the same |max-steps| and the default keys, so it reduces \emph{and} shows every row. \textbf{Min} and \textbf{Max} are its fastest and its slowest of the five runs.
+   \item \textbf{Cached} is the same |\lcReduce| with |cache|, the file already written, so the rows are read instead of computed.
+\end{itemize}
+\begin{center}
+\small
+\IfFileExists{bench/bench-results.tex}
+   {\input{bench/bench-results.tex}}
+   {\textit{Run \texttt{sh bench/run.sh} to fill in this table.}}
+\end{center}
+
+\printindex[\jobname]
 \end{document}

@@ -1,0 +1,14 @@
+% written by bench/run.sh, do not edit
+\begin{tabular}{@{}lrrrrrr@{}}
+   \toprule
+   \textbf{Term} & \textbf{Rows} & \textbf{Reduce} & \textbf{Typeset} & \textbf{Min} & \textbf{Max} & \textbf{Cached} \\
+   \midrule
+   no redex & 1 & \qty {0.3}{\ms } & \qty {0.7}{\ms } & \qty {0.7}{\ms } & \qty {0.8}{\ms } & \qty {0.6}{\ms } \\
+   four steps & 5 & \qty {0.9}{\ms } & \qty {11.7}{\ms } & \qty {10.6}{\ms } & \qty {15.1}{\ms } & \qty {9.8}{\ms } \\
+   factorial of 2 & 60 & \qty {246.4}{\ms } & \qty {1070.5}{\ms } & \qty {1017.4}{\ms } & \qty {1129.0}{\ms } & \qty {651.4}{\ms } \\
+   factorial of 2, arrows & 60 & \qty {241.0}{\ms } & \qty {13437.4}{\ms } & \qty {12294.4}{\ms } & \qty {13938.4}{\ms } & \qty {14265.6}{\ms } \\
+   factorial of 2, compact & 60 & \qty {240.8}{\ms } & \qty {579.5}{\ms } & \qty {523.8}{\ms } & \qty {634.4}{\ms } & \qty {252.7}{\ms } \\
+   factorial of 2, no nodes & 60 & \qty {241.3}{\ms } & \qty {1047.3}{\ms } & \qty {955.6}{\ms } & \qty {1126.1}{\ms } & \qty {644.4}{\ms } \\
+   factorial of 3, cut off & 100 & \qty {336.5}{\ms } & \qty {1285.8}{\ms } & \qty {1187.9}{\ms } & \qty {1401.6}{\ms } & \qty {735.5}{\ms } \\
+   \bottomrule
+\end{tabular}

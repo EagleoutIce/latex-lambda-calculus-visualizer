@@ -1,0 +1,42 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+\g__lc_cache_iow=\write...
+Package lc-visualizer Warning: The cache file `lc-cache' is used by different reductions.
+Package lc-visualizer Warning: The cache file `lc-cache' is used by different reductions.
+Package lc-visualizer Warning: The cache file `lc-cache' is used by different reductions.
+(cache-lc-97246AC5.tex) (cache-lc-97246AC5.tex)
+Package lc-visualizer Warning: The cache file `lc-cache' is used by different reductions.
+Package lc-visualizer Warning: Stopped reducing after 1 steps without reaching a normal form (increase max-steps if there is one).
+Package lc-visualizer Warning: The cache file `lc-cache' is used by different reductions.
+Package lc-visualizer Warning: The cache file `lc-cache' is used by different reductions.
+! Package lc-visualizer Error: Missing `)' in lambda term.
+Type <return> to continue.
+ ...                                              
+l. ...\lcReduce[cache=lc-cache]{(\\x.\x \y}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: Missing `)' in lambda term.
+Type <return> to continue.
+ ...                                              
+l. ...\lcReduce[cache=lc-cache]{(\\x.\x \y}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+! Package lc-visualizer Error: Refusing to overwrite `lc-foreign', which is no cache file of lc-visualizer.
+Type <return> to continue.
+ ...                                              
+l. ...\lcReduce[cache=lc-foreign]{(\\x.\x) \y}
+LaTeX does not know anything more about this error, sorry.
+Try typing <return> to proceed.
+If that doesn't work, type X <return> to quit.
+\foreign=\read...
+(lc-num.tex
+LaTeX Font Info:    Font shape `OT1/cmss/m/it' in size <10> not available
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line ....
+) (lc-num.tex) (lc-multi.tex) (lc-multi.tex)
+\lctmpout=\write...
+(lc-space.tex)
+cached~width~equals~fresh~width
+[1
+]

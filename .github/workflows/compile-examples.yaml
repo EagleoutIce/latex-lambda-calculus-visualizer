@@ -7,19 +7,33 @@ name: Build Example
 jobs:
   build-pdfs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
     steps:
       - name: Checkout git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: "TODO to Issue"
         uses: "alstr/todo-to-issue-action@v4"
-      - name: 📄 Compile Examples
-        uses: xu-cheng/latex-action@v2
+      - name: ⏱️ Benchmark
+        uses: xu-cheng/latex-action@v3
         with:
+          latexmk_use_lualatex: false
+          work_in_root_file_dir: false
+          root_file: bench/bench.tex
+          pre_compile: sh bench/run.sh
+          post_compile: "true"
+      - name: 📄 Compile Examples
+        uses: xu-cheng/latex-action@v3
+        with:
+          pre_compile: l3build check
           root_file: |
             example.tex
             visualizer-doc.tex
       - name: Install PU for previews
-        run: sudo apt install poppler-utils
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
       - name: 🖼️ Generate preview
         run: |
           pdftoppm -png -r 400 ./build/example.pdf example
@@ -27,7 +41,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -f "./build/example.pdf" "example-1.png" "./build/visualizer-doc.pdf"
+          git add -f "./build/example.pdf" "example-1.png" "./build/visualizer-doc.pdf" "bench/bench-results.tex"
           git commit -m "Newly compiled data"
       - name: Push changes
         uses: ad-m/github-push-action@master

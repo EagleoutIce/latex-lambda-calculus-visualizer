@@ -1,0 +1,22 @@
+\documentclass{article}
+\usepackage{lc-visualizer}
+\input{regression-test}
+\input{lc-test}
+\begin{document}
+\START
+\Test{(\\x.\\y.\x) \a \b}{\a}[beta,beta]
+\Test{(\\x.\\x.\x) \y}{\\x.\x}[beta]
+\Test{(\\x.\\y.\\x.\y) \y}{\\y.\\x.\y}[beta]
+\Test{(\\x.\z) ((\\x.\x \x) (\\x.\x \x))}{\z}[beta]
+\Test[max-steps=2]{(\\x.\x \x) (\\x.\x \x)}{(\\x.\x \x) (\\x.\x \x)}[beta,beta,...]
+\Test{(\\f.\\x.\f \x) \x}{\x}[alpha,beta,eta]
+\Test[eta=false]{(\\x.\\y.\\{y'}.\x \y \lcVar{y'}) (\y \lcVar{y'})}{\\{y''}.\\{y'''}.\y \lcVar{y'} \lcVar{y''} \lcVar{y'''}}[alpha,beta]
+\Test{(\\x.\\{foo}.\x) \lcVar{foo}}{\\{foo'}.\lcVar{foo}}[alpha,beta]
+\Test{\\y.\\x.\y \x}{\\y.\y}[eta]
+\Test{\\x.\f \x \x}{\\x.\f \x \x}[]
+\lcReduceSetup{eta=false}
+\Test{\\x.\f \x}{\\x.\f \x}[]
+\lcReduceSetup{eta=true}
+\TestEq{\\x.\\y.\x \y}{\\y.\\x.\y \x}{true}
+\TestEq{\\x.\\y.\x}{\\x.\\y.\y}{false}
+\END
