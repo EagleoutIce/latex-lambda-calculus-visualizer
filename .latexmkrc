@@ -6,3 +6,4 @@ $postscript_mode = 0;
 $max_repeat = 8; # index, hyperref and the tikz marks need a few rounds from cold
 $dvi_mode = 0;
 $pdflatex = 'pdflatex %O -shell-escape %S';ensure_path('TEXINPUTS', './xlistings//');
+ensure_path('TEXINPUTS', './bench//');

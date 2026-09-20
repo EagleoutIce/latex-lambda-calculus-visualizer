@@ -3,6 +3,7 @@ name: Build Example
 "on":
   push:
     branches: [master, main]
+  workflow_dispatch:
 
 jobs:
   build-pdfs:
@@ -28,6 +29,7 @@ jobs:
       - name: 📄 Compile Examples
         uses: xu-cheng/latex-action@v3
         with:
+          extra_system_packages: "diffutils" # l3build needs GNU diff, not busybox
           pre_compile: l3build check
           root_file: |
             example.tex
@@ -41,8 +43,8 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -f "./build/example.pdf" "example-1.png" "./build/visualizer-doc.pdf" "bench/bench-results.tex"
-          git commit -m "Newly compiled data"
+          git add -f "./build/example.pdf" "example-1.png" "./build/visualizer-doc.pdf" "./build/bench.pdf" "bench/bench-results.tex"
+          git commit -m "Newly compiled data" || echo "nothing new to commit"
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:

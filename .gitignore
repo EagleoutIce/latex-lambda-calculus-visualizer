@@ -424,3 +424,7 @@ $RECYCLE.BIN/
 build/
 bench/bench-results.tex.new
 
+bench/rows.tmp
+bench/bench-row.tex
+bench/measure.out
+bench/lc-bench-*.tex
