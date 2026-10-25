@@ -153,11 +153,15 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
 \def\lc@vstyleid{}
 \def\lc@vdirty#1{\protected@edef\lc@vstyleid{\lc@vstyleid @\detokenize{#1}}}
 \def\lc@lastmark{lc@last}
-\protected\def\lc@varplain#1{\lc@ifbracket{\lc@varplain@{#1}}{\lc@showname{#1}\xspace}}
-\def\lc@varplain@#1#2#3]{\lc@mark{#3}{\lc@showname{#1}}\xspace}
+% \xspace, but no space before a closing bracket of either kind: a term typeset inside the argument
+% of another macro (\inferrule, ...) has plain parentheses
+\def\lc@xspace{\futurelet\@let@token\lc@xspace@}
+\def\lc@xspace@{\ifx\@let@token)\else\ifx\@let@token\lc@close\else\xspace\fi\fi}
+\protected\def\lc@varplain#1{\lc@ifbracket{\lc@varplain@{#1}}{\lc@showname{#1}\lc@xspace}}
+\def\lc@varplain@#1#2#3]{\lc@mark{#3}{\lc@showname{#1}}\lc@xspace}
 \protected\def\lc@varopt#1#2{\lc@ifbracket{\lc@varopt@{#1}{#2}}{\lc@varset{#1}{#2}{lc@last}}}
 \def\lc@varopt@#1#2#3#4]{\lc@varset{#1}{#2}{#4}}
-\protected\def\lc@varset#1#2#3{\lc@colorvar{#1}{#2}{#3}\ifx\lc@mark@sep\z@\else\xspace\fi}
+\protected\def\lc@varset#1#2#3{\lc@colorvar{#1}{#2}{#3}\ifx\lc@mark@sep\z@\else\expandafter\lc@xspace\fi}
 \def\lc@colorvar#1#2#3{\setbox\z@=\hbox{g}\protected@edef\lc@thismark{#3}%
 \iflc@marks\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi
    {\lc@mark{#3}}%
@@ -191,7 +195,26 @@ text opacity=1,text=\lc@colormix{##1}!#1!green!75!black}}}
    }%
    \begingroup\advance\c@lc@bracketlevel\@ne
 }
+% no space before a closing bracket, whatever put it there (\xspace, a separator); the glue may
+% hide behind the empty boxes of the marker nodes, so up to two of them are looked behind
+\def\lc@trimclose{%
+   \ifdim\lastskip>\z@ \unskip
+   \else\setbox\z@\lastbox
+      \ifvoid\z@\else
+         \ifdim\wd\z@=\z@
+            \ifdim\lastskip>\z@ \unskip
+            \else\setbox\tw@\lastbox
+               \ifvoid\tw@\else
+                  \ifdim\wd\tw@=\z@ \unskip\fi
+                  \box\tw@
+               \fi
+            \fi
+         \fi
+         \box\z@
+      \fi
+   \fi}
 \def\lc@close{%
+   \lc@trimclose
    \xdef\lc@lastbracket{\the\c@lc@bracketlevel}%
    \endgroup
    \stepcounter{lc@markerindex}%
