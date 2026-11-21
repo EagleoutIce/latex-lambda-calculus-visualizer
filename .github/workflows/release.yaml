@@ -41,4 +41,4 @@ jobs:
           body_path: ctan-announce.txt
           files: |
             lc-visualizer-ctan.zip
-            build/doc/visualizer-doc.pdf
+            build/doc/lc-visualizer-doc.pdf

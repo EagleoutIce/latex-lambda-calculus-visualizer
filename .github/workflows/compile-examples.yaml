@@ -33,7 +33,7 @@ jobs:
           pre_compile: l3build check
           root_file: |
             example.tex
-            visualizer-doc.tex
+            lc-visualizer-doc.tex
       - name: Install PU for previews
         run: sudo apt-get update && sudo apt-get install -y poppler-utils
       - name: 🖼️ Generate preview
@@ -43,7 +43,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add -f "./build/example.pdf" "example-1.png" "./build/visualizer-doc.pdf" "./build/bench.pdf" "bench/bench-results.tex"
+          git add -f "./build/example.pdf" "example-1.png" "./build/lc-visualizer-doc.pdf" "./build/bench.pdf" "bench/bench-results.tex"
           git commit -m "Newly compiled data" || echo "nothing new to commit"
       - name: Push changes
         uses: ad-m/github-push-action@master

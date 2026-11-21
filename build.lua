@@ -8,8 +8,8 @@ installfiles = {"lc-visualizer.sty"}
 unpackfiles  = {}
 tdsroot      = "latex"
 packtdszip   = false
-docfiles     = {"visualizer-doc.tex", "example.tex"}
-typesetfiles = {"visualizer-doc.tex"}
+docfiles     = {"lc-visualizer-doc.tex", "example.tex"}
+typesetfiles = {"lc-visualizer-doc.tex"}
 typesetopts  = "-shell-escape -interaction=nonstopmode"
 -- the index is a plain makeindex index, not the one of the doc package
 indexstyle   = ""
@@ -23,6 +23,9 @@ function docinit_hook()
   end
   cp("xlistings.sty", "xlistings", typesetdir)
   cp("xlistings-*.cfg", "xlistings/langs", typesetdir)
+  if not fileexists("bench/bench-results.tex") then
+    error("bench/bench-results.tex is missing: run 'sh bench/run.sh'")
+  end
   mkdir(typesetdir .. "/bench")
   cp("bench-results.tex", "bench", typesetdir .. "/bench")
   return 0
@@ -65,7 +68,6 @@ uploadconfig = {
   repository        = "https://github.com/EagleoutIce/latex-lambda-calculus-visualizer",
   bugtracker        = "https://github.com/EagleoutIce/latex-lambda-calculus-visualizer/issues",
   support           = "https://github.com/EagleoutIce/latex-lambda-calculus-visualizer/issues",
-  home              = "https://github.com/EagleoutIce/latex-lambda-calculus-visualizer",
   topic             = {"pgf-tikz", "logic"},
   update            = false,
   announcement_file = "ctan-announce.txt",

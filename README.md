@@ -2,7 +2,7 @@
 
 [![made-with-latex](https://img.shields.io/badge/Made%20with-LaTeX-1f425f.svg)](https://www.latex-project.org/) [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com) [![CTAN](https://img.shields.io/ctan/v/lc-visualizer.svg)](https://www.ctan.org/pkg/lc-visualizer) [![Build Example](https://github.com/EagleoutIce/latex-lambda-calculus-visualizer/actions/workflows/compile-examples.yaml/badge.svg)](https://github.com/EagleoutIce/latex-lambda-calculus-visualizer/actions/workflows/compile-examples.yaml)
 
-A small and work-in-progress package to visualize lambda calculus expressions in LaTeX (see the [documentation](https://raw.githubusercontent.com/EagleoutIce/latex-lambda-calculus-visualizer/gh-pages/build/visualizer-doc.pdf)).
+A small and work-in-progress package to visualize lambda calculus expressions in LaTeX (see the [documentation](https://raw.githubusercontent.com/EagleoutIce/latex-lambda-calculus-visualizer/gh-pages/build/lc-visualizer-doc.pdf)).
 
 *lc-visualizer* is actively developed by *Florian Sihler* (contact me at: <florian.sihler@uni-ulm.de>) under the [MIT License](LICENSE). I am very happy about every contribution (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
