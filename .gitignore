@@ -428,3 +428,7 @@ bench/rows.tmp
 bench/bench-row.tex
 bench/measure.out
 bench/lc-bench-*.tex
+
+# l3build release
+lc-visualizer-ctan.zip
+lc-visualizer-ctan.curlopt

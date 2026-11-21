@@ -1,0 +1,44 @@
+name: Release
+
+"on":
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container: texlive/texlive:latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: 🏷️ Check that the tag matches the package version
+        if: github.ref_type == 'tag'
+        run: |
+          version=$(sed -n 's/^\\ProvidesPackage{lc-visualizer}\[[0-9/]* v\([^ ]*\) .*/\1/p' lc-visualizer.sty)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match version v$version of lc-visualizer.sty"
+            exit 1
+          fi
+      - name: 📦 Run the tests and build the CTAN archive
+        run: l3build ctan
+      - name: 🔍 Upload the test output for inspection
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: build/test/*.diff
+          if-no-files-found: ignore
+      - name: 🚀 Create the GitHub release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: lc-visualizer ${{ github.ref_name }}
+          body_path: ctan-announce.txt
+          files: |
+            lc-visualizer-ctan.zip
+            build/doc/visualizer-doc.pdf

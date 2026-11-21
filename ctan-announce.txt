@@ -1,0 +1,10 @@
+lc-visualizer v1.0.0
+
+First release on CTAN. lc-visualizer typesets terms of the untyped lambda
+calculus with TikZ: abstractions, the variables they bind and the ranges of
+their bodies are highlighted in matching colors. Terms can be reduced
+automatically (alpha and eta conversions, beta reductions, user-defined
+rewriting rules), every step of a reduction can be shown, and terms can be
+typeset with de Bruijn indices.
+
+https://github.com/EagleoutIce/latex-lambda-calculus-visualizer
